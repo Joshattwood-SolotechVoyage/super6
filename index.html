@@ -114,6 +114,24 @@
           </section>
         </div>
 
+        <section class="card" id="realAccountCard">
+          <div class="section-head"><div><div class="kicker">Secure accounts</div><h3>Player login accounts</h3><div class="muted">Create a real Username + 4-digit PIN account or reset an existing player's PIN. These actions are stored in Supabase.</div></div><span class="chip good">Supabase</span></div>
+          <div class="notice">Account setup is live. Weekly predictions/results are still being migrated to Supabase, so keep using this as setup/testing until the data migration is finished.</div>
+          <div class="manage-grid">
+            <div>
+              <label class="field">Player username<input id="realPlayerName" maxlength="80" placeholder="e.g. Robbie Gibson" autocomplete="off" /></label>
+              <label class="field">4-digit PIN<input id="realPlayerPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="••••" autocomplete="new-password" /></label>
+              <label class="field">League<select id="realPlayerLeague"></select></label>
+              <button id="createRealPlayerBtn" class="big-action" type="button">Create player login</button>
+              <div id="accountManagerStatus" class="muted" style="margin-top:9px"></div>
+            </div>
+            <div>
+              <div class="kicker">Existing real accounts</div>
+              <div id="realPlayerAccountList" style="margin-top:8px"><div class="muted">Loading accounts…</div></div>
+            </div>
+          </div>
+        </section>
+
         <section class="card">
           <div class="section-head"><div><div class="kicker">Flexible leagues</div><h3>Players & league management</h3><div class="muted">Rename or add leagues, and move players when needed. Their season stats move with them.</div></div></div>
           <div class="manage-grid">

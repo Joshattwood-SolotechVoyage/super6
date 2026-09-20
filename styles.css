@@ -95,3 +95,8 @@ button{touch-action:manipulation}
   .player-row .secondary.name{min-height:48px}
 }
 
+
+/* v0.13 secure account manager */
+.account-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.account-row:last-child{border-bottom:0}.account-person{min-width:0}.account-person b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.account-person small{display:block;color:var(--muted);margin-top:2px;font-size:11px}
+@media(max-width:430px){.account-row{gap:7px}.account-row .secondary{padding:7px 8px}}

@@ -1,5 +1,5 @@
 // Super 6 backend adapter — real Supabase authentication, local prototype data.
-// v0.12 moves the main login to the secure Username + 4-digit PIN flow.
+// v0.13 adds secure Admin player-account creation + PIN reset through an Edge Function.
 // Competition data is still the existing local prototype until the next migration steps.
 (function(){
   const cfg = window.SUPER6_CONFIG || {};
@@ -70,13 +70,77 @@
     return profile;
   }
 
+  async function requireSession(){
+    const sb = getClient();
+    const { data, error } = await sb.auth.getSession();
+    const session = data?.session;
+    if (error || !session?.access_token) {
+      throw new Error('Your Super 6 session has expired. Please sign in again.');
+    }
+    return session;
+  }
+
+  async function listAccountManagerData(){
+    const sb = getClient();
+    await requireSession();
+
+    const [leagueRes, playerRes] = await Promise.all([
+      sb.from('leagues').select('id, name, sort_order').order('sort_order'),
+      sb.from('profiles').select('id, username, role, league_id').eq('role', 'player').order('username')
+    ]);
+
+    if (leagueRes.error) throw new Error(leagueRes.error.message || 'Could not load leagues.');
+    if (playerRes.error) throw new Error(playerRes.error.message || 'Could not load player accounts.');
+
+    return { leagues: leagueRes.data || [], players: playerRes.data || [] };
+  }
+
+  async function callAdminUsers(body){
+    const session = await requireSession();
+    const response = await fetch(
+      cfg.SUPABASE_URL + '/functions/v1/super6-admin-users',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': cfg.SUPABASE_PUBLISHABLE_KEY,
+          'Authorization': 'Bearer ' + session.access_token
+        },
+        body: JSON.stringify(body)
+      }
+    );
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload?.ok) {
+      throw new Error(payload?.error || 'The account request could not be completed.');
+    }
+    return payload;
+  }
+
+  async function createPlayerAccount(username, pin, leagueId){
+    return callAdminUsers({
+      action: 'create_player',
+      username: String(username || '').trim(),
+      pin: String(pin || '').trim(),
+      league_id: String(leagueId || '').trim()
+    });
+  }
+
+  async function resetPlayerPin(userId, pin){
+    return callAdminUsers({
+      action: 'reset_pin',
+      user_id: String(userId || '').trim(),
+      pin: String(pin || '').trim()
+    });
+  }
+
   async function signOut(){
     if (!client) return;
     await client.auth.signOut();
   }
 
   window.Super6Backend = {
-    mode: 'supabase-auth-local-data',
+    mode: 'supabase-auth-admin-users-local-data',
     schema: cfg.SUPABASE_SCHEMA || 'super6',
     isConfigured(){ return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY); },
     configuration(){
@@ -87,6 +151,9 @@
       };
     },
     pinLogin,
+    listAccountManagerData,
+    createPlayerAccount,
+    resetPlayerPin,
     signOut,
     client: getClient
   };

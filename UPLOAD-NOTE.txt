@@ -1,8 +1,10 @@
-SUPER 6 v0.12
+SUPER 6 v0.13
 
-Main change:
-- The real Super 6 login now uses the secure Supabase Username + 4-digit PIN flow.
-- Admin / 2468 and Josh Attwood / 1111 now authenticate against Supabase, not JavaScript demo PINs.
-- Existing competition screens/data still use the local prototype while database migration continues.
+Upload ALL files in this folder to the root of the GitHub super6 repository, replacing matching files.
+Cloudflare Pages should deploy automatically from main.
 
-Upload the CONTENTS of this folder to the root of the GitHub super6 repository, replacing matching files.
+After deployment:
+1. Sign in as Admin / 2468.
+2. Scroll to Secure accounts -> Player login accounts.
+3. Confirm Josh Attwood appears as a real player account.
+4. Do not create all players yet; we are still migrating shared weekly data to Supabase.
