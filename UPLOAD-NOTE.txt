@@ -1,1 +1,4 @@
-Super 6 v0.17 — upload the CONTENTS of this folder to the root of the GitHub super6 repository, replacing matching files. Player predictions now save to Supabase and reload across devices. Admin payment overview/results are still the next migration steps.
+Super 6 v0.18
+Upload the CONTENTS of this folder to the root of the GitHub super6 repository, replacing matching files.
+
+This release migrates the Admin weekly entry overview and Paid/Unpaid controls to Supabase.

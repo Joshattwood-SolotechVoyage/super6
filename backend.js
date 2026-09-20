@@ -1,6 +1,6 @@
 // Super 6 backend adapter — real Supabase authentication, local prototype data.
-// v0.17 uses real Supabase authentication, account management, live season standings, live rounds, and live player predictions.
-// Payments/admin weekly overview/results are migrated in later steps.
+// v0.18 uses real Supabase authentication, account management, live season standings, live rounds, live player predictions, and live admin payment tracking.
+// Round result completion/scoring is migrated in a later step.
 (function(){
   const cfg = window.SUPER6_CONFIG || {};
   let client = null;
@@ -258,13 +258,86 @@
     return data;
   }
 
+
+  async function loadAdminRoundOverview(roundId){
+    const sb = getClient();
+    await requireSession();
+    if (!roundId) return { leagues: [], players: [] };
+
+    const [leagueRes, playerRes, entryRes, paymentRes] = await Promise.all([
+      sb.from('leagues').select('id, name, sort_order').order('sort_order'),
+      sb.from('profiles').select('id, username, league_id').eq('role', 'player').order('username'),
+      sb.from('entries').select('id, player_id, first_goal_minute, submitted_at').eq('round_id', roundId),
+      sb.from('payments').select('player_id, paid, updated_at').eq('round_id', roundId)
+    ]);
+
+    if (leagueRes.error) throw new Error(leagueRes.error.message || 'Could not load leagues.');
+    if (playerRes.error) throw new Error(playerRes.error.message || 'Could not load players.');
+    if (entryRes.error) throw new Error(entryRes.error.message || 'Could not load round entries.');
+    if (paymentRes.error) throw new Error(paymentRes.error.message || 'Could not load payments.');
+
+    const leagueMap = new Map((leagueRes.data || []).map(l => [l.id, l.name]));
+    const entries = new Map((entryRes.data || []).map(e => [e.player_id, e]));
+    const payments = new Map((paymentRes.data || []).map(p => [p.player_id, p]));
+
+    return {
+      leagues: leagueRes.data || [],
+      players: (playerRes.data || []).map(p => {
+        const entry = entries.get(p.id) || null;
+        const payment = payments.get(p.id) || null;
+        return {
+          id: p.id,
+          username: p.username,
+          league_id: p.league_id,
+          league_name: leagueMap.get(p.league_id) || '',
+          submitted: Boolean(entry),
+          submitted_at: entry?.submitted_at || null,
+          first_goal_minute: entry?.first_goal_minute ?? null,
+          paid: Boolean(payment?.paid),
+          payment_updated_at: payment?.updated_at || null
+        };
+      })
+    };
+  }
+
+  async function setAdminPayment(roundId, playerId, paid){
+    const sb = getClient();
+    await requireSession();
+    const { error } = await sb.rpc('admin_set_payment', {
+      p_round_id: roundId,
+      p_player_id: playerId,
+      p_paid: Boolean(paid)
+    });
+    if (error) throw new Error(error.message || 'Could not update payment status.');
+  }
+
+  async function loadAdminPlayerEntry(roundId, playerId){
+    const sb = getClient();
+    await requireSession();
+    const { data: entry, error: entryError } = await sb
+      .from('entries')
+      .select('id, player_id, first_goal_minute, submitted_at, updated_at')
+      .eq('round_id', roundId)
+      .eq('player_id', playerId)
+      .maybeSingle();
+    if (entryError) throw new Error(entryError.message || 'Could not load the player entry.');
+    if (!entry) return { entry: null, predictions: [] };
+
+    const { data: predictions, error: predictionError } = await sb
+      .from('predictions')
+      .select('fixture_id, home_score, away_score')
+      .eq('entry_id', entry.id);
+    if (predictionError) throw new Error(predictionError.message || 'Could not load the player predictions.');
+    return { entry, predictions: predictions || [] };
+  }
+
   async function signOut(){
     if (!client) return;
     await client.auth.signOut();
   }
 
   window.Super6Backend = {
-    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions',
+    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-live-payments',
     schema: cfg.SUPABASE_SCHEMA || 'super6',
     isConfigured(){ return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY); },
     configuration(){
@@ -284,6 +357,9 @@
     saveAndPublishRound,
     loadMyRoundEntry,
     submitMyPredictions,
+    loadAdminRoundOverview,
+    setAdminPayment,
+    loadAdminPlayerEntry,
     signOut,
     client: getClient
   };
