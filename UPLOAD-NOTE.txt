@@ -1,3 +1,2 @@
-Super 6 v0.15
-
-This build keeps the secure Supabase Username + PIN login and account management, and now reads the season league tables + player dashboard season stats from Supabase. Weekly round, payments and predictions are still local for the next migration step.
+Super 6 v0.16 — upload all files in this folder to the repository root, replacing matching files.
+This step moves current round fixtures/cutoff to Supabase. Prediction entry remains temporarily disabled until the next migration step.

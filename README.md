@@ -1,8 +1,8 @@
-# Super 6 v0.15
+# Super 6 v0.16
 
 This build keeps the existing Super 6 prototype competition data while adding secure Supabase authentication/account management.
 
-New in v0.15: the Admin Secure Accounts panel can bulk-create the staged 2026/27 roster. Existing accounts are skipped, and newly created players have no PIN until the Admin resets/sets one.
+New in v0.16: the Admin Secure Accounts panel can bulk-create the staged 2026/27 roster. Existing accounts are skipped, and newly created players have no PIN until the Admin resets/sets one.
 
 # Super 6 Web v0.13
 
@@ -17,3 +17,7 @@ Responsive Super 6 football prediction web app.
 - Competition/weekly data is still the staged local prototype and will be migrated separately.
 
 Super 6 database objects remain isolated in the `super6` schema.
+
+
+## v0.16 migration step
+Current round name, cutoff and six fixtures now load/save from the `super6` Supabase schema via `admin_save_round`. If no round exists, Admin starts with a blank six-fixture form and players see “No round published”. Prediction entry remains intentionally disabled until the next Supabase migration step.

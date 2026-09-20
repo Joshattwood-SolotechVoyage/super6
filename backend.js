@@ -1,6 +1,6 @@
 // Super 6 backend adapter — real Supabase authentication, local prototype data.
-// v0.15 keeps secure Supabase authentication/account management and now reads the live season standings from Supabase.
-// Weekly round/prediction data remains local for this migration step.
+// v0.16 keeps secure Supabase authentication/account management and live season standings.
+// Current round fixtures/cutoff are now read and written in Supabase. Predictions/payments/results remain disabled for this migration step.
 (function(){
   const cfg = window.SUPER6_CONFIG || {};
   let client = null;
@@ -152,13 +152,60 @@
     return data || [];
   }
 
+
+  async function loadCurrentRound(){
+    const sb = getClient();
+    await requireSession();
+
+    const { data: round, error: roundError } = await sb
+      .from('rounds')
+      .select('id, name, cutoff_at, entry_fee, status, official_first_goal_minute, completed_at')
+      .eq('status', 'published')
+      .order('cutoff_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (roundError) throw new Error(roundError.message || 'Could not load the current round.');
+    if (!round) return null;
+
+    const { data: fixtures, error: fixturesError } = await sb
+      .from('fixtures')
+      .select('id, sort_order, home_team, away_team, removed, home_score, away_score')
+      .eq('round_id', round.id)
+      .order('sort_order');
+
+    if (fixturesError) throw new Error(fixturesError.message || 'Could not load the round fixtures.');
+
+    return { ...round, fixtures: fixtures || [] };
+  }
+
+  async function saveAndPublishRound({ roundId=null, name, cutoffAt, fixtures }){
+    const sb = getClient();
+    await requireSession();
+
+    const cleanFixtures = (fixtures || []).map(f => ({
+      home: String(f?.home || '').trim(),
+      away: String(f?.away || '').trim()
+    }));
+
+    const { data, error } = await sb.rpc('admin_save_round', {
+      p_round_id: roundId || null,
+      p_name: String(name || '').trim(),
+      p_cutoff_at: cutoffAt,
+      p_fixtures: cleanFixtures
+    });
+
+    if (error) throw new Error(error.message || 'Could not save the round.');
+    return data;
+  }
+
   async function signOut(){
     if (!client) return;
     await client.auth.signOut();
   }
 
   window.Super6Backend = {
-    mode: 'supabase-auth-admin-users-live-standings-local-round',
+    mode: 'supabase-auth-admin-users-live-standings-live-round',
     schema: cfg.SUPABASE_SCHEMA || 'super6',
     isConfigured(){ return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY); },
     configuration(){
@@ -174,6 +221,8 @@
     resetPlayerPin,
     bulkCreatePendingPlayers,
     loadSeasonStandings,
+    loadCurrentRound,
+    saveAndPublishRound,
     signOut,
     client: getClient
   };
