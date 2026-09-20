@@ -1,5 +1,8 @@
-Super 6 full upload v0.11
+SUPER 6 v0.12
 
-This build keeps the main Super 6 app unchanged and updates auth-test.html to test the real Username + 4-digit PIN flow end-to-end through the secure Supabase Edge Function.
+Main change:
+- The real Super 6 login now uses the secure Supabase Username + 4-digit PIN flow.
+- Admin / 2468 and Josh Attwood / 1111 now authenticate against Supabase, not JavaScript demo PINs.
+- Existing competition screens/data still use the local prototype while database migration continues.
 
 Upload the CONTENTS of this folder to the root of the GitHub super6 repository, replacing matching files.

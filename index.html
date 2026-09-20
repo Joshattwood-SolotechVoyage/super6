@@ -18,10 +18,10 @@
         <div style="font-size:13px;opacity:.85">Six fixtures. One minute. Plenty of bragging rights.</div>
       </div>
       <form class="login-body" id="loginForm">
-        <label class="field">Username<input id="loginName" autocomplete="username" value="Josh Attwood" /></label>
-        <label class="field">4-digit PIN<input id="loginPin" type="password" inputmode="numeric" maxlength="4" value="1111" /></label>
+        <label class="field">Username<input id="loginName" autocomplete="username" placeholder="Your name" /></label>
+        <label class="field">4-digit PIN<input id="loginPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="current-password" placeholder="••••" /></label>
         <button class="big-action" type="submit">Enter Super 6</button>
-        <div class="hint"><strong>Prototype demo:</strong> player: <b>Josh Attwood / 1111</b> · admin: <b>Admin / 2468</b>.</div>
+        <div class="hint">Use the username and 4-digit PIN provided by the Super 6 admin.</div>
       </form>
     </div>
   </section>
@@ -135,6 +135,7 @@
 </div>
 
 <div id="modalRoot"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="backend.js"></script>
 <script src="app.js"></script>
