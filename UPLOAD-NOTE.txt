@@ -1,3 +1,3 @@
-Super 6 v0.14
+Super 6 v0.15
 
-Adds an Admin-only bulk roster setup button. It calls the deployed super6-admin-users Edge Function action bulk_create_pending. Existing accounts are skipped. New staged players are created without a PIN and cannot log in until an admin sets one.
+This build keeps the secure Supabase Username + PIN login and account management, and now reads the season league tables + player dashboard season stats from Supabase. Weekly round, payments and predictions are still local for the next migration step.

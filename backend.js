@@ -1,6 +1,6 @@
 // Super 6 backend adapter — real Supabase authentication, local prototype data.
-// v0.14 adds secure bulk creation of staged player accounts (pending PIN) through the Admin Edge Function.
-// Competition data is still the existing local prototype until the next migration steps.
+// v0.15 keeps secure Supabase authentication/account management and now reads the live season standings from Supabase.
+// Weekly round/prediction data remains local for this migration step.
 (function(){
   const cfg = window.SUPER6_CONFIG || {};
   let client = null;
@@ -138,13 +138,27 @@
     return callAdminUsers({ action: 'bulk_create_pending' });
   }
 
+
+  async function loadSeasonStandings(){
+    const sb = getClient();
+    await requireSession();
+    const { data, error } = await sb
+      .from('season_standings')
+      .select('position, player_id, username, league_id, league_name, points, weeks_played, wins, exact_scores, correct_results, wooden_spoons')
+      .order('league_name')
+      .order('position')
+      .order('username');
+    if (error) throw new Error(error.message || 'Could not load the live league tables.');
+    return data || [];
+  }
+
   async function signOut(){
     if (!client) return;
     await client.auth.signOut();
   }
 
   window.Super6Backend = {
-    mode: 'supabase-auth-admin-users-local-data',
+    mode: 'supabase-auth-admin-users-live-standings-local-round',
     schema: cfg.SUPABASE_SCHEMA || 'super6',
     isConfigured(){ return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY); },
     configuration(){
@@ -159,6 +173,7 @@
     createPlayerAccount,
     resetPlayerPin,
     bulkCreatePendingPlayers,
+    loadSeasonStandings,
     signOut,
     client: getClient
   };

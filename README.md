@@ -1,8 +1,8 @@
-# Super 6 v0.14
+# Super 6 v0.15
 
 This build keeps the existing Super 6 prototype competition data while adding secure Supabase authentication/account management.
 
-New in v0.14: the Admin Secure Accounts panel can bulk-create the staged 2026/27 roster. Existing accounts are skipped, and newly created players have no PIN until the Admin resets/sets one.
+New in v0.15: the Admin Secure Accounts panel can bulk-create the staged 2026/27 roster. Existing accounts are skipped, and newly created players have no PIN until the Admin resets/sets one.
 
 # Super 6 Web v0.13
 
