@@ -1,5 +1,5 @@
 // Super 6 runtime configuration.
-// v0.16 uses real Supabase authentication, live season standings, and live round fixtures/cutoff while the remaining weekly data is migrated in stages.
+// v0.17 uses real Supabase authentication, live season standings, live rounds, and live player prediction submission.
 // This file contains only the Supabase browser-safe publishable key.
 // Never put a Supabase secret/service-role key in this file.
 window.SUPER6_CONFIG = {

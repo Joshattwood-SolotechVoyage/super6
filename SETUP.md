@@ -29,3 +29,7 @@ When we reach the database step, the Supabase dashboard must also add `super6` t
 5. Replace local demo storage with live Supabase reads/writes.
 6. Import current league/player/season data.
 7. Test with a small group, then go live.
+
+
+## v0.17
+Player prediction entry now uses the live Supabase round. Saved predictions and first-goal minute reload from Supabase on login, so the same entry follows the player between devices. Admin payment overview and results remain staged for later migration.

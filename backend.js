@@ -1,6 +1,6 @@
 // Super 6 backend adapter — real Supabase authentication, local prototype data.
-// v0.16 keeps secure Supabase authentication/account management and live season standings.
-// Current round fixtures/cutoff are now read and written in Supabase. Predictions/payments/results remain disabled for this migration step.
+// v0.17 uses real Supabase authentication, account management, live season standings, live rounds, and live player predictions.
+// Payments/admin weekly overview/results are migrated in later steps.
 (function(){
   const cfg = window.SUPER6_CONFIG || {};
   let client = null;
@@ -199,13 +199,72 @@
     return data;
   }
 
+
+  async function loadMyRoundEntry(roundId){
+    const sb = getClient();
+    const session = await requireSession();
+    const userId = session.user?.id;
+    if (!roundId || !userId) return { entry: null, predictions: [], paid: false };
+
+    const [entryRes, paymentRes] = await Promise.all([
+      sb.from('entries')
+        .select('id, first_goal_minute, submitted_at, updated_at')
+        .eq('round_id', roundId)
+        .eq('player_id', userId)
+        .maybeSingle(),
+      sb.from('payments')
+        .select('paid, updated_at')
+        .eq('round_id', roundId)
+        .eq('player_id', userId)
+        .maybeSingle()
+    ]);
+
+    if (entryRes.error) throw new Error(entryRes.error.message || 'Could not load your entry.');
+    if (paymentRes.error) throw new Error(paymentRes.error.message || 'Could not load your payment status.');
+
+    let predictions = [];
+    if (entryRes.data?.id) {
+      const predRes = await sb.from('predictions')
+        .select('fixture_id, home_score, away_score')
+        .eq('entry_id', entryRes.data.id);
+      if (predRes.error) throw new Error(predRes.error.message || 'Could not load your predictions.');
+      predictions = predRes.data || [];
+    }
+
+    return {
+      entry: entryRes.data || null,
+      predictions,
+      paid: Boolean(paymentRes.data?.paid)
+    };
+  }
+
+  async function submitMyPredictions(roundId, firstGoalMinute, predictions){
+    const sb = getClient();
+    await requireSession();
+
+    const cleanPredictions = (predictions || []).map(p => ({
+      fixture_id: String(p.fixture_id || ''),
+      home_score: Number(p.home_score),
+      away_score: Number(p.away_score)
+    }));
+
+    const { data, error } = await sb.rpc('submit_my_predictions', {
+      p_round_id: roundId,
+      p_first_goal_minute: Number(firstGoalMinute),
+      p_predictions: cleanPredictions
+    });
+
+    if (error) throw new Error(error.message || 'Could not submit your predictions.');
+    return data;
+  }
+
   async function signOut(){
     if (!client) return;
     await client.auth.signOut();
   }
 
   window.Super6Backend = {
-    mode: 'supabase-auth-admin-users-live-standings-live-round',
+    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions',
     schema: cfg.SUPABASE_SCHEMA || 'super6',
     isConfigured(){ return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY); },
     configuration(){
@@ -223,6 +282,8 @@
     loadSeasonStandings,
     loadCurrentRound,
     saveAndPublishRound,
+    loadMyRoundEntry,
+    submitMyPredictions,
     signOut,
     client: getClient
   };
