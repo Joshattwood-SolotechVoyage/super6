@@ -1,4 +1,4 @@
-# Super 6 v0.19
+# Super 6 v0.20
 
 Hotfix for v0.17: restores the Admin renderer that was accidentally omitted during the Supabase prediction migration.
 
@@ -34,7 +34,7 @@ Current round name, cutoff and six fixtures now load/save from the `super6` Supa
 ## v0.17
 Player prediction entry now uses the live Supabase round. Saved predictions and first-goal minute reload from Supabase on login, so the same entry follows the player between devices. Admin payment overview and results remain staged for later migration.
 
-## v0.19
+## v0.20
 - Admin weekly entry overview now reads live Supabase entries.
 - Paid/Unpaid switches now call the secure `admin_set_payment` RPC and write the audit log.
 - Admin player-entry inspection now reads the live Supabase prediction.

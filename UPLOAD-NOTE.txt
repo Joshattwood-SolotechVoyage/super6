@@ -1,4 +1,3 @@
-Super 6 v0.19
-Upload the CONTENTS of this folder to the root of the GitHub super6 repository, replacing matching files.
-
-This release migrates the Admin weekly entry overview and Paid/Unpaid controls to Supabase.
+Super 6 v0.20
+Upload the contents of this folder to the root of the GitHub super6 repository, replacing matching files.
+UI-only update: admin tabs and clearer colour-coded Submitted / Paid / Unpaid / Not entered statuses. No Supabase SQL changes required.

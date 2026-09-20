@@ -100,3 +100,31 @@ button{touch-action:manipulation}
 .account-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 .account-row:last-child{border-bottom:0}.account-person{min-width:0}.account-person b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.account-person small{display:block;color:var(--muted);margin-top:2px;font-size:11px}
 @media(max-width:430px){.account-row{gap:7px}.account-row .secondary{padding:7px 8px}}
+
+
+/* v0.20 — calmer admin navigation + unmistakable entry/payment statuses */
+.admin-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0}
+.admin-tabs button{appearance:none;border:1px solid var(--line);background:#f5ecd4;color:var(--green);border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer;min-width:0;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.admin-tabs button b{display:block;font-size:14px}.admin-tabs button small{display:block;margin-top:2px;color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-tabs button.active{background:var(--green);color:var(--cream);border-color:var(--green);box-shadow:0 4px 12px rgba(24,69,45,.18)}
+.admin-tabs button.active small{color:#e9dfc5}
+.admin-tab-panel{animation:adminFade .14s ease-out}.admin-tab-panel>section+section{margin-top:14px}
+@keyframes adminFade{from{opacity:.55;transform:translateY(2px)}to{opacity:1;transform:none}}
+
+.metric{position:relative;overflow:hidden}.metric:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px}
+.metric-submitted{background:#e8f2fb;border-color:#b6cee4}.metric-submitted:before{background:#2f6f9f}.metric-submitted strong{color:#255f8b}
+.metric-paid{background:#e2f1df;border-color:#b6d4af}.metric-paid:before{background:#3b7b47}.metric-paid strong{color:#2d6838}
+.metric-unpaid{background:#faecd0;border-color:#e2c98e}.metric-unpaid:before{background:#bd7a16}.metric-unpaid strong{color:#925b0c}
+.metric-missing{background:#f4dfdc;border-color:#dfb5af}.metric-missing:before{background:#ad4b42}.metric-missing strong{color:#8f3932}
+
+.status-key,.status-summary,.player-statuses{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.status-key{margin:0 0 12px}.status-summary{padding:9px 10px;border-bottom:1px solid #e4dcc5;background:#fbf4e3}
+.status-pill{display:inline-flex;align-items:center;gap:4px;border:1px solid;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:800;line-height:1.1;white-space:nowrap}
+.status-pill.submitted{background:#e3f0fb;color:#245f8c;border-color:#b3cfe7}
+.status-pill.paid{background:#e1f0dc;color:#2d6738;border-color:#b7d2ae}
+.status-pill.unpaid{background:#f9e8c5;color:#8a580d;border-color:#dfc17e}
+.status-pill.missing{background:#f2dcd8;color:#8e3831;border-color:#d9aaa4}
+.status-pill.mini{font-size:10px;padding:3px 6px;font-weight:750}
+.player-statuses{margin-top:5px}.player-row{grid-template-columns:minmax(0,1fr) auto}.player-row .name{display:block;width:100%}.player-row .name b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+@media(min-width:760px){.admin-tabs{grid-template-columns:repeat(4,minmax(0,1fr));position:sticky;top:8px;z-index:8;background:rgba(239,230,204,.94);padding:6px;border-radius:14px;backdrop-filter:blur(7px)}.admin-tabs button{padding:11px 14px}.admin-tabs button b{font-size:15px}.admin-tabs button small{font-size:11px}}

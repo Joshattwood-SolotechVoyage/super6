@@ -75,80 +75,106 @@
       <div class="screen">
         <section class="card hero admin-hero">
           <div><div class="kicker">Super 6 control room</div><h2 class="title">Admin Dashboard</h2><div id="adminCutoff"></div></div>
-          <div class="metrics"><div class="metric"><strong id="mSubmitted">0</strong><span>Submitted</span></div><div class="metric"><strong id="mPaid">0</strong><span>Paid</span></div><div class="metric"><strong id="mUnpaid">0</strong><span>Unpaid</span></div><div class="metric"><strong id="mMissing">0</strong><span>Not entered</span></div></div>
-        </section>
-
-        <div class="admin-layout two">
-          <section class="card">
-            <div class="section-head"><div><div class="kicker">Current round</div><h3>Fixtures & cutoff</h3><div class="muted">One shared fixture sheet for every league.</div></div><span id="roundState" class="chip"></span></div>
-            <label class="field">Round name<input id="adminRoundName" /></label>
-            <label class="field">Cutoff date & time<input id="adminCutoffInput" type="datetime-local" /></label>
-            <div id="fixtureEditor"></div>
-            <div class="btnrow"><button id="saveRoundBtn" class="big-action" type="button">Save & publish round</button><button id="startNextRoundBtn" class="secondary hidden" type="button">Start next round</button></div>
-          </section>
-          <section class="card">
-            <div class="section-head"><div><div class="kicker">Rules</div><h3>Current settings</h3></div></div>
-            <div class="notice">5 points exact · 2 points correct result · 0 otherwise.</div>
-            <div class="notice">Predictions lock at cutoff. Payment stays editable for 12 hours after cutoff.</div>
-            <div class="notice">£6 per weekly Super 6 sheet. Money details are admin-only.</div>
-          </section>
-        </div>
-
-        <section class="card">
-          <div class="section-head"><div><div class="kicker">Combined overview</div><h3>Entries & payment</h3><div class="muted">Tap a player to inspect their entry. Paid status can be changed until the grace window ends.</div></div></div>
-          <div class="league-panels" id="adminLeaguePanels"></div>
-        </section>
-
-        <div class="admin-layout two">
-          <section class="card">
-            <div class="section-head"><div><div class="kicker">Full time</div><h3>Enter results</h3><div class="muted">Score nothing until Complete Round is pressed.</div></div></div>
-            <div id="resultsEditor"></div>
-            <label class="field">Official first-goal minute (1–90)<input id="officialMinute" type="number" min="1" max="90" inputmode="numeric" /></label>
-            <div class="btnrow"><button id="completeRoundBtn" class="big-action" type="button">Complete Round</button><button id="reopenRoundBtn" class="secondary hidden" type="button">Edit completed round</button></div>
-            <div id="resultValidation" class="muted" style="margin-top:9px"></div>
-          </section>
-          <section class="card">
-            <div class="section-head"><div><div class="kicker">Weekly outcome</div><h3>Winners & spoons</h3></div><button id="posterBtn" class="secondary small" type="button">Weekly summary poster</button></div>
-            <div id="weeklyResults" class="week-results"></div>
-            <div id="moneySummary"></div>
-          </section>
-        </div>
-
-        <section class="card" id="realAccountCard">
-          <div class="section-head"><div><div class="kicker">Secure accounts</div><h3>Player login accounts</h3><div class="muted">Create a real Username + 4-digit PIN account or reset an existing player's PIN. These actions are stored in Supabase.</div></div><span class="chip good">Supabase</span></div>
-          <div class="notice">Account setup, player predictions, payments, round completion and weekly scoring are now live in Supabase.</div>
-          <div class="manage-grid">
-            <div>
-              <label class="field">Player username<input id="realPlayerName" maxlength="80" placeholder="e.g. Robbie Gibson" autocomplete="off" /></label>
-              <label class="field">4-digit PIN<input id="realPlayerPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="••••" autocomplete="new-password" /></label>
-              <label class="field">League<select id="realPlayerLeague"></select></label>
-              <button id="createRealPlayerBtn" class="big-action" type="button">Create player login</button>
-              <div class="notice" style="margin-top:14px"><b>Bulk roster setup</b><br>Creates secure accounts for staged 2026/27 players who do not already exist. No PIN is assigned, so they cannot log in until you reset/set their PIN.</div>
-              <button id="bulkCreatePendingBtn" class="secondary" type="button" style="width:100%;margin-top:8px">Create staged players (no PIN)</button>
-              <div id="accountManagerStatus" class="muted" style="margin-top:9px"></div>
-            </div>
-            <div>
-              <div class="kicker">Existing real accounts</div>
-              <div id="realPlayerAccountList" style="margin-top:8px"><div class="muted">Loading accounts…</div></div>
-            </div>
+          <div class="metrics">
+            <div class="metric metric-submitted"><strong id="mSubmitted">0</strong><span>Submitted</span></div>
+            <div class="metric metric-paid"><strong id="mPaid">0</strong><span>Paid</span></div>
+            <div class="metric metric-unpaid"><strong id="mUnpaid">0</strong><span>Unpaid</span></div>
+            <div class="metric metric-missing"><strong id="mMissing">0</strong><span>Not entered</span></div>
           </div>
         </section>
 
-        <section class="card">
-          <div class="section-head"><div><div class="kicker">Flexible leagues</div><h3>Players & league management</h3><div class="muted">Rename or add leagues, and move players when needed. Their season stats move with them.</div></div></div>
-          <div class="manage-grid">
-            <div>
-              <div class="inline"><input id="newLeagueName" placeholder="New league name" /><button id="addLeagueBtn" class="secondary" type="button">Add league</button></div>
-              <div id="leagueManageList" style="margin-top:10px"></div>
+        <nav class="admin-tabs" id="adminTabs" aria-label="Admin sections">
+          <button data-admin-tab="overview" class="active" type="button"><b>Overview</b><small>Entries & payment</small></button>
+          <button data-admin-tab="round" type="button"><b>Round</b><small>Fixtures & cutoff</small></button>
+          <button data-admin-tab="results" type="button"><b>Results</b><small>Scores & winners</small></button>
+          <button data-admin-tab="players" type="button"><b>Players</b><small>Accounts & leagues</small></button>
+        </nav>
+
+        <div class="admin-tab-panel" data-admin-panel="overview">
+          <section class="card">
+            <div class="section-head"><div><div class="kicker">Combined overview</div><h3>Entries & payment</h3><div class="muted">Tap a player to inspect their entry. Paid status can be changed until the grace window ends.</div></div></div>
+            <div class="status-key" aria-label="Entry status colours">
+              <span class="status-pill submitted">Submitted</span>
+              <span class="status-pill paid">Paid</span>
+              <span class="status-pill unpaid">Unpaid</span>
+              <span class="status-pill missing">Not entered</span>
             </div>
-            <div>
-              <label class="field">Move player<select id="movePlayerSelect"></select></label>
-              <label class="field">To league<select id="moveLeagueSelect"></select></label>
-              <button id="movePlayerBtn" class="secondary" type="button">Move player</button>
-              <div class="audit" id="moveAudit">No league moves recorded this session.</div>
-            </div>
+            <div class="league-panels" id="adminLeaguePanels"></div>
+          </section>
+        </div>
+
+        <div class="admin-tab-panel hidden" data-admin-panel="round">
+          <div class="admin-layout two">
+            <section class="card">
+              <div class="section-head"><div><div class="kicker">Current round</div><h3>Fixtures & cutoff</h3><div class="muted">One shared fixture sheet for every league.</div></div><span id="roundState" class="chip"></span></div>
+              <label class="field">Round name<input id="adminRoundName" /></label>
+              <label class="field">Cutoff date & time<input id="adminCutoffInput" type="datetime-local" /></label>
+              <div id="fixtureEditor"></div>
+              <div class="btnrow"><button id="saveRoundBtn" class="big-action" type="button">Save & publish round</button><button id="startNextRoundBtn" class="secondary hidden" type="button">Start next round</button></div>
+            </section>
+            <section class="card">
+              <div class="section-head"><div><div class="kicker">Rules</div><h3>Current settings</h3></div></div>
+              <div class="notice">5 points exact · 2 points correct result · 0 otherwise.</div>
+              <div class="notice">Predictions lock at cutoff. Payment stays editable for 12 hours after cutoff.</div>
+              <div class="notice">£6 per weekly Super 6 sheet. Money details are admin-only.</div>
+            </section>
           </div>
-        </section>
+        </div>
+
+        <div class="admin-tab-panel hidden" data-admin-panel="results">
+          <div class="admin-layout two">
+            <section class="card">
+              <div class="section-head"><div><div class="kicker">Full time</div><h3>Enter results</h3><div class="muted">Score nothing until Complete Round is pressed.</div></div></div>
+              <div id="resultsEditor"></div>
+              <label class="field">Official first-goal minute (1–90)<input id="officialMinute" type="number" min="1" max="90" inputmode="numeric" /></label>
+              <div class="btnrow"><button id="completeRoundBtn" class="big-action" type="button">Complete Round</button><button id="reopenRoundBtn" class="secondary hidden" type="button">Edit completed round</button></div>
+              <div id="resultValidation" class="muted" style="margin-top:9px"></div>
+            </section>
+            <section class="card">
+              <div class="section-head"><div><div class="kicker">Weekly outcome</div><h3>Winners & spoons</h3></div><button id="posterBtn" class="secondary small" type="button">Weekly summary poster</button></div>
+              <div id="weeklyResults" class="week-results"></div>
+              <div id="moneySummary"></div>
+            </section>
+          </div>
+        </div>
+
+        <div class="admin-tab-panel hidden" data-admin-panel="players">
+          <section class="card" id="realAccountCard">
+            <div class="section-head"><div><div class="kicker">Secure accounts</div><h3>Player login accounts</h3><div class="muted">Create a real Username + 4-digit PIN account or reset an existing player's PIN. These actions are stored in Supabase.</div></div><span class="chip good">Supabase</span></div>
+            <div class="notice">Account setup, player predictions, payments, round completion and weekly scoring are now live in Supabase.</div>
+            <div class="manage-grid">
+              <div>
+                <label class="field">Player username<input id="realPlayerName" maxlength="80" placeholder="e.g. Robbie Gibson" autocomplete="off" /></label>
+                <label class="field">4-digit PIN<input id="realPlayerPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="••••" autocomplete="new-password" /></label>
+                <label class="field">League<select id="realPlayerLeague"></select></label>
+                <button id="createRealPlayerBtn" class="big-action" type="button">Create player login</button>
+                <div class="notice" style="margin-top:14px"><b>Bulk roster setup</b><br>Creates secure accounts for staged 2026/27 players who do not already exist. No PIN is assigned, so they cannot log in until you reset/set their PIN.</div>
+                <button id="bulkCreatePendingBtn" class="secondary" type="button" style="width:100%;margin-top:8px">Create staged players (no PIN)</button>
+                <div id="accountManagerStatus" class="muted" style="margin-top:9px"></div>
+              </div>
+              <div>
+                <div class="kicker">Existing real accounts</div>
+                <div id="realPlayerAccountList" style="margin-top:8px"><div class="muted">Loading accounts…</div></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="section-head"><div><div class="kicker">Flexible leagues</div><h3>Players & league management</h3><div class="muted">Rename or add leagues, and move players when needed. Their season stats move with them.</div></div></div>
+            <div class="manage-grid">
+              <div>
+                <div class="inline"><input id="newLeagueName" placeholder="New league name" /><button id="addLeagueBtn" class="secondary" type="button">Add league</button></div>
+                <div id="leagueManageList" style="margin-top:10px"></div>
+              </div>
+              <div>
+                <label class="field">Move player<select id="movePlayerSelect"></select></label>
+                <label class="field">To league<select id="moveLeagueSelect"></select></label>
+                <button id="movePlayerBtn" class="secondary" type="button">Move player</button>
+                <div class="audit" id="moveAudit">No league moves recorded this session.</div>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   </section>
