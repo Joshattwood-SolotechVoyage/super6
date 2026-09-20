@@ -1,4 +1,12 @@
-# Super 6 v0.17
+# Super 6 v0.17.1
+
+Hotfix for v0.17: restores the Admin renderer that was accidentally omitted during the Supabase prediction migration.
+
+- Fixes `renderAdmin is not defined` after Admin PIN login.
+- Keeps the v0.17 Supabase-backed round and prediction work unchanged.
+- Full replacement upload package.
+
+# Super 6 v0.17.1
 
 This build keeps the existing Super 6 prototype competition data while adding secure Supabase authentication/account management.
 
