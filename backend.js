@@ -1,6 +1,5 @@
-// Super 6 backend adapter — real Supabase authentication, local prototype data.
-// v0.18 uses real Supabase authentication, account management, live season standings, live rounds, live player predictions, and live admin payment tracking.
-// Round result completion/scoring is migrated in a later step.
+// Super 6 backend adapter — Supabase-backed authentication and competition data.
+// v0.19 adds live round completion, scoring/results loading, postponed-fixture handling, and completed-round reloads.
 (function(){
   const cfg = window.SUPER6_CONFIG || {};
   let client = null;
@@ -153,20 +152,18 @@
   }
 
 
-  async function loadCurrentRound(){
+  async function loadRoundById(roundId){
     const sb = getClient();
     await requireSession();
+    if (!roundId) return null;
 
     const { data: round, error: roundError } = await sb
       .from('rounds')
-      .select('id, name, cutoff_at, entry_fee, status, official_first_goal_minute, completed_at')
-      .eq('status', 'published')
-      .order('cutoff_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .select('id, name, cutoff_at, entry_fee, status, official_first_goal_minute, completed_at, created_at')
+      .eq('id', roundId)
+      .single();
 
-    if (roundError) throw new Error(roundError.message || 'Could not load the current round.');
-    if (!round) return null;
+    if (roundError) throw new Error(roundError.message || 'Could not load the round.');
 
     const { data: fixtures, error: fixturesError } = await sb
       .from('fixtures')
@@ -175,8 +172,40 @@
       .order('sort_order');
 
     if (fixturesError) throw new Error(fixturesError.message || 'Could not load the round fixtures.');
-
     return { ...round, fixtures: fixtures || [] };
+  }
+
+  async function loadCurrentRound(){
+    const sb = getClient();
+    await requireSession();
+
+    // Prefer an open/published round. If there is none, keep the most recent
+    // completed round visible so players can see their locked entry/results
+    // and admins can correct/recalculate it.
+    let { data: round, error: roundError } = await sb
+      .from('rounds')
+      .select('id')
+      .eq('status', 'published')
+      .order('cutoff_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (roundError) throw new Error(roundError.message || 'Could not load the current round.');
+
+    if (!round) {
+      const completed = await sb
+        .from('rounds')
+        .select('id')
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (completed.error) throw new Error(completed.error.message || 'Could not load the latest completed round.');
+      round = completed.data || null;
+    }
+
+    if (!round) return null;
+    return loadRoundById(round.id);
   }
 
   async function saveAndPublishRound({ roundId=null, name, cutoffAt, fixtures }){
@@ -331,13 +360,74 @@
     return { entry, predictions: predictions || [] };
   }
 
+  async function completeRound(roundId, fixtures, officialFirstGoalMinute){
+    const sb = getClient();
+    await requireSession();
+    if (!roundId) throw new Error('No round is selected.');
+
+    // Persist postponed/abandoned flags before calculation.
+    for (const fixture of fixtures || []) {
+      const { error } = await sb
+        .from('fixtures')
+        .update({ removed: Boolean(fixture.removed) })
+        .eq('id', fixture.id)
+        .eq('round_id', roundId);
+      if (error) throw new Error(error.message || 'Could not update fixture status.');
+    }
+
+    const results = (fixtures || [])
+      .filter(f => !f.removed)
+      .map(f => ({
+        fixture_id: String(f.id || ''),
+        home_score: Number(f.result?.[0]),
+        away_score: Number(f.result?.[1])
+      }));
+
+    const { error } = await sb.rpc('admin_complete_round', {
+      p_round_id: roundId,
+      p_results: results,
+      p_official_first_goal_minute: officialFirstGoalMinute == null ? null : Number(officialFirstGoalMinute)
+    });
+
+    if (error) throw new Error(error.message || 'Could not complete the round.');
+    return loadRoundById(roundId);
+  }
+
+  async function loadRoundResults(roundId){
+    const sb = getClient();
+    await requireSession();
+    if (!roundId) return [];
+
+    const { data: rows, error: resultError } = await sb
+      .from('round_player_results')
+      .select('round_id, player_id, points, exact_scores, correct_results, tie_break_difference, position, is_winner, is_second, is_wooden_spoon, counted, calculated_at')
+      .eq('round_id', roundId)
+      .eq('counted', true)
+      .order('position')
+      .order('points', { ascending: false });
+
+    if (resultError) throw new Error(resultError.message || 'Could not load the weekly results.');
+    const list = rows || [];
+    if (!list.length) return [];
+
+    const ids = [...new Set(list.map(r => r.player_id).filter(Boolean))];
+    const { data: profiles, error: profileError } = await sb
+      .from('profiles')
+      .select('id, username, league_id')
+      .in('id', ids);
+    if (profileError) throw new Error(profileError.message || 'Could not load result players.');
+
+    const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+    return list.map(r => ({ ...r, ...(profileMap.get(r.player_id) || {}) }));
+  }
+
   async function signOut(){
     if (!client) return;
     await client.auth.signOut();
   }
 
   window.Super6Backend = {
-    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-live-payments',
+    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-live-payments-live-results',
     schema: cfg.SUPABASE_SCHEMA || 'super6',
     isConfigured(){ return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY); },
     configuration(){
@@ -354,12 +444,15 @@
     bulkCreatePendingPlayers,
     loadSeasonStandings,
     loadCurrentRound,
+    loadRoundById,
     saveAndPublishRound,
     loadMyRoundEntry,
     submitMyPredictions,
     loadAdminRoundOverview,
     setAdminPayment,
     loadAdminPlayerEntry,
+    completeRound,
+    loadRoundResults,
     signOut,
     client: getClient
   };

@@ -1,4 +1,4 @@
-Super 6 v0.18
+Super 6 v0.19
 Upload the CONTENTS of this folder to the root of the GitHub super6 repository, replacing matching files.
 
 This release migrates the Admin weekly entry overview and Paid/Unpaid controls to Supabase.
