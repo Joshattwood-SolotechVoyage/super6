@@ -1,3 +1,1 @@
-Super 6 v0.20
-Upload the contents of this folder to the root of the GitHub super6 repository, replacing matching files.
-UI-only update: admin tabs and clearer colour-coded Submitted / Paid / Unpaid / Not entered statuses. No Supabase SQL changes required.
+v0.20.1 UI-only update: clearer Admin Dashboard Submitted / Paid / Unpaid / Not entered summary callouts. No Supabase SQL changes required.

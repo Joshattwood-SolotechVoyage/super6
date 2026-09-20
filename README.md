@@ -1,3 +1,12 @@
+# Super 6 v0.20.1
+
+UI refinement to the Admin Dashboard summary cards.
+
+- Submitted / Paid / Unpaid / Not entered callouts now use stronger, high-contrast labels.
+- Each callout has a short plain-English explanation underneath.
+- Counts remain large and colour-coded.
+- No Supabase or database changes required.
+
 # Super 6 v0.20
 
 Hotfix for v0.17: restores the Admin renderer that was accidentally omitted during the Supabase prediction migration.

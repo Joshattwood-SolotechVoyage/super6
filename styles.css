@@ -128,3 +128,11 @@ button{touch-action:manipulation}
 .player-statuses{margin-top:5px}.player-row{grid-template-columns:minmax(0,1fr) auto}.player-row .name{display:block;width:100%}.player-row .name b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 @media(min-width:760px){.admin-tabs{grid-template-columns:repeat(4,minmax(0,1fr));position:sticky;top:8px;z-index:8;background:rgba(239,230,204,.94);padding:6px;border-radius:14px;backdrop-filter:blur(7px)}.admin-tabs button{padding:11px 14px}.admin-tabs button b{font-size:15px}.admin-tabs button small{font-size:11px}}
+
+/* v0.20.1 — clearer admin summary callouts */
+.metrics .metric{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"count label" "count help";column-gap:10px;align-items:center;min-height:72px;padding:10px 12px 10px 15px}
+.metrics .metric strong{grid-area:count;font-size:30px;line-height:1;font-weight:900;min-width:30px}
+.metrics .metric .metric-label{grid-area:label;display:block;font-size:14px;line-height:1.05;font-weight:900;letter-spacing:.035em;text-transform:uppercase;color:#162b20;text-decoration:none!important}
+.metrics .metric small{grid-area:help;display:block;margin-top:3px;font-size:10px;line-height:1.15;font-weight:700;color:#4d5149}
+.metric-submitted .metric-label{color:#174f79}.metric-paid .metric-label{color:#235b30}.metric-unpaid .metric-label{color:#744606}.metric-missing .metric-label{color:#7f302b}
+@media(max-width:430px){.metrics .metric{min-height:68px;column-gap:8px;padding:9px 10px 9px 13px}.metrics .metric strong{font-size:27px}.metrics .metric .metric-label{font-size:12px}.metrics .metric small{font-size:9px}}
