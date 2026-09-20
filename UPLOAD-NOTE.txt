@@ -1,10 +1,3 @@
-SUPER 6 v0.13
+Super 6 v0.14
 
-Upload ALL files in this folder to the root of the GitHub super6 repository, replacing matching files.
-Cloudflare Pages should deploy automatically from main.
-
-After deployment:
-1. Sign in as Admin / 2468.
-2. Scroll to Secure accounts -> Player login accounts.
-3. Confirm Josh Attwood appears as a real player account.
-4. Do not create all players yet; we are still migrating shared weekly data to Supabase.
+Adds an Admin-only bulk roster setup button. It calls the deployed super6-admin-users Edge Function action bulk_create_pending. Existing accounts are skipped. New staged players are created without a PIN and cannot log in until an admin sets one.

@@ -93,7 +93,7 @@ function completeRound(){let ok=true;$('#resultsEditor').querySelectorAll('input
 function applyRoundToDisplayOnly(){save()}
 function renderWeeklyResults(){const box=$('#weeklyResults'),money=$('#moneySummary');if(!state.round.completed){box.innerHTML='<div class="notice">Complete the round to calculate league winners.</div>';money.innerHTML='';$('#posterBtn').disabled=true;return}$('#posterBtn').disabled=false;box.innerHTML=state.leagues.map(l=>{const o=leagueWeeklyOutcome(l.id);if(!o.rows.length)return`<div class="result-card"><h4>${l.name}</h4><div class="muted">No eligible paid entries.</div></div>`;const names=a=>a.map(r=>`${r.p.name} (${r.points})`).join(', ');return`<div class="result-card"><h4>${l.name}</h4><div class="podium"><div><span>🏆 Winner</span><b>${names(o.first)}</b></div>${o.first.length===1&&o.second.length?`<div><span>🥈 2nd</span><b>${names(o.second)}</b></div>`:''}<div><span>🥄 Spoon</span><b>${names(o.spoons)}</b></div></div>${weeklyRankingHTML(o)}</div>`}).join('');money.innerHTML='<div class="money"><b>Admin-only money view</b>'+state.leagues.map(l=>`<div>${l.name}: ${eligiblePlayers(l.id).length} paid × £${state.round.fee} = <strong>£${eligiblePlayers(l.id).length*state.round.fee}</strong></div>`).join('')+'</div>'}
 async function renderRealAccountManager(){
- const list=$('#realPlayerAccountList'),leagueSel=$('#realPlayerLeague'),status=$('#accountManagerStatus'),createBtn=$('#createRealPlayerBtn');
+ const list=$('#realPlayerAccountList'),leagueSel=$('#realPlayerLeague'),status=$('#accountManagerStatus'),createBtn=$('#createRealPlayerBtn'),bulkBtn=$('#bulkCreatePendingBtn');
  if(!list||!leagueSel||!status||!createBtn||session.role!=='admin')return;
  const load=++accountManagerLoad;
  list.innerHTML='<div class="muted">Loading accounts…</div>';
@@ -108,6 +108,7 @@ async function renderRealAccountManager(){
   list.innerHTML=players.length?players.map(p=>`<div class="account-row"><div class="account-person"><b>${escapeHtml(p.username)}</b><small>${escapeHtml(leagueMap[p.league_id]||'No league')}</small></div><button class="secondary small" data-real-reset="${p.id}" data-real-name="${escapeAttr(p.username)}" type="button">Reset PIN</button></div>`).join(''):'<div class="notice">No real player accounts yet.</div>';
   list.querySelectorAll('[data-real-reset]').forEach(b=>b.onclick=()=>showResetPin(b.dataset.realReset,b.dataset.realName));
   createBtn.onclick=createRealPlayer;
+  if(bulkBtn)bulkBtn.onclick=bulkCreatePendingPlayers;
  }catch(err){
   if(load!==accountManagerLoad)return;
   list.innerHTML='<div class="notice bad">'+escapeHtml(err?.message||'Could not load real player accounts.')+'</div>';
@@ -131,6 +132,20 @@ async function createRealPlayer(){
   await renderRealAccountManager();
  }catch(err){status.textContent=err?.message||'Could not create player.'}
  finally{btn.disabled=false;btn.textContent='Create player login'}
+}
+async function bulkCreatePendingPlayers(){
+ const btn=$('#bulkCreatePendingBtn'),status=$('#accountManagerStatus');
+ if(!btn||!status)return;
+ if(!confirm('Create secure Supabase accounts for every staged 2026/27 player who does not already exist? No PINs will be assigned, so they cannot log in until you set a PIN for them.'))return;
+ btn.disabled=true;btn.textContent='Creating staged accounts…';status.textContent='Creating staged player accounts. This can take a little while…';
+ try{
+  const result=await window.Super6Backend.bulkCreatePendingPlayers();
+  const failed=result.failed_count||0,created=result.created_count||0,skipped=result.skipped_count||0;
+  status.textContent=`Bulk setup finished: ${created} created · ${skipped} skipped · ${failed} failed.`;
+  await renderRealAccountManager();
+  const refreshed=$('#accountManagerStatus');if(refreshed)refreshed.textContent=`Bulk setup finished: ${created} created · ${skipped} skipped · ${failed} failed.`;
+ }catch(err){status.textContent=err?.message||'Bulk player setup failed.'}
+ finally{btn.disabled=false;btn.textContent='Create staged players (no PIN)'}
 }
 function showResetPin(userId,name){
  modal(`<div class="kicker">Secure account</div><h3>Reset PIN</h3><div class="muted">${escapeHtml(name)}</div><label class="field">New 4-digit PIN<input id="resetRealPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="••••" autocomplete="new-password"></label><div id="resetRealStatus" class="muted"></div><div class="modal-actions"><button class="secondary" id="cancelRealReset" type="button">Cancel</button><button class="big-action" style="width:auto" id="confirmRealReset" type="button">Reset PIN</button></div>`);

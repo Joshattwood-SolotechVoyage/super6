@@ -1,5 +1,5 @@
 // Super 6 backend adapter — real Supabase authentication, local prototype data.
-// v0.13 adds secure Admin player-account creation + PIN reset through an Edge Function.
+// v0.14 adds secure bulk creation of staged player accounts (pending PIN) through the Admin Edge Function.
 // Competition data is still the existing local prototype until the next migration steps.
 (function(){
   const cfg = window.SUPER6_CONFIG || {};
@@ -134,6 +134,10 @@
     });
   }
 
+  async function bulkCreatePendingPlayers(){
+    return callAdminUsers({ action: 'bulk_create_pending' });
+  }
+
   async function signOut(){
     if (!client) return;
     await client.auth.signOut();
@@ -154,6 +158,7 @@
     listAccountManagerData,
     createPlayerAccount,
     resetPlayerPin,
+    bulkCreatePendingPlayers,
     signOut,
     client: getClient
   };

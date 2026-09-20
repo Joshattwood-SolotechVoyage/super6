@@ -123,6 +123,8 @@
               <label class="field">4-digit PIN<input id="realPlayerPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="••••" autocomplete="new-password" /></label>
               <label class="field">League<select id="realPlayerLeague"></select></label>
               <button id="createRealPlayerBtn" class="big-action" type="button">Create player login</button>
+              <div class="notice" style="margin-top:14px"><b>Bulk roster setup</b><br>Creates secure accounts for staged 2026/27 players who do not already exist. No PIN is assigned, so they cannot log in until you reset/set their PIN.</div>
+              <button id="bulkCreatePendingBtn" class="secondary" type="button" style="width:100%;margin-top:8px">Create staged players (no PIN)</button>
               <div id="accountManagerStatus" class="muted" style="margin-top:9px"></div>
             </div>
             <div>
