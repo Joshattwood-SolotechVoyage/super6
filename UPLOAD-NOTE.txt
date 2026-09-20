@@ -1,0 +1,11 @@
+SUPER 6 — FULL GITHUB UPLOAD PACK
+
+This pack contains the complete v0.9 site plus:
+- Updated config.js with the browser-safe Supabase project URL/publishable key
+- auth-test.html for the temporary real Supabase authentication test
+
+Upload the CONTENTS of this folder to the root of the existing GitHub super6 repository.
+When GitHub asks about files with the same names, replace/overwrite the existing versions.
+Do not delete the supabase folder.
+
+The main Super 6 app remains in DEMO_MODE for now, so the existing PIN-based prototype continues to work while the auth test is separate.
