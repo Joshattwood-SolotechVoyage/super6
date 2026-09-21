@@ -4,7 +4,16 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="theme-color" content="#173f2a" />
+<meta name="application-name" content="Super 6" />
+<meta name="apple-mobile-web-app-title" content="Super 6" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>Super 6</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="48x48" href="assets/favicon-48.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+<link rel="manifest" href="manifest.webmanifest" />
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -12,9 +21,8 @@
   <section id="loginScreen" class="login-wrap">
     <div class="login-card">
       <div class="login-top">
-        <div class="brand-mark">6</div>
+        <img class="login-logo" src="assets/super6-logo.png" alt="Super 6" />
         <div class="kicker" style="color:#ead8a6">Football prediction league</div>
-        <h1 class="title" style="font-size:42px;margin:2px 0">SUPER 6</h1>
         <div style="font-size:13px;opacity:.85">Six fixtures. One minute. Plenty of bragging rights.</div>
       </div>
       <form class="login-body" id="loginForm">
@@ -28,7 +36,7 @@
 
   <section id="appScreen" class="hidden">
     <header class="topbar">
-      <div class="brand"><div class="brand-mark">6</div><div><small>Football prediction league</small><h1>SUPER 6</h1></div></div>
+      <div class="brand"><img class="brand-logo" src="assets/super6-logo.png" alt="Super 6" /><div><small>Football prediction league</small><h1>SUPER 6</h1></div></div>
       <div class="top-actions"><button id="whoBtn" type="button"></button><button id="logoutBtn" type="button">Log out</button></div>
     </header>
 

@@ -1,4 +1,4 @@
-# Super 6 v0.22.2
+# Super 6 v0.23
 
 UI cleanup for awards and icon meanings.
 
@@ -37,3 +37,10 @@ This build improves the completed-round presentation and adds a persistent leagu
 - This crown is intended for normal league rounds only; extra/cup competitions will not use it when those are added.
 
 No Supabase SQL changes are required for this update.
+
+## v0.23 — Logo & saved-app identity
+- Adds the new Super 6 crest to the login screen and main header.
+- Adds favicon/browser-tab icons.
+- Adds Apple Touch icon for iPhone/iPad Home Screen.
+- Adds a web app manifest with 192px, 512px and maskable icons for install/save-to-home-screen support.
+- No Supabase/database changes required.

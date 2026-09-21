@@ -333,3 +333,14 @@ button{touch-action:manipulation}
   .icon-key>b,.icon-key>small{grid-column:1/-1}
   .icon-key>span{white-space:normal;justify-content:flex-start}
 }
+
+/* v0.23 — Super 6 identity / install icons */
+.brand-logo{width:58px;height:48px;object-fit:contain;display:block;flex:0 0 auto;filter:drop-shadow(0 2px 2px rgba(0,0,0,.12))}
+.login-logo{display:block;width:min(210px,68%);height:auto;margin:0 auto 8px;filter:drop-shadow(0 5px 8px rgba(0,0,0,.18))}
+@media(max-width:759px){
+  .brand-logo{width:46px;height:40px}
+  .login-logo{width:min(180px,72%);margin-bottom:6px}
+}
+@media(max-width:430px){
+  .brand-logo{width:42px;height:36px}
+}
