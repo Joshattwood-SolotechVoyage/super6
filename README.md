@@ -1,3 +1,17 @@
+# Super 6 v0.21
+
+Completed-round clarity and Admin navigation update.
+
+- Fixes the Admin **Results → Weekly outcome** so live Supabase results populate against the correct league.
+- Admin **Overview** shows each counted player’s round points after completion.
+- Clicking a player after completion now shows their prediction, final score, per-match points, total, correct scores/results and first-goal tiebreak detail.
+- Player weekly summary now includes the same per-match points breakdown.
+- Player season labels now say **Correct scores** and **Correct results**.
+- Adds an Admin **Tables** tab with live standings for all three leagues.
+- Cleans up the top header / Admin summary layout so labels do not bunch together.
+- Keeps the clearer Submitted / Paid / Unpaid / Not entered callouts from v0.20.1.
+- No Supabase SQL changes required.
+
 # Super 6 v0.20.1
 
 UI refinement to the Admin Dashboard summary cards.

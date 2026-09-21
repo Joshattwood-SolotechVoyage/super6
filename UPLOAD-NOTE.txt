@@ -1,1 +1,5 @@
-v0.20.1 UI-only update: clearer Admin Dashboard Submitted / Paid / Unpaid / Not entered summary callouts. No Supabase SQL changes required.
+Super 6 v0.21
+
+UI + completed-round clarity update. No Supabase SQL changes required.
+
+Upload the CONTENTS of this folder to the root of the GitHub super6 repo, replacing matching files.
