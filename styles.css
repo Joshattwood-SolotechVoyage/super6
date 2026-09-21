@@ -209,3 +209,77 @@ button{touch-action:manipulation}
   .weekly-entry-count{font-size:10px}
   .weekly-award-name{font-size:12px}
 }
+
+/* v0.22.1 — Results tab breathing room on desktop + safe responsive stacking */
+/* The Results tab needs more horizontal room than the Round tab. Keep the
+   result-entry editor and weekly outcome as separate full-width sections. */
+.admin-tab-panel[data-admin-panel="results"] .admin-layout.two{
+  grid-template-columns:1fr!important;
+}
+.admin-tab-panel[data-admin-panel="results"] .admin-layout.two>section{
+  width:100%;
+  min-width:0;
+}
+
+/* Give each league outcome enough room for names, stats and points. */
+@media(min-width:900px){
+  .admin-tab-panel[data-admin-panel="results"] .weekly-outcome-layout{
+    grid-template-columns:minmax(270px,340px) minmax(0,1fr);
+    gap:20px;
+  }
+  .admin-tab-panel[data-admin-panel="results"] .weekly-outcome-card{
+    padding:18px 20px;
+  }
+  .admin-tab-panel[data-admin-panel="results"] .round-rank-row{
+    grid-template-columns:42px minmax(0,1fr) 78px;
+    gap:12px;
+    padding:11px 12px;
+  }
+  .admin-tab-panel[data-admin-panel="results"] .round-person b{
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+  }
+  .admin-tab-panel[data-admin-panel="results"] .round-person small{
+    white-space:normal;
+    line-height:1.35;
+  }
+}
+
+/* Tablet/mobile: never force the awards and ranking side-by-side. */
+@media(max-width:899px){
+  .admin-tab-panel[data-admin-panel="results"] .weekly-outcome-layout{
+    grid-template-columns:1fr!important;
+    gap:12px;
+  }
+}
+
+/* Mobile polish for the weekly outcome cards. */
+@media(max-width:599px){
+  .admin-tab-panel[data-admin-panel="results"] .section-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .admin-tab-panel[data-admin-panel="results"] #posterBtn{
+    width:100%;
+  }
+  .weekly-outcome-card{
+    padding:13px 12px;
+  }
+  .weekly-outcome-head{
+    gap:8px;
+  }
+  .weekly-entry-count{
+    white-space:normal;
+  }
+  .weekly-award-name{
+    align-items:flex-start;
+  }
+  .round-rank-row{
+    grid-template-columns:30px minmax(0,1fr) auto;
+    gap:7px;
+  }
+  .round-points{
+    font-size:19px;
+  }
+}

@@ -1,3 +1,15 @@
+# Super 6 v0.22.1
+
+Results-layout hotfix.
+
+- Admin Results no longer squeezes the score editor and Weekly Outcome side-by-side.
+- Weekly Outcome gets the full desktop width.
+- League awards and full ranking have wider desktop columns.
+- Tablet/mobile explicitly stack the outcome sections so names, stats and points remain readable.
+- No database or Supabase changes.
+
+---
+
 # Super 6 v0.22
 
 This build improves the completed-round presentation and adds a persistent league-winner crown.
