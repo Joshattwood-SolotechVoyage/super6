@@ -1,1 +1,5 @@
-Super 6 v0.22 — UI update only. Upload/replace the full contents in the GitHub repo root. No SQL changes required.
+SUPER 6 v0.23.1
+
+Upload ALL files and folders in this directory to the ROOT of the GitHub super6 repository, replacing matching files.
+
+The visible Super 6 logo is embedded directly in index.html. Root icon files are used for browser tabs, Apple Home Screen and PWA installation.

@@ -44,3 +44,8 @@ No Supabase SQL changes are required for this update.
 - Adds Apple Touch icon for iPhone/iPad Home Screen.
 - Adds a web app manifest with 192px, 512px and maskable icons for install/save-to-home-screen support.
 - No Supabase/database changes required.
+
+
+## v0.23.1 logo hotfix
+- Main on-page logo is embedded directly inside `index.html`, so it cannot disappear because an assets folder was missed.
+- Browser / Apple / PWA icons are also duplicated at repository root and referenced from there for reliable deployment.
