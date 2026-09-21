@@ -1,5 +1,1 @@
-Super 6 v0.21
-
-UI + completed-round clarity update. No Supabase SQL changes required.
-
-Upload the CONTENTS of this folder to the root of the GitHub super6 repo, replacing matching files.
+Super 6 v0.22 — UI update only. Upload/replace the full contents in the GitHub repo root. No SQL changes required.

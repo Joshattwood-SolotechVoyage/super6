@@ -421,6 +421,56 @@
     return list.map(r => ({ ...r, ...(profileMap.get(r.player_id) || {}) }));
   }
 
+  async function loadLatestLeagueWinners(){
+    const sb = getClient();
+    await requireSession();
+
+    const { data: season, error: seasonError } = await sb
+      .from('seasons')
+      .select('id')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (seasonError) throw new Error(seasonError.message || 'Could not load the active season.');
+    if (!season?.id) return { round: null, winners: [] };
+
+    const { data: round, error: roundError } = await sb
+      .from('rounds')
+      .select('id, name, completed_at')
+      .eq('season_id', season.id)
+      .eq('status', 'completed')
+      .not('completed_at', 'is', null)
+      .order('completed_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (roundError) throw new Error(roundError.message || 'Could not load the latest completed league round.');
+    if (!round?.id) return { round: null, winners: [] };
+
+    const { data: rows, error: resultError } = await sb
+      .from('round_player_results')
+      .select('player_id, points, position, is_winner')
+      .eq('round_id', round.id)
+      .eq('counted', true)
+      .eq('is_winner', true);
+    if (resultError) throw new Error(resultError.message || 'Could not load the latest league winners.');
+
+    const list = rows || [];
+    if (!list.length) return { round, winners: [] };
+    const ids = [...new Set(list.map(r => r.player_id).filter(Boolean))];
+    const { data: profiles, error: profileError } = await sb
+      .from('profiles')
+      .select('id, username, league_id')
+      .in('id', ids);
+    if (profileError) throw new Error(profileError.message || 'Could not load winner profiles.');
+
+    const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+    return {
+      round,
+      winners: list.map(r => ({ ...r, ...(profileMap.get(r.player_id) || {}) }))
+    };
+  }
+
   async function signOut(){
     if (!client) return;
     await client.auth.signOut();
@@ -453,6 +503,7 @@
     loadAdminPlayerEntry,
     completeRound,
     loadRoundResults,
+    loadLatestLeagueWinners,
     signOut,
     client: getClient
   };
