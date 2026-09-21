@@ -58,7 +58,7 @@
       </div>
 
       <div class="screen hidden" id="playerTables">
-        <section class="card"><div class="section-head"><div><div class="kicker">Season tables</div><h3>League standings</h3><div class="muted">All leagues are visible.</div></div></div><div class="tabs" id="leagueTabs"></div><div class="table-wrap"><table><thead><tr><th>Pos</th><th>Player</th><th>Pts</th><th>Wins</th><th>Correct scores</th><th>Correct results</th><th>Played</th><th>🥄</th></tr></thead><tbody id="leagueTableBody"></tbody></table></div></section>
+        <section class="card"><div class="section-head"><div><div class="kicker">Season tables</div><h3>League standings</h3><div class="muted">All leagues are visible.</div></div></div><div class="icon-key" aria-label="Super 6 icon key"><b>Icon key</b><span>👑 Reigning league winner</span><span>🏆 Weekly winner</span><span>🥈 2nd place</span><span>🥄 Wooden spoon</span><small>👑 is league-only and moves when the next league results are final. Extra competitions do not use the crown.</small></div><div class="tabs" id="leagueTabs"></div><div class="table-wrap"><table><thead><tr><th>Pos</th><th>Player</th><th>Pts</th><th>Wins</th><th>Correct scores</th><th>Correct results</th><th>Played</th><th>Spoons</th></tr></thead><tbody id="leagueTableBody"></tbody></table></div></section>
       </div>
 
       <div class="screen hidden" id="playerHistory">
@@ -90,6 +90,8 @@
           <button data-admin-tab="tables" type="button"><b>Tables</b><small>League standings</small></button>
           <button data-admin-tab="players" type="button"><b>Players</b><small>Accounts & leagues</small></button>
         </nav>
+
+        <div class="icon-key admin-icon-key" aria-label="Super 6 icon key"><b>Icon key</b><span>👑 Reigning league winner</span><span>🏆 Weekly winner</span><span>🥈 2nd place</span><span>🥄 Wooden spoon</span><small>👑 is league-only and moves when the next league results are final. Extra competitions do not use the crown.</small></div>
 
         <div class="admin-tab-panel" data-admin-panel="overview">
           <section class="card">
@@ -144,7 +146,7 @@
             <div class="section-head"><div><div class="kicker">Season tables</div><h3>League standings</h3><div class="muted">Live Supabase standings for every league.</div></div></div>
             <div class="tabs" id="adminTableLeagueTabs"></div>
             <div class="admin-table-heading" id="adminLeagueTableTitle"></div>
-            <div class="table-wrap"><table><thead><tr><th>Pos</th><th>Player</th><th>Pts</th><th>Wins</th><th>Correct scores</th><th>Correct results</th><th>Played</th><th>🥄</th></tr></thead><tbody id="adminLeagueTableBody"></tbody></table></div>
+            <div class="table-wrap"><table><thead><tr><th>Pos</th><th>Player</th><th>Pts</th><th>Wins</th><th>Correct scores</th><th>Correct results</th><th>Played</th><th>Spoons</th></tr></thead><tbody id="adminLeagueTableBody"></tbody></table></div>
           </section>
         </div>
 

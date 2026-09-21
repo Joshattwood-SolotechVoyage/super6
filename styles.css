@@ -283,3 +283,53 @@ button{touch-action:manipulation}
     font-size:19px;
   }
 }
+
+
+/* v0.22.2 — simplified award language + shared icon key */
+.icon-key{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px 10px;
+  margin:0 0 14px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#f7f0dc;
+  color:var(--green);
+  font-size:11px;
+  line-height:1.3;
+}
+.icon-key>b{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-right:2px;
+}
+.icon-key>span{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:4px 7px;
+  border:1px solid rgba(23,63,42,.14);
+  border-radius:999px;
+  background:#fffaf0;
+  font-weight:800;
+  white-space:nowrap;
+}
+.icon-key>small{
+  flex-basis:100%;
+  color:var(--muted);
+  font-size:10px;
+  margin-top:1px;
+}
+.admin-icon-key{margin:0 0 12px}
+/* The crown now belongs only to season/overview contexts; weekly result areas use
+   their own trophy/second/spoon marks and never stack a crown beside them. */
+.weekly-award-name .league-crown,
+.round-ranking .league-crown{display:none!important}
+@media(max-width:599px){
+  .icon-key{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:9px 10px}
+  .icon-key>b,.icon-key>small{grid-column:1/-1}
+  .icon-key>span{white-space:normal;justify-content:flex-start}
+}

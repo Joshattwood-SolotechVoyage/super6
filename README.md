@@ -1,3 +1,17 @@
+# Super 6 v0.22.2
+
+UI cleanup for awards and icon meanings.
+
+- 👑 is now reserved for the reigning winner of the latest completed normal league round.
+- 🏆 marks the winner of the specific weekly result.
+- 🥈 marks second place for that weekly result.
+- 🥄 marks the wooden spoon for that weekly result.
+- Weekly Outcome no longer duplicates the crown beside winners.
+- Player/Admin headers and entry modals no longer duplicate crowns.
+- Added a responsive icon key for both Admin and Player views.
+- League table wooden-spoon count header now says `Spoons` rather than showing another spoon icon.
+- Crown remains league-only; future cups/extra competitions should not award it.
+
 # Super 6 v0.22.1
 
 Results-layout hotfix.
