@@ -1,5 +1,5 @@
 // Super 6 backend adapter — Supabase-backed authentication and competition data.
-// v0.19 adds live round completion, scoring/results loading, postponed-fixture handling, and completed-round reloads.
+// v0.25 adds published same-league prediction viewing after results are final, plus the v0.24 payment flow.
 (function(){
   const cfg = window.SUPER6_CONFIG || {};
   let client = null;
@@ -545,13 +545,24 @@
     };
   }
 
+  async function loadPublishedLeaguePredictions(roundId){
+    const sb = getClient();
+    await requireSession();
+    if (!roundId) return [];
+    const { data, error } = await sb.rpc('get_published_league_predictions', {
+      p_round_id: roundId
+    });
+    if (error) throw new Error(error.message || 'Could not load published league predictions. Run the v0.25 Supabase upgrade SQL first.');
+    return Array.isArray(data) ? data : [];
+  }
+
   async function signOut(){
     if (!client) return;
     await client.auth.signOut();
   }
 
   window.Super6Backend = {
-    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-live-payment-pending-live-results',
+    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-live-payment-pending-live-results-published-league-picks',
     schema: cfg.SUPABASE_SCHEMA || 'super6',
     isConfigured(){ return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY); },
     configuration(){
@@ -581,6 +592,7 @@
     completeRound,
     loadRoundResults,
     loadLatestLeagueWinners,
+    loadPublishedLeaguePredictions,
     signOut,
     client: getClient
   };

@@ -1,6 +1,7 @@
 (()=>{
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const STORAGE='super6_v03_state';
+const DEFAULT_PAYMENT_URL='https://monzo.me/daylehodge/6.00?h=GgbX1T&d=Super%206&account_type=personal';
 const nowPlus=(h)=>{const d=new Date();d.setHours(d.getHours()+h);return d.toISOString()};
 const initialLeagues=[
  {id:'serie',name:'The Serie-As League'},
@@ -23,10 +24,13 @@ let liveWeeklyResults=[];
 let latestLeagueWinners=[];
 let latestLeagueWinnerRound=null;
 let liveRoundExists=false;
+let publishedLeaguePredictions=[];
+let publishedPredictionRoundId=null;
+let publishedPredictionsError='';
 let adminRoundOverview={leagues:[],players:[]};
 let adminOverviewLastFetch=0;
 let adminOverviewFetching=false;
-let appSettings={default_entry_fee:6,payment_grace_hours:12,payment_url:''};
+let appSettings={default_entry_fee:6,payment_grace_hours:12,payment_url:DEFAULT_PAYMENT_URL};
 function cleanRoundDraft(){
  return {id:null,name:'',cutoff:'',fee:6,fixtures:Array.from({length:6},(_,i)=>({id:null,home:'',away:'',removed:false,result:null,sortOrder:i+1})),officialMinute:null,completed:false,completedAt:null,audit:[]};
 }
@@ -49,7 +53,7 @@ async function refreshLiveRound(){
  const row=await window.Super6Backend.loadCurrentRound();
  liveRoundExists=Boolean(row);
  state.round=mapLiveRound(row);
- if(!row||previousId!==state.round.id)state.entries={};
+ if(!row||previousId!==state.round.id){state.entries={};publishedLeaguePredictions=[];publishedPredictionRoundId=null;publishedPredictionsError='';}
  playerDraft=null;
  save();
  return state.round;
@@ -60,11 +64,11 @@ async function refreshAppSettings(){
   appSettings={
    default_entry_fee:Number(loaded?.default_entry_fee??6),
    payment_grace_hours:Number(loaded?.payment_grace_hours??12),
-   payment_url:String(loaded?.payment_url||'').trim()
+   payment_url:String(loaded?.payment_url||DEFAULT_PAYMENT_URL).trim()
   };
  }catch(err){
   console.warn('Could not load app settings',err);
-  appSettings={default_entry_fee:6,payment_grace_hours:12,payment_url:''};
+  appSettings={default_entry_fee:6,payment_grace_hours:12,payment_url:DEFAULT_PAYMENT_URL};
  }
  return appSettings;
 }
@@ -111,6 +115,18 @@ async function refreshLiveWeeklyResults(){
  liveWeeklyResults=await window.Super6Backend.loadRoundResults(state.round.id);
  return liveWeeklyResults;
 }
+async function refreshPublishedLeaguePredictions(){
+ publishedPredictionsError='';
+ if(session.role!=='player'||!liveRoundExists||!state.round?.id||!state.round.completed){publishedLeaguePredictions=[];publishedPredictionRoundId=null;return publishedLeaguePredictions}
+ try{
+  publishedLeaguePredictions=await window.Super6Backend.loadPublishedLeaguePredictions(state.round.id);
+  publishedPredictionRoundId=state.round.id;
+ }catch(err){
+  console.warn('Could not load published league predictions',err);
+  publishedLeaguePredictions=[];publishedPredictionRoundId=state.round.id;publishedPredictionsError=err?.message||'Could not load published predictions.';
+ }
+ return publishedLeaguePredictions;
+}
 async function refreshLatestLeagueWinners(){
  try{
   const data=await window.Super6Backend.loadLatestLeagueWinners();
@@ -140,7 +156,7 @@ function liveWeeklyOutcome(leagueId){
  const liveLeagueId=liveLeagueIdFor(leagueId),name=leagueName(leagueId);
  const rows=liveWeeklyResults.filter(r=>r.league_id===liveLeagueId||r.league_name===name).map(r=>{
   const local=state.players.find(p=>p.name.toLowerCase()===String(r.username||'').toLowerCase());
-  const p=local||{id:r.player_id,name:r.username||'Player',leagueId};
+  const p=local?{...local,authId:r.player_id}:{id:r.player_id,authId:r.player_id,name:r.username||'Player',leagueId};
   return {p,e:{minute:null},points:Number(r.points||0),exact:Number(r.exact_scores||0),correct:Number(r.correct_results||0),diff:r.tie_break_difference==null?null:Number(r.tie_break_difference),weekPos:Number(r.position||0),isWinner:Boolean(r.is_winner),isSecond:Boolean(r.is_second),isSpoon:Boolean(r.is_wooden_spoon)};
  }).sort((a,b)=>a.weekPos-b.weekPos||b.points-a.points||a.p.name.localeCompare(b.p.name));
  return {rows,first:rows.filter(r=>r.isWinner),second:rows.filter(r=>r.isSecond),spoons:rows.filter(r=>r.isSpoon)};
@@ -201,6 +217,7 @@ async function login(name,pin){
   activeLeague=p.leagueId;
   playerDraft=null;
   await refreshMyLiveEntry();
+  await refreshPublishedLeaguePredictions();
   showApp();
   return true;
  }
@@ -295,10 +312,21 @@ function renderPlayerPayment(){
 }
 function weeklyPositions(rows){let lastKey='',pos=0;return rows.map((r,i)=>{const tieKey=state.round.officialMinute==null?`${r.points}`:`${r.points}|${r.diff}`;if(tieKey!==lastKey){pos=i+1;lastKey=tieKey}return{...r,weekPos:pos}})}
 function weeklyAwardMark(out,r){const marks=[];if(out.first.some(x=>x.p.id===r.p.id))marks.push('🏆');if(out.first.length===1&&out.second.some(x=>x.p.id===r.p.id))marks.push('🥈');if(out.spoons.some(x=>x.p.id===r.p.id))marks.push('🥄');return marks.join(' ')}
-function weeklyRankingHTML(out,meId=null){
- const ranked=weeklyPositions(out.rows);
- return `<div class="round-ranking">${ranked.map(r=>{const tie=state.round.officialMinute==null?'':(r.e?.minute!=null?` · Goal ${r.e.minute}'`:(r.diff!=null?` · Tie-break ±${r.diff}`:''));return `<div class="round-rank-row ${r.p.id===meId?'me':''}"><div class="round-pos">${r.weekPos}</div><div class="round-person"><b>${escapeHtml(r.p.name)}<span class="award-mini">${weeklyAwardMark(out,r)}</span></b><small>${r.exact} correct score${r.exact===1?'':'s'} · ${r.correct} correct result${r.correct===1?'':'s'}${tie}</small></div><div class="round-points">${r.points}<small style="display:block;font:11px Georgia;color:var(--muted);letter-spacing:.5px">PTS</small></div></div>`}).join('')}</div>`;
+function weeklyRankingHTML(out,meId=null,options={}){
+ const ranked=weeklyPositions(out.rows),showPicks=Boolean(options.showPublishedPredictions&&state.round.completed);
+ return `<div class="round-ranking">${ranked.map(r=>{const tie=state.round.officialMinute==null?'':(r.e?.minute!=null?` · Goal ${r.e.minute}'`:(r.diff!=null?` · Tie-break ±${r.diff}`:''));const authId=r.p.authId||r.p.id;const picks=showPicks&&authId&&String(authId)!==String(session.authUserId)?`<button class="picks-btn" data-view-picks="${escapeAttr(authId)}" type="button">View picks</button>`:'';return `<div class="round-rank-row ${r.p.id===meId?'me':''}"><div class="round-pos">${r.weekPos}</div><div class="round-person"><b>${escapeHtml(r.p.name)}<span class="award-mini">${weeklyAwardMark(out,r)}</span></b><small>${r.exact} correct score${r.exact===1?'':'s'} · ${r.correct} correct result${r.correct===1?'':'s'}${tie}</small>${picks}</div><div class="round-points">${r.points}<small style="display:block;font:11px Georgia;color:var(--muted);letter-spacing:.5px">PTS</small></div></div>`}).join('')}</div>`;
 }
+function publishedPredictionRowsFor(playerId){return publishedLeaguePredictions.filter(x=>String(x.player_id)===String(playerId))}
+function showPublishedPredictions(playerId){
+ const rows=publishedPredictionRowsFor(playerId);
+ if(!rows.length){modal(`<div class="kicker">Published predictions</div><h3>Predictions unavailable</h3><div class="notice">These predictions could not be loaded.</div><div class="modal-actions"><button class="secondary" id="closePublishedPicks" type="button">Close</button></div>`);$('#closePublishedPicks').onclick=closeModal;return}
+ const first=rows[0],byFixture=new Map(rows.map(x=>[String(x.fixture_id),x]));
+ const breakdown=scoreBreakdownHTML(f=>{const x=byFixture.get(String(f.id));return x?[Number(x.home_score),Number(x.away_score)]:null});
+ const tie=state.round.officialMinute==null?`No goals were scored across the six fixtures, so the first-goal tiebreak was ignored.`:`First-goal minute: ${first.first_goal_minute??'–'}' · Official ${state.round.officialMinute}'${first.first_goal_minute!=null?` · Difference ${Math.abs(Number(first.first_goal_minute)-Number(state.round.officialMinute))} min`:''}`;
+ modal(`<div class="section-head"><div><div class="kicker">Published predictions</div><h3>${escapeHtml(first.username||'Player')}</h3><div class="muted">${escapeHtml(first.league_name||leagueName(currentUser()?.leagueId))} · ${Number(first.points||0)} pts · position ${Number(first.position||0)}</div></div><button class="secondary small" id="closePublishedPicks" type="button">Close</button></div><div class="published-picks-note">Results are final, so league predictions are now visible.</div>${breakdown}<div class="tie-break-summary"><b>Tiebreak:</b> ${escapeHtml(tie)}</div>`);
+ $('#closePublishedPicks').onclick=closeModal;
+}
+
 function renderPersonalResult(){
  const sec=$('#personalResultSection'),p=currentUser(),out=state.round.completed?liveWeeklyOutcome(p.leagueId):null,e=entryFor(p.id);
  if(!state.round.completed){sec.classList.add('hidden');return}
@@ -307,8 +335,12 @@ function renderPersonalResult(){
  const row=out.rows.find(r=>r.p.id===p.id);
  const ranked=weeklyPositions(out.rows),mine=ranked.find(r=>r.p.id===p.id);
  const personal=row?`<div class="stats weekly-personal-stats" style="margin-bottom:14px"><div class="stat"><strong>${row.points}</strong><span>Your points</span></div><div class="stat"><strong>${mine?.weekPos??row.weekPos??'-'}</strong><span>Your finish</span></div><div class="stat"><strong>${row.exact}</strong><span>Correct scores</span></div><div class="stat"><strong>${row.correct}</strong><span>Correct results</span></div></div>${scoreBreakdownHTML((f,i)=>e.scores?.[i]||null)}${state.round.officialMinute!=null?`<div class="tie-break-summary"><b>First-goal tiebreak:</b> You chose ${e.minute??'–'}' · Official ${state.round.officialMinute}'${e.minute!=null?` · Difference ${Math.abs(Number(e.minute)-Number(state.round.officialMinute))} min`:''}</div>`:''}`:`<div class="notice" style="margin-bottom:12px">Your entry did not count this week, but you can still see how your league finished.</div>`;
- sec.innerHTML=`<div class="weekly-league-title"><div><div class="kicker">${escapeHtml(state.round.name)}</div><h3>How everyone did</h3><div class="muted">${escapeHtml(leagueName(p.leagueId))} · paid entries only</div></div><div class="muted">${state.round.officialMinute==null?'No goals · tiebreak ignored':`First goal ${state.round.officialMinute}'`}</div></div>${personal}<div class="weekly-full-table-title">Your league this week</div>${weeklyRankingHTML(out,p.id)}`;
+ const picksReady=publishedPredictionRoundId===state.round.id&&!publishedPredictionsError;
+ const picksMessage=publishedPredictionsError?`<div class="notice bad published-picks-hint">Predictions are final, but the shared-predictions database update has not loaded yet.</div>`:`<div class="published-picks-hint"><b>Predictions unlocked 🔓</b><span>Results are final. Tap <b>View picks</b> beside another player to see all six of their predictions.</span></div>`;
+ sec.innerHTML=`<div class="weekly-league-title"><div><div class="kicker">${escapeHtml(state.round.name)}</div><h3>How everyone did</h3><div class="muted">${escapeHtml(leagueName(p.leagueId))} · paid entries only</div></div><div class="muted">${state.round.officialMinute==null?'No goals · tiebreak ignored':`First goal ${state.round.officialMinute}'`}</div></div>${personal}<div class="weekly-full-table-title">Your league this week</div>${picksMessage}${weeklyRankingHTML(out,p.id,{showPublishedPredictions:picksReady})}`;
+ sec.querySelectorAll('[data-view-picks]').forEach(btn=>btn.onclick=()=>showPublishedPredictions(btn.dataset.viewPicks));
 }
+
 function renderLeagueTabs(){const holder=$('#leagueTabs');holder.innerHTML=state.leagues.map(l=>`<button type="button" data-league-tab="${l.id}" class="${activeLeague===l.id?'active':''}">${l.name}</button>`).join('');holder.querySelectorAll('button').forEach(b=>b.onclick=()=>{activeLeague=b.dataset.leagueTab;renderLeagueTabs()});const body=$('#leagueTableBody');const rows=liveRowsForLeague(activeLeague);if(rows.length){body.innerHTML=rows.map(r=>`<tr class="${r.player_id===session.authUserId?'me':''}"><td>${r.position}</td><td>${playerNameWithCrown(r.player_id,r.username)}</td><td>${r.points}</td><td>${r.wins}</td><td>${r.exact_scores}</td><td>${r.correct_results}</td><td>${r.weeks_played}</td><td>${r.wooden_spoons}</td></tr>`).join('');return}const me=currentUser()?.id;body.innerHTML=seasonSortedLocal(activeLeague).map(p=>`<tr class="${p.id===me?'me':''}"><td>${p.pos}</td><td>${playerNameWithCrown(p.id,p.name)}</td><td>${p.points}</td><td>${p.wins}</td><td>${p.exact}</td><td>${p.correct}</td><td>${p.played}</td><td>${p.spoons}</td></tr>`).join('')}
 function renderHistory(){const p=currentUser(),list=$('#historyList');const relevant=state.history.filter(h=>h.leagueId===p.leagueId);if(!relevant.length){list.innerHTML='<div class="notice">No completed historical rounds stored in this prototype yet. Once rounds are completed they can appear here.</div>';return}list.innerHTML=relevant.map(h=>`<div class="result-card"><b>${h.roundName}</b><div>${h.playerPoints} pts · ${h.position}</div></div>`).join('')}
 function renderInlinePredictions(){const p=currentUser();if(!p)return;const e=ensureEntry(p.id),locked=predictionLocked(),ed=$('#playerPredictionPanel'),actions=$('#playerPredictionActions');if(!ed||!actions)return;if(locked&&!e.submitted){ed.innerHTML='<div class="notice bad">The cutoff has passed. No predictions were submitted for this round.</div>';actions.innerHTML='';return;}if(!playerDraft||playerDraft.playerId!==p.id)playerDraft={...JSON.parse(JSON.stringify(e)),playerId:p.id};const working=playerDraft;ed.innerHTML=state.round.fixtures.map((f,i)=>`<div class="match-card"><div class="match-line"><div class="team" title="${escapeHtml(f.home)}">${escapeHtml(f.home)}</div><div class="scorectl"><button type="button" data-i="${i}" data-side="0" data-d="-1" ${locked?'disabled':''} aria-label="Decrease ${escapeHtml(f.home)} score">−</button><div class="scorebox ${working.scores[i][0]==null?'blank':''}" id="is${i}h">${working.scores[i][0]??'–'}</div><button type="button" data-i="${i}" data-side="0" data-d="1" ${locked?'disabled':''} aria-label="Increase ${escapeHtml(f.home)} score">+</button></div><div class="versus">vs</div><div class="scorectl"><button type="button" data-i="${i}" data-side="1" data-d="-1" ${locked?'disabled':''} aria-label="Decrease ${escapeHtml(f.away)} score">−</button><div class="scorebox ${working.scores[i][1]==null?'blank':''}" id="is${i}a">${working.scores[i][1]??'–'}</div><button type="button" data-i="${i}" data-side="1" data-d="1" ${locked?'disabled':''} aria-label="Increase ${escapeHtml(f.away)} score">+</button></div><div class="team away" title="${escapeHtml(f.away)}">${escapeHtml(f.away)}</div></div></div>`).join('')+`<div class="minute-card"><div><b>First-goal minute</b><div class="muted">Tie-breaker · 1–90</div></div><div class="minctl"><button id="inlineMinMinus" type="button" ${locked?'disabled':''}>−</button><div class="minval" id="inlineMinuteVal">${working.minute??'–'}</div><button id="inlineMinPlus" type="button" ${locked?'disabled':''}>+</button></div></div>`;ed.querySelectorAll('.scorectl button').forEach(btn=>btn.onclick=()=>{const i=+btn.dataset.i,side=+btn.dataset.side,d=+btn.dataset.d;let v=working.scores[i][side];if(v==null)v=0;else v=Math.max(0,Math.min(20,v+d));working.scores[i][side]=v;const el=$(`#is${i}${side?'a':'h'}`);el.textContent=v;el.classList.remove('blank')});if(!locked){$('#inlineMinMinus').onclick=()=>{working.minute=working.minute==null?1:Math.max(1,working.minute-1);$('#inlineMinuteVal').textContent=working.minute};$('#inlineMinPlus').onclick=()=>{working.minute=working.minute==null?1:Math.min(90,working.minute+1);$('#inlineMinuteVal').textContent=working.minute};actions.innerHTML=`<button class="big-action" id="reviewInlinePred" type="button">${e.submitted?'Review changes':'Review & submit'}</button>`;$('#reviewInlinePred').onclick=()=>reviewInlinePrediction(p,working)}else{actions.innerHTML='<div class="locked-note">🔒 These predictions are locked. You can still view them here.</div>'}}
@@ -357,8 +389,8 @@ async function savePaymentUrl(){
  btn.disabled=true;const original=btn.textContent;btn.textContent='Saving…';
  try{
   const saved=await window.Super6Backend.savePaymentUrl(value);
-  appSettings.payment_url=String(saved?.payment_url||value||'').trim();
-  if(status)status.textContent=value?'Payment link saved.':'Payment link removed.';
+  appSettings.payment_url=String(saved?.payment_url||value||DEFAULT_PAYMENT_URL).trim();
+  if(status)status.textContent=value?'Payment link saved.':'The default £6 Monzo link remains active.';
  }catch(err){if(status)status.textContent=err?.message||'Could not save the payment link.'}
  finally{btn.disabled=false;btn.textContent=original}
 }

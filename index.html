@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
 <link rel="manifest" href="manifest.webmanifest" />
-<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="styles.css?v=0.25" />
 </head>
 <body>
 <div class="app" id="app">
@@ -41,6 +41,10 @@
     </header>
 
     <main id="playerArea" class="hidden">
+      <nav class="player-nav" aria-label="Player navigation">
+        <button data-player-tab="home" class="active" type="button">Home</button><button data-player-tab="tables" type="button">Tables</button><button data-player-tab="history" type="button">History</button>
+      </nav>
+
       <div class="screen" id="playerHome">
         <section class="card hero paper">
           <div class="hero-grid">
@@ -78,9 +82,6 @@
         <section class="card"><div class="section-head"><div><div class="kicker">Season archive</div><h3>Previous final tables</h3></div></div><div class="notice">Prototype note: the production app will keep final season standings while old detailed weekly data can be exported to Excel and cleared.</div></section>
       </div>
 
-      <nav class="bottom-nav" aria-label="Player navigation">
-        <button data-player-tab="home" class="active" type="button">Home</button><button data-player-tab="tables" type="button">Tables</button><button data-player-tab="history" type="button">History</button>
-      </nav>
     </main>
 
     <main id="adminArea" class="hidden">
@@ -217,7 +218,7 @@
 <div id="modalRoot"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script src="backend.js"></script>
-<script src="app.js"></script>
+<script src="backend.js?v=0.25"></script>
+<script src="app.js?v=0.25"></script>
 </body>
 </html>
