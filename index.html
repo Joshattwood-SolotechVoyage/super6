@@ -62,6 +62,10 @@
           <div id="playerPredictionPanel" class="prediction-sheet"></div>
           <div id="playerPredictionActions" class="prediction-submit"></div>
         </section>
+        <section class="card hidden" id="playerPaymentCard">
+          <div class="section-head"><div><div class="kicker">Entry fee</div><h3>Payment</h3></div></div>
+          <div id="playerPaymentBody"></div>
+        </section>
         <section id="personalResultSection" class="card hidden"></section>
       </div>
 
@@ -86,6 +90,7 @@
           <div class="metrics">
             <div class="metric metric-submitted"><strong id="mSubmitted">0</strong><span class="metric-label">Submitted</span><small>Predictions received</small></div>
             <div class="metric metric-paid"><strong id="mPaid">0</strong><span class="metric-label">Paid</span><small>Payment confirmed</small></div>
+            <div class="metric metric-pending"><strong id="mPending">0</strong><span class="metric-label">Pending</span><small>Player says paid</small></div>
             <div class="metric metric-unpaid"><strong id="mUnpaid">0</strong><span class="metric-label">Unpaid</span><small>Payment still due</small></div>
             <div class="metric metric-missing"><strong id="mMissing">0</strong><span class="metric-label">Not entered</span><small>No predictions received</small></div>
           </div>
@@ -107,6 +112,7 @@
             <div class="status-key" aria-label="Entry status colours">
               <span class="status-pill submitted">Submitted</span>
               <span class="status-pill paid">Paid</span>
+              <span class="status-pill pending">Payment pending</span>
               <span class="status-pill unpaid">Unpaid</span>
               <span class="status-pill missing">Not entered</span>
             </div>
@@ -128,6 +134,14 @@
               <div class="notice">5 points exact · 2 points correct result · 0 otherwise.</div>
               <div class="notice">Predictions lock at cutoff. Payment stays editable for 12 hours after cutoff.</div>
               <div class="notice">£6 per weekly Super 6 sheet. Money details are admin-only.</div>
+              <div class="payment-admin-settings">
+                <div class="kicker">Player payment button</div>
+                <h3 style="margin:3px 0 8px">Monzo payment link</h3>
+                <div class="muted" style="margin-bottom:10px">Paste your £6 Monzo payment link once. It will only appear for players who have submitted and still need to pay.</div>
+                <label class="field">£6 payment link<input id="paymentUrlInput" type="url" inputmode="url" placeholder="https://..." autocomplete="off" /></label>
+                <button id="savePaymentUrlBtn" class="secondary" type="button">Save payment link</button>
+                <div id="paymentUrlStatus" class="muted" style="margin-top:8px"></div>
+              </div>
             </section>
           </div>
         </div>

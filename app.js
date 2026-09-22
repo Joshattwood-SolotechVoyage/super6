@@ -26,6 +26,7 @@ let liveRoundExists=false;
 let adminRoundOverview={leagues:[],players:[]};
 let adminOverviewLastFetch=0;
 let adminOverviewFetching=false;
+let appSettings={default_entry_fee:6,payment_grace_hours:12,payment_url:''};
 function cleanRoundDraft(){
  return {id:null,name:'',cutoff:'',fee:6,fixtures:Array.from({length:6},(_,i)=>({id:null,home:'',away:'',removed:false,result:null,sortOrder:i+1})),officialMinute:null,completed:false,completedAt:null,audit:[]};
 }
@@ -53,6 +54,20 @@ async function refreshLiveRound(){
  save();
  return state.round;
 }
+async function refreshAppSettings(){
+ try{
+  const loaded=await window.Super6Backend.loadAppSettings();
+  appSettings={
+   default_entry_fee:Number(loaded?.default_entry_fee??6),
+   payment_grace_hours:Number(loaded?.payment_grace_hours??12),
+   payment_url:String(loaded?.payment_url||'').trim()
+  };
+ }catch(err){
+  console.warn('Could not load app settings',err);
+  appSettings={default_entry_fee:6,payment_grace_hours:12,payment_url:''};
+ }
+ return appSettings;
+}
 async function refreshMyLiveEntry(){
  if(session.role!=='player')return null;
  const p=currentUser();
@@ -66,7 +81,8 @@ async function refreshMyLiveEntry(){
  const live=await window.Super6Backend.loadMyRoundEntry(state.round.id);
  const byFixture=new Map((live.predictions||[]).map(x=>[x.fixture_id,x]));
  const scores=state.round.fixtures.map(f=>{const x=byFixture.get(f.id);return x?[Number(x.home_score),Number(x.away_score)]:[null,null]});
- state.entries[p.id]={submitted:Boolean(live.entry),submittedAt:live.entry?.submitted_at||null,scores,minute:live.entry?.first_goal_minute??null,paid:Boolean(live.paid),adminEdits:[]};
+ const previous=state.entries[p.id]||{};
+ state.entries[p.id]={submitted:Boolean(live.entry),submittedAt:live.entry?.submitted_at||null,scores,minute:live.entry?.first_goal_minute??null,paid:Boolean(live.paid),paymentPending:Boolean(live.paymentPending),paymentClaimedAt:live.paymentClaimedAt||null,paymentStarted:Boolean(previous.paymentStarted)&&!live.paid&&!live.paymentPending,adminEdits:[]};
  playerDraft=null;
  save();
  return state.entries[p.id];
@@ -76,10 +92,10 @@ function leagueName(id){return state.leagues.find(l=>l.id===id)?.name||'Unknown 
 function getPlayer(id){return state.players.find(p=>p.id===id)}
 function currentUser(){return getPlayer(session.userId)}
 function cutoff(){return state.round?.cutoff?new Date(state.round.cutoff):null}
-function graceEnd(){const c=cutoff();return c?new Date(c.getTime()+12*3600000):null}
+function graceEnd(){const c=cutoff();const hours=Number(appSettings.payment_grace_hours||12);return c?new Date(c.getTime()+hours*3600000):null}
 function predictionLocked(){const c=cutoff();return !liveRoundExists||Boolean(state.round?.completed)||!c||Number.isNaN(c.getTime())||Date.now()>=c.getTime()}
 function paymentLocked(){const g=graceEnd();return !g||Number.isNaN(g.getTime())||Date.now()>=g.getTime()}
-function entryFor(pid){return state.entries[pid]||{submitted:false,submittedAt:null,scores:Array(6).fill(null).map(()=>[null,null]),minute:null,paid:false,adminEdits:[]}}
+function entryFor(pid){return state.entries[pid]||{submitted:false,submittedAt:null,scores:Array(6).fill(null).map(()=>[null,null]),minute:null,paid:false,paymentPending:false,paymentClaimedAt:null,paymentStarted:false,adminEdits:[]}}
 function ensureEntry(pid){if(!state.entries[pid])state.entries[pid]=entryFor(pid);return state.entries[pid]}
 function fmtDate(d){return new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(d)}
 function resultType(ph,pa,ah,aa){if(ph===ah&&pa===aa)return'exact';const pr=Math.sign(ph-pa),ar=Math.sign(ah-aa);return pr===ar?'correct':'wrong'}
@@ -165,6 +181,7 @@ async function login(name,pin){
  const profile=await window.Super6Backend.pinLogin(name,pin);
  await refreshLiveStandings();
  await refreshLiveRound();
+ await refreshAppSettings();
  await refreshLiveWeeklyResults();
  await refreshLatestLeagueWinners();
  if(profile.role==='admin'){
@@ -195,12 +212,87 @@ async function logout(){await window.Super6Backend.signOut().catch(()=>{});sessi
 function startTimer(){clearInterval(timer);timer=setInterval(()=>{if(session.role==='player')renderCountdown();if(session.role==='admin'){renderAdminHero();maybeRefreshAdminRoundOverview()}},1000)}
 function renderAll(){if(session.role==='player')renderPlayer();else if(session.role==='admin')renderAdmin()}
 function renderCountdown(){const box=$('#countdownBox');if(!box)return;if(!liveRoundExists||!cutoff()){ $('#countdown').textContent='NO ROUND';$('#cutoffText').textContent='Waiting for the next fixture sheet';box.classList.remove('urgent','soon');return;}let ms=cutoff()-Date.now();let label;if(ms<=0){label='CLOSED';ms=0}else{const h=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000);label=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}$('#countdown').textContent=label;$('#cutoffText').textContent='Cutoff '+fmtDate(cutoff());box.classList.toggle('urgent',ms>0&&ms<=10*60000);box.classList.toggle('soon',ms>10*60000&&ms<=3600000)}
-function renderPlayer(){const p=currentUser(),e=entryFor(p.id),live=currentLiveStanding();if($('#whoBtn'))$('#whoBtn').textContent=p.name;const rank=live?.position??seasonSortedLocal(p.leagueId).find(x=>x.id===p.id)?.pos??'-';$('#roundHeroName').textContent=liveRoundExists?state.round.name:'No round published';$('#playerLeagueName').textContent=live?.league_name||leagueName(p.leagueId);const pay=$('#paymentChip'),ent=$('#entryChip');if(!liveRoundExists){pay.textContent='Waiting';pay.className='chip';ent.textContent='No round';ent.className='chip';}else if(e.paid){pay.textContent='Paid ✓';pay.className='chip good'}else if(e.submitted&&predictionLocked()&&!paymentLocked()){pay.textContent='Payment pending';pay.className='chip warn'}else if(e.submitted&&paymentLocked()){pay.textContent='Entry not counted';pay.className='chip bad'}else{pay.textContent='Not paid';pay.className='chip bad'}
- if(liveRoundExists){if(!e.submitted){ent.textContent=predictionLocked()?'Not entered':'Not submitted';ent.className='chip bad'}else if(predictionLocked()){ent.textContent='Locked ✓';ent.className='chip good'}else{ent.textContent='Submitted ✓';ent.className='chip good'}}
+function renderPlayer(){
+ const p=currentUser(),e=entryFor(p.id),live=currentLiveStanding();
+ if($('#whoBtn'))$('#whoBtn').textContent=p.name;
+ const rank=live?.position??seasonSortedLocal(p.leagueId).find(x=>x.id===p.id)?.pos??'-';
+ $('#roundHeroName').textContent=liveRoundExists?state.round.name:'No round published';
+ $('#playerLeagueName').textContent=live?.league_name||leagueName(p.leagueId);
+ const pay=$('#paymentChip'),ent=$('#entryChip');
+ if(!liveRoundExists){pay.textContent='Waiting';pay.className='chip';ent.textContent='No round';ent.className='chip';}
+ else if(e.paid){pay.textContent='Paid ✓';pay.className='chip good'}
+ else if(e.paymentPending){pay.textContent='Payment pending';pay.className='chip warn'}
+ else if(e.submitted&&paymentLocked()){pay.textContent='Entry not counted';pay.className='chip bad'}
+ else if(e.submitted){pay.textContent=`£${Number(state.round.fee||6).toFixed(0)} unpaid`;pay.className='chip bad'}
+ else{pay.textContent='Payment after entry';pay.className='chip'}
+ if(liveRoundExists){
+  if(!e.submitted){ent.textContent=predictionLocked()?'Not entered':'Not submitted';ent.className='chip bad'}
+  else if(predictionLocked()){ent.textContent='Locked ✓';ent.className='chip good'}
+  else{ent.textContent='Submitted ✓';ent.className='chip good'}
+ }
  $('#playerStats').innerHTML=[['Position',rank],['Points',live?.points??p.points],['Wins',live?.wins??p.wins],['Correct scores',live?.exact_scores??p.exact],['Correct results',live?.correct_results??p.correct]].map(x=>`<div class="stat"><strong>${x[1]}</strong><span>${x[0]}</span></div>`).join('');
- if(!liveRoundExists){$('#entryHelp').textContent='The next Super 6 fixture sheet has not been published yet.';const inlineStatus=$('#inlineEntryStatus');inlineStatus.textContent='Waiting';inlineStatus.className='chip';$('#playerPredictionPanel').innerHTML='<div class="notice">No current round. Check back when the admin publishes the next six fixtures.</div>';$('#playerPredictionActions').innerHTML='';}
- else{const inlineStatus=$('#inlineEntryStatus');if(e.submitted){inlineStatus.textContent=predictionLocked()?'Locked ✓':'Submitted ✓';inlineStatus.className='chip good';$('#entryHelp').textContent=predictionLocked()?'Your saved predictions are locked for this round.':'Your entry is saved in Super 6. You can edit it until cutoff.';}else{inlineStatus.textContent=predictionLocked()?'Closed':'Enter now';inlineStatus.className=predictionLocked()?'chip bad':'chip';$('#entryHelp').textContent=predictionLocked()?'The cutoff has passed and no entry was submitted.':'Complete all six score predictions and the first-goal minute.';}renderInlinePredictions();}
- $('#historyLeagueName').textContent=live?.league_name||leagueName(p.leagueId);renderCountdown();renderLeagueTabs();renderHistory();renderPersonalResult()}
+ if(!liveRoundExists){
+  $('#entryHelp').textContent='The next Super 6 fixture sheet has not been published yet.';
+  const inlineStatus=$('#inlineEntryStatus');inlineStatus.textContent='Waiting';inlineStatus.className='chip';
+  $('#playerPredictionPanel').innerHTML='<div class="notice">No current round. Check back when the admin publishes the next six fixtures.</div>';
+  $('#playerPredictionActions').innerHTML='';
+ }else{
+  const inlineStatus=$('#inlineEntryStatus');
+  if(e.submitted){inlineStatus.textContent=predictionLocked()?'Locked ✓':'Submitted ✓';inlineStatus.className='chip good';$('#entryHelp').textContent=predictionLocked()?'Your saved predictions are locked for this round.':'Your entry is saved in Super 6. You can edit it until cutoff.';}
+  else{inlineStatus.textContent=predictionLocked()?'Closed':'Enter now';inlineStatus.className=predictionLocked()?'chip bad':'chip';$('#entryHelp').textContent=predictionLocked()?'The cutoff has passed and no entry was submitted.':'Complete all six score predictions and the first-goal minute.';}
+  renderInlinePredictions();
+ }
+ renderPlayerPayment();
+ $('#historyLeagueName').textContent=live?.league_name||leagueName(p.leagueId);
+ renderCountdown();renderLeagueTabs();renderHistory();renderPersonalResult();
+}
+function renderPlayerPayment(){
+ const card=$('#playerPaymentCard'),body=$('#playerPaymentBody');
+ if(!card||!body)return;
+ const p=currentUser(),e=p?entryFor(p.id):null;
+ if(!liveRoundExists||!e?.submitted){card.classList.add('hidden');body.innerHTML='';return}
+ card.classList.remove('hidden');
+ const fee=Number(state.round.fee||appSettings.default_entry_fee||6);
+ const feeText=`£${Number.isInteger(fee)?fee.toFixed(0):fee.toFixed(2)}`;
+ if(e.paid){
+  body.innerHTML=`<div class="payment-state paid-state"><div class="payment-state-icon">✓</div><div><b>Payment confirmed</b><span>${feeText} received for this round.</span></div></div>`;
+  return;
+ }
+ if(e.paymentPending){
+  body.innerHTML=`<div class="payment-state pending-state"><div class="payment-state-icon">…</div><div><b>Payment pending</b><span>You said you have paid ${feeText}. The payment button is hidden while Admin checks it.</span></div></div>`;
+  return;
+ }
+ if(paymentLocked()){
+  body.innerHTML=`<div class="payment-state closed-state"><div class="payment-state-icon">!</div><div><b>Payment window closed</b><span>Your payment was not confirmed in time, so this entry is not counted.</span></div></div>`;
+  return;
+ }
+ if(!appSettings.payment_url){
+  body.innerHTML=`<div class="payment-state unpaid-state"><div class="payment-copy"><b>${feeText} entry fee</b><span>Payment is still due. Admin has not added the Monzo payment link yet.</span></div></div>`;
+  return;
+ }
+ if(!e.paymentStarted){
+  body.innerHTML=`<div class="payment-state unpaid-state"><div class="payment-copy"><b>${feeText} entry fee</b><span>Pay securely using the Super 6 Monzo link. Once you have paid, come back here to confirm it.</span></div><button class="big-action payment-pay-btn" id="payMonzoBtn" type="button">Pay ${feeText} with Monzo</button></div>`;
+  $('#payMonzoBtn').onclick=()=>{
+   e.paymentStarted=true;save();renderPlayerPayment();
+   window.open(appSettings.payment_url,'_blank','noopener,noreferrer');
+  };
+  return;
+ }
+ body.innerHTML=`<div class="payment-confirm"><div><div class="kicker">Quick check</div><h3>Did you complete the ${feeText} payment?</h3><div class="muted">Only press yes after the payment has actually gone through.</div></div><div class="payment-confirm-actions"><button class="big-action" id="confirmPaidBtn" type="button">Yes, I've paid</button><button class="secondary" id="notPaidYetBtn" type="button">Not yet</button></div><div id="paymentActionStatus"></div></div>`;
+ $('#notPaidYetBtn').onclick=()=>{e.paymentStarted=false;save();renderPlayerPayment()};
+ $('#confirmPaidBtn').onclick=async()=>{
+  const btn=$('#confirmPaidBtn'),status=$('#paymentActionStatus');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+   await window.Super6Backend.markMyPaymentPending(state.round.id);
+   await refreshMyLiveEntry();
+   renderPlayer();
+  }catch(err){
+   if(status)status.innerHTML=`<div class="notice bad" style="margin-top:10px">${escapeHtml(err?.message||'Could not update payment status.')}</div>`;
+   btn.disabled=false;btn.textContent="Yes, I've paid";
+  }
+ };
+}
 function weeklyPositions(rows){let lastKey='',pos=0;return rows.map((r,i)=>{const tieKey=state.round.officialMinute==null?`${r.points}`:`${r.points}|${r.diff}`;if(tieKey!==lastKey){pos=i+1;lastKey=tieKey}return{...r,weekPos:pos}})}
 function weeklyAwardMark(out,r){const marks=[];if(out.first.some(x=>x.p.id===r.p.id))marks.push('🏆');if(out.first.length===1&&out.second.some(x=>x.p.id===r.p.id))marks.push('🥈');if(out.spoons.some(x=>x.p.id===r.p.id))marks.push('🥄');return marks.join(' ')}
 function weeklyRankingHTML(out,meId=null){
@@ -226,8 +318,50 @@ function setAdminTab(tab){
  $$('[data-admin-tab]').forEach(b=>b.classList.toggle('active',b.dataset.adminTab===activeAdminTab));
  $$('[data-admin-panel]').forEach(p=>p.classList.toggle('hidden',p.dataset.adminPanel!==activeAdminTab));
 }
-function renderAdmin(){renderAdminHero();renderFixtureEditor();renderAdminLeaguePanels();renderResultsEditor();renderWeeklyResults();renderAdminTables();renderLeagueManagement();renderRealAccountManager();setAdminTab(activeAdminTab)}
-function renderAdminHero(){if(session.role!=='admin')return;const rs=$('#roundState');if(!liveRoundExists){$('#mSubmitted').textContent='0';$('#mPaid').textContent='0';$('#mUnpaid').textContent='0';$('#mMissing').textContent=liveStandings.length||state.players.length;$('#adminCutoff').textContent='No round published · create the next fixture sheet below';rs.textContent='New round';rs.className='chip';return;}const players=adminRoundOverview.players||[];$('#mSubmitted').textContent=players.filter(p=>p.submitted).length;$('#mPaid').textContent=players.filter(p=>p.paid).length;$('#mUnpaid').textContent=players.filter(p=>p.submitted&&!p.paid).length;$('#mMissing').textContent=players.filter(p=>!p.submitted).length;$('#adminCutoff').textContent=`${state.round.name} · cutoff ${fmtDate(cutoff())} · payment grace to ${fmtDate(graceEnd())}`;if(state.round.completed){rs.textContent='Completed';rs.className='chip good'}else if(predictionLocked()){rs.textContent=paymentLocked()?'Locked':'Predictions locked · payment grace';rs.className='chip warn'}else{rs.textContent='Open';rs.className='chip good'}}
+function renderAdmin(){renderAdminHero();renderFixtureEditor();renderPaymentSettings();renderAdminLeaguePanels();renderResultsEditor();renderWeeklyResults();renderAdminTables();renderLeagueManagement();renderRealAccountManager();setAdminTab(activeAdminTab)}
+function renderAdminHero(){
+ if(session.role!=='admin')return;
+ const rs=$('#roundState');
+ if(!liveRoundExists){
+  $('#mSubmitted').textContent='0';$('#mPaid').textContent='0';$('#mPending').textContent='0';$('#mUnpaid').textContent='0';$('#mMissing').textContent=liveStandings.length||state.players.length;
+  $('#adminCutoff').textContent='No round published · create the next fixture sheet below';
+  rs.textContent='New round';rs.className='chip';return;
+ }
+ const players=adminRoundOverview.players||[];
+ $('#mSubmitted').textContent=players.filter(p=>p.submitted).length;
+ $('#mPaid').textContent=players.filter(p=>p.paid).length;
+ $('#mPending').textContent=players.filter(p=>p.submitted&&!p.paid&&p.payment_pending).length;
+ $('#mUnpaid').textContent=players.filter(p=>p.submitted&&!p.paid&&!p.payment_pending).length;
+ $('#mMissing').textContent=players.filter(p=>!p.submitted).length;
+ $('#adminCutoff').textContent=`${state.round.name} · cutoff ${fmtDate(cutoff())} · payment grace to ${fmtDate(graceEnd())}`;
+ if(state.round.completed){rs.textContent='Completed';rs.className='chip good'}
+ else if(predictionLocked()){rs.textContent=paymentLocked()?'Locked':'Predictions locked · payment grace';rs.className='chip warn'}
+ else{rs.textContent='Open';rs.className='chip good'}
+}
+function renderPaymentSettings(){
+ const input=$('#paymentUrlInput'),status=$('#paymentUrlStatus');
+ if(!input)return;
+ if(document.activeElement!==input)input.value=appSettings.payment_url||'';
+ if(status&&!appSettings.payment_url)status.textContent='Add your £6 Monzo payment link once. Players will only see it while their entry is unpaid.';
+ else if(status)status.textContent='Payment link saved. It is only shown to submitted players who still need to pay.';
+}
+async function savePaymentUrl(){
+ const input=$('#paymentUrlInput'),btn=$('#savePaymentUrlBtn'),status=$('#paymentUrlStatus');
+ if(!input||!btn)return;
+ const value=input.value.trim();
+ if(value){
+  let parsed;
+  try{parsed=new URL(value)}catch{if(status)status.textContent='Paste the full Monzo payment link, including https://';return}
+  if(parsed.protocol!=='https:'){if(status)status.textContent='The payment link must start with https://';return}
+ }
+ btn.disabled=true;const original=btn.textContent;btn.textContent='Saving…';
+ try{
+  const saved=await window.Super6Backend.savePaymentUrl(value);
+  appSettings.payment_url=String(saved?.payment_url||value||'').trim();
+  if(status)status.textContent=value?'Payment link saved.':'Payment link removed.';
+ }catch(err){if(status)status.textContent=err?.message||'Could not save the payment link.'}
+ finally{btn.disabled=false;btn.textContent=original}
+}
 function localDT(iso){const d=new Date(iso),pad=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`}
 function renderFixtureEditor(){
  $('#adminRoundName').value=state.round.name||'';$('#adminCutoffInput').value=state.round.cutoff?localDT(state.round.cutoff):'';
@@ -251,9 +385,18 @@ function renderAdminLeaguePanels(){
  if(!players.length){wrap.innerHTML='<div class="notice">Loading the live Supabase entry overview…</div>';return;}
  wrap.innerHTML=leagues.map(l=>{
   const ps=players.filter(p=>p.league_id===l.id);
-  const sub=ps.filter(p=>p.submitted).length,paid=ps.filter(p=>p.paid).length,unpaid=ps.filter(p=>p.submitted&&!p.paid).length,miss=ps.filter(p=>!p.submitted).length;
+  const sub=ps.filter(p=>p.submitted).length;
+  const paid=ps.filter(p=>p.paid).length;
+  const pending=ps.filter(p=>p.submitted&&!p.paid&&p.payment_pending).length;
+  const unpaid=ps.filter(p=>p.submitted&&!p.paid&&!p.payment_pending).length;
+  const miss=ps.filter(p=>!p.submitted).length;
   const counted=ps.filter(p=>p.submitted&&p.paid).length;
-  return `<div class="league-panel"><h4>${escapeHtml(l.name)}</h4><div class="status-summary"><span class="status-pill submitted"><b>${sub}</b> Submitted</span><span class="status-pill paid"><b>${paid}</b> Paid</span><span class="status-pill unpaid"><b>${unpaid}</b> Unpaid</span><span class="status-pill missing"><b>${miss}</b> Not entered</span></div>${ps.map(p=>{const result=state.round.completed?weeklyResultForPlayer(p.id):null;const points=result?`<span class="overview-points">${Number(result.points||0)} pts</span>`:'';return `<div class="player-row"><button class="secondary small name" data-view="${p.id}" type="button" style="text-align:left"><b>${playerNameWithCrown(p.id,p.username)}${points}</b><span class="player-statuses"><span class="status-pill mini ${p.submitted?'submitted':'missing'}">${p.submitted?'Submitted':'Not entered'}</span>${p.paid?'<span class="status-pill mini paid">Paid</span>':p.submitted?'<span class="status-pill mini unpaid">Unpaid</span>':''}${state.round.completed&&p.submitted&&p.paid&&!result?'<span class="status-pill mini missing">Not counted</span>':''}</span></button><label class="switch"><input type="checkbox" data-paid="${p.id}" ${p.paid?'checked':''} ${paymentLocked()?'disabled':''}> Paid</label></div>`}).join('')}<div class="money">Pot currently: <strong>£${counted*state.round.fee}</strong></div></div>`;
+  return `<div class="league-panel"><h4>${escapeHtml(l.name)}</h4><div class="status-summary"><span class="status-pill submitted"><b>${sub}</b> Submitted</span><span class="status-pill paid"><b>${paid}</b> Paid</span><span class="status-pill pending"><b>${pending}</b> Pending</span><span class="status-pill unpaid"><b>${unpaid}</b> Unpaid</span><span class="status-pill missing"><b>${miss}</b> Not entered</span></div>${ps.map(p=>{
+   const result=state.round.completed?weeklyResultForPlayer(p.id):null;
+   const points=result?`<span class="overview-points">${Number(result.points||0)} pts</span>`:'';
+   const paymentStatus=p.paid?'<span class="status-pill mini paid">Paid</span>':p.submitted&&p.payment_pending?'<span class="status-pill mini pending">Payment pending</span>':p.submitted?'<span class="status-pill mini unpaid">Unpaid</span>':'';
+   return `<div class="player-row"><button class="secondary small name" data-view="${p.id}" type="button" style="text-align:left"><b>${playerNameWithCrown(p.id,p.username)}${points}</b><span class="player-statuses"><span class="status-pill mini ${p.submitted?'submitted':'missing'}">${p.submitted?'Submitted':'Not entered'}</span>${paymentStatus}${state.round.completed&&p.submitted&&p.paid&&!result?'<span class="status-pill mini missing">Not counted</span>':''}</span></button><label class="switch"><input type="checkbox" data-paid="${p.id}" ${p.paid?'checked':''} ${paymentLocked()?'disabled':''}> Paid</label></div>`;
+  }).join('')}<div class="money">Pot currently: <strong>£${counted*state.round.fee}</strong></div></div>`;
  }).join('');
  wrap.querySelectorAll('[data-paid]').forEach(x=>x.onchange=async()=>{
   const desired=x.checked,playerId=x.dataset.paid;
@@ -268,7 +411,8 @@ async function adminViewPlayer(playerId){
  if(!p)return;
  const result=state.round.completed?weeklyResultForPlayer(playerId):null;
  const headline=result?` · ${Number(result.points||0)} points · position ${Number(result.position||0)}`:'';
- modal(`<div class="section-head"><div><div class="kicker">Admin entry view</div><h3>${escapeHtml(p.username)}</h3><div class="muted">${escapeHtml(p.league_name||'')} · ${p.paid?'Paid':'Not paid'}${headline}</div></div><button class="secondary small" id="closeAdminView">Close</button></div><div id="liveAdminEntry"><div class="muted">Loading live entry…</div></div>`);
+ const payLabel=p.paid?'Paid':p.payment_pending?'Payment pending':'Unpaid';
+ modal(`<div class="section-head"><div><div class="kicker">Admin entry view</div><h3>${escapeHtml(p.username)}</h3><div class="muted">${escapeHtml(p.league_name||'')} · ${payLabel}${headline}</div></div><button class="secondary small" id="closeAdminView">Close</button></div><div id="liveAdminEntry"><div class="muted">Loading live entry…</div></div>`);
  $('#closeAdminView').onclick=closeModal;
  const box=$('#liveAdminEntry');
  try{
@@ -419,5 +563,5 @@ $('#loginForm').addEventListener('submit',async e=>{
   btn.disabled=false;
   btn.textContent=original;
  }
-});$('#logoutBtn').onclick=logout;$('#whoBtn').onclick=logout;$$('[data-admin-tab]').forEach(b=>b.onclick=()=>setAdminTab(b.dataset.adminTab));$$('[data-player-tab]').forEach(b=>b.onclick=()=>{$$('[data-player-tab]').forEach(x=>x.classList.toggle('active',x===b));$('#playerHome').classList.toggle('hidden',b.dataset.playerTab!=='home');$('#playerTables').classList.toggle('hidden',b.dataset.playerTab!=='tables');$('#playerHistory').classList.toggle('hidden',b.dataset.playerTab!=='history');if(b.dataset.playerTab==='tables')renderLeagueTabs()});$('#saveRoundBtn').onclick=saveRound;const nextRoundBtn=$('#startNextRoundBtn');if(nextRoundBtn)nextRoundBtn.onclick=startNextRound;$('#completeRoundBtn').onclick=completeRound;$('#reopenRoundBtn').onclick=()=>{$('#resultValidation').textContent='You can correct the results above, then press “Save corrections & recalculate”.'};$('#posterBtn').onclick=showPoster;$('#addLeagueBtn').onclick=addLeague;$('#movePlayerBtn').onclick=movePlayer;
+});$('#logoutBtn').onclick=logout;$('#whoBtn').onclick=logout;$$('[data-admin-tab]').forEach(b=>b.onclick=()=>setAdminTab(b.dataset.adminTab));$$('[data-player-tab]').forEach(b=>b.onclick=()=>{$$('[data-player-tab]').forEach(x=>x.classList.toggle('active',x===b));$('#playerHome').classList.toggle('hidden',b.dataset.playerTab!=='home');$('#playerTables').classList.toggle('hidden',b.dataset.playerTab!=='tables');$('#playerHistory').classList.toggle('hidden',b.dataset.playerTab!=='history');if(b.dataset.playerTab==='tables')renderLeagueTabs()});$('#saveRoundBtn').onclick=saveRound;const savePayBtn=$('#savePaymentUrlBtn');if(savePayBtn)savePayBtn.onclick=savePaymentUrl;const nextRoundBtn=$('#startNextRoundBtn');if(nextRoundBtn)nextRoundBtn.onclick=startNextRound;$('#completeRoundBtn').onclick=completeRound;$('#reopenRoundBtn').onclick=()=>{$('#resultValidation').textContent='You can correct the results above, then press “Save corrections & recalculate”.'};$('#posterBtn').onclick=showPoster;$('#addLeagueBtn').onclick=addLeague;$('#movePlayerBtn').onclick=movePlayer;
 })();

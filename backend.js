@@ -79,6 +79,47 @@
     return session;
   }
 
+  async function loadAppSettings(){
+    const sb = getClient();
+    await requireSession();
+
+    let res = await sb
+      .from('app_settings')
+      .select('id, default_entry_fee, payment_grace_hours, payment_url')
+      .eq('id', 1)
+      .maybeSingle();
+
+    // Backward-compatible fallback if the v0.24 SQL has not been applied yet.
+    if (res.error) {
+      res = await sb
+        .from('app_settings')
+        .select('id, default_entry_fee, payment_grace_hours')
+        .eq('id', 1)
+        .maybeSingle();
+    }
+    if (res.error) throw new Error(res.error.message || 'Could not load Super 6 settings.');
+    return {
+      id: 1,
+      default_entry_fee: Number(res.data?.default_entry_fee ?? 6),
+      payment_grace_hours: Number(res.data?.payment_grace_hours ?? 12),
+      payment_url: String(res.data?.payment_url || '')
+    };
+  }
+
+  async function savePaymentUrl(url){
+    const sb = getClient();
+    await requireSession();
+    const cleanUrl = String(url || '').trim();
+    const { data, error } = await sb
+      .from('app_settings')
+      .update({ payment_url: cleanUrl || null, updated_at: new Date().toISOString() })
+      .eq('id', 1)
+      .select('id, default_entry_fee, payment_grace_hours, payment_url')
+      .single();
+    if (error) throw new Error(error.message || 'Could not save the payment link. Run the v0.24 Supabase upgrade SQL first.');
+    return data;
+  }
+
   async function listAccountManagerData(){
     const sb = getClient();
     await requireSession();
@@ -233,21 +274,30 @@
     const sb = getClient();
     const session = await requireSession();
     const userId = session.user?.id;
-    if (!roundId || !userId) return { entry: null, predictions: [], paid: false };
+    if (!roundId || !userId) return { entry: null, predictions: [], paid: false, paymentPending: false, paymentClaimedAt: null };
 
-    const [entryRes, paymentRes] = await Promise.all([
-      sb.from('entries')
-        .select('id, first_goal_minute, submitted_at, updated_at')
-        .eq('round_id', roundId)
-        .eq('player_id', userId)
-        .maybeSingle(),
-      sb.from('payments')
+    const entryPromise = sb.from('entries')
+      .select('id, first_goal_minute, submitted_at, updated_at')
+      .eq('round_id', roundId)
+      .eq('player_id', userId)
+      .maybeSingle();
+
+    let paymentRes = await sb.from('payments')
+      .select('paid, player_claimed_paid, claimed_at, updated_at')
+      .eq('round_id', roundId)
+      .eq('player_id', userId)
+      .maybeSingle();
+
+    // Keep the site usable if the new pending-payment columns have not been added yet.
+    if (paymentRes.error) {
+      paymentRes = await sb.from('payments')
         .select('paid, updated_at')
         .eq('round_id', roundId)
         .eq('player_id', userId)
-        .maybeSingle()
-    ]);
+        .maybeSingle();
+    }
 
+    const entryRes = await entryPromise;
     if (entryRes.error) throw new Error(entryRes.error.message || 'Could not load your entry.');
     if (paymentRes.error) throw new Error(paymentRes.error.message || 'Could not load your payment status.');
 
@@ -263,7 +313,9 @@
     return {
       entry: entryRes.data || null,
       predictions,
-      paid: Boolean(paymentRes.data?.paid)
+      paid: Boolean(paymentRes.data?.paid),
+      paymentPending: Boolean(paymentRes.data?.player_claimed_paid) && !Boolean(paymentRes.data?.paid),
+      paymentClaimedAt: paymentRes.data?.claimed_at || null
     };
   }
 
@@ -288,17 +340,37 @@
   }
 
 
+  async function markMyPaymentPending(roundId){
+    const sb = getClient();
+    await requireSession();
+    const { data, error } = await sb.rpc('mark_my_payment_pending', {
+      p_round_id: roundId
+    });
+    if (error) throw new Error(error.message || 'Could not mark your payment as pending. Run the v0.24 Supabase upgrade SQL first.');
+    return data;
+  }
+
   async function loadAdminRoundOverview(roundId){
     const sb = getClient();
     await requireSession();
     if (!roundId) return { leagues: [], players: [] };
 
-    const [leagueRes, playerRes, entryRes, paymentRes] = await Promise.all([
+    const [leagueRes, playerRes, entryRes] = await Promise.all([
       sb.from('leagues').select('id, name, sort_order').order('sort_order'),
       sb.from('profiles').select('id, username, league_id').eq('role', 'player').order('username'),
-      sb.from('entries').select('id, player_id, first_goal_minute, submitted_at').eq('round_id', roundId),
-      sb.from('payments').select('player_id, paid, updated_at').eq('round_id', roundId)
+      sb.from('entries').select('id, player_id, first_goal_minute, submitted_at').eq('round_id', roundId)
     ]);
+
+    let paymentRes = await sb.from('payments')
+      .select('player_id, paid, player_claimed_paid, claimed_at, updated_at')
+      .eq('round_id', roundId);
+
+    // Backward-compatible fallback before the v0.24 database upgrade.
+    if (paymentRes.error) {
+      paymentRes = await sb.from('payments')
+        .select('player_id, paid, updated_at')
+        .eq('round_id', roundId);
+    }
 
     if (leagueRes.error) throw new Error(leagueRes.error.message || 'Could not load leagues.');
     if (playerRes.error) throw new Error(playerRes.error.message || 'Could not load players.');
@@ -323,6 +395,8 @@
           submitted_at: entry?.submitted_at || null,
           first_goal_minute: entry?.first_goal_minute ?? null,
           paid: Boolean(payment?.paid),
+          payment_pending: Boolean(payment?.player_claimed_paid) && !Boolean(payment?.paid),
+          payment_claimed_at: payment?.claimed_at || null,
           payment_updated_at: payment?.updated_at || null
         };
       })
@@ -477,7 +551,7 @@
   }
 
   window.Super6Backend = {
-    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-live-payments-live-results',
+    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-live-payment-pending-live-results',
     schema: cfg.SUPABASE_SCHEMA || 'super6',
     isConfigured(){ return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY); },
     configuration(){
@@ -488,6 +562,8 @@
       };
     },
     pinLogin,
+    loadAppSettings,
+    savePaymentUrl,
     listAccountManagerData,
     createPlayerAccount,
     resetPlayerPin,
@@ -498,6 +574,7 @@
     saveAndPublishRound,
     loadMyRoundEntry,
     submitMyPredictions,
+    markMyPaymentPending,
     loadAdminRoundOverview,
     setAdminPayment,
     loadAdminPlayerEntry,

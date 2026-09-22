@@ -114,6 +114,7 @@ button{touch-action:manipulation}
 .metric{position:relative;overflow:hidden}.metric:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px}
 .metric-submitted{background:#e8f2fb;border-color:#b6cee4}.metric-submitted:before{background:#2f6f9f}.metric-submitted strong{color:#255f8b}
 .metric-paid{background:#e2f1df;border-color:#b6d4af}.metric-paid:before{background:#3b7b47}.metric-paid strong{color:#2d6838}
+.metric-pending{background:#f7edd2;border-color:#e5cc8d}.metric-pending:before{background:#c88a22}.metric-pending strong{color:#8a5b0a}
 .metric-unpaid{background:#faecd0;border-color:#e2c98e}.metric-unpaid:before{background:#bd7a16}.metric-unpaid strong{color:#925b0c}
 .metric-missing{background:#f4dfdc;border-color:#dfb5af}.metric-missing:before{background:#ad4b42}.metric-missing strong{color:#8f3932}
 
@@ -122,6 +123,7 @@ button{touch-action:manipulation}
 .status-pill{display:inline-flex;align-items:center;gap:4px;border:1px solid;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:800;line-height:1.1;white-space:nowrap}
 .status-pill.submitted{background:#e3f0fb;color:#245f8c;border-color:#b3cfe7}
 .status-pill.paid{background:#e1f0dc;color:#2d6738;border-color:#b7d2ae}
+.status-pill.pending{background:#f7edd2;color:#80520b;border-color:#ddc078}
 .status-pill.unpaid{background:#f9e8c5;color:#8a580d;border-color:#dfc17e}
 .status-pill.missing{background:#f2dcd8;color:#8e3831;border-color:#d9aaa4}
 .status-pill.mini{font-size:10px;padding:3px 6px;font-weight:750}
@@ -134,7 +136,7 @@ button{touch-action:manipulation}
 .metrics .metric strong{grid-area:count;font-size:30px;line-height:1;font-weight:900;min-width:30px}
 .metrics .metric .metric-label{grid-area:label;display:block;font-size:14px;line-height:1.05;font-weight:900;letter-spacing:.035em;text-transform:uppercase;color:#162b20;text-decoration:none!important}
 .metrics .metric small{grid-area:help;display:block;margin-top:3px;font-size:10px;line-height:1.15;font-weight:700;color:#4d5149}
-.metric-submitted .metric-label{color:#174f79}.metric-paid .metric-label{color:#235b30}.metric-unpaid .metric-label{color:#744606}.metric-missing .metric-label{color:#7f302b}
+.metric-submitted .metric-label{color:#174f79}.metric-paid .metric-label{color:#235b30}.metric-pending .metric-label{color:#80520b}.metric-unpaid .metric-label{color:#744606}.metric-missing .metric-label{color:#7f302b}
 @media(max-width:430px){.metrics .metric{min-height:68px;column-gap:8px;padding:9px 10px 9px 13px}.metrics .metric strong{font-size:27px}.metrics .metric .metric-label{font-size:12px}.metrics .metric small{font-size:9px}}
 
 
@@ -170,7 +172,7 @@ button{touch-action:manipulation}
 @media(min-width:760px){
   .admin-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}
   .admin-hero{display:block}
-  .admin-hero .metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .admin-hero .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:759px){
   .brand small{display:none}.brand h1{font-size:24px}.brand-mark{flex:0 0 auto}
@@ -343,4 +345,35 @@ button{touch-action:manipulation}
 }
 @media(max-width:430px){
   .brand-logo{width:42px;height:36px}
+}
+
+
+/* v0.24 — simple Monzo payment flow */
+.payment-state{display:grid;grid-template-columns:auto minmax(0,1fr);gap:11px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:13px;background:#fffaf0}
+.payment-state .payment-copy,.payment-state>div:nth-child(2){min-width:0}
+.payment-state b{display:block;color:var(--green);font-size:17px}
+.payment-state span{display:block;margin-top:3px;color:var(--muted);font-size:12px;line-height:1.4}
+.payment-state-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:Impact,Haettenschweiler,"Arial Narrow Bold",sans-serif;font-size:22px;border:1px solid var(--line);background:#f4ecd7}
+.paid-state{background:#e5f0e1;border-color:#b8d2b0}.paid-state .payment-state-icon{background:#d5e8cf;color:#2f6a3a}
+.pending-state{background:#f8edd3;border-color:#dec17d}.pending-state .payment-state-icon{background:#f0dca8;color:#7d5610}
+.closed-state{background:#f2dedb;border-color:#d7aaa4}.closed-state .payment-state-icon{background:#e8c9c4;color:#8a3831}
+.unpaid-state{grid-template-columns:minmax(0,1fr) auto}
+.payment-pay-btn{width:auto;min-width:180px;padding:12px 16px;font-size:16px}
+.payment-confirm{border:1px solid #dec17d;border-radius:14px;padding:14px;background:#faf1dc}
+.payment-confirm h3{margin:3px 0 5px}
+.payment-confirm-actions{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.payment-confirm-actions .big-action{width:auto;min-width:180px}
+.payment-admin-settings{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.payment-admin-settings .secondary{width:100%}
+@media(min-width:1050px){
+  .admin-hero .metrics{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media(min-width:760px) and (max-width:1049px){
+  .admin-hero .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:759px){
+  .unpaid-state{grid-template-columns:1fr}
+  .payment-pay-btn{width:100%}
+  .payment-confirm-actions{display:grid;grid-template-columns:1fr}
+  .payment-confirm-actions .big-action,.payment-confirm-actions .secondary{width:100%}
 }

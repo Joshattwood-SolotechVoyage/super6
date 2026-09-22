@@ -1,5 +1,11 @@
-SUPER 6 v0.23.1
+SUPER 6 v0.24
 
-Upload ALL files and folders in this directory to the ROOT of the GitHub super6 repository, replacing matching files.
+1. Run `supabase/upgrade-v0.24-payment-flow.sql` ONCE in Supabase SQL Editor.
+2. Upload ALL files and folders in this directory to the ROOT of the GitHub `super6` repository, replacing matching files.
+3. Wait for Cloudflare Pages to deploy.
+4. Log in as Admin → Round → paste your fixed £6 Monzo payment link → Save payment link.
 
-The visible Super 6 logo is embedded directly in index.html. Root icon files are used for browser tabs, Apple Home Screen and PWA installation.
+Payment flow:
+Pay £6 → player confirms "I've paid" → Payment pending → Admin ticks Paid → Paid ✓
+
+The visible Super 6 logo remains embedded directly in index.html. Root icon files remain included for browser tabs, Apple Home Screen and PWA installation.

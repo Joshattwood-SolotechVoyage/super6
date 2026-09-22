@@ -33,3 +33,12 @@ When we reach the database step, the Supabase dashboard must also add `super6` t
 
 ## v0.17
 Player prediction entry now uses the live Supabase round. Saved predictions and first-goal minute reload from Supabase on login, so the same entry follows the player between devices. Admin payment overview and results remain staged for later migration.
+
+
+## v0.24 payment upgrade
+
+Before using the new player payment flow, run:
+
+`supabase/upgrade-v0.24-payment-flow.sql`
+
+Then open **Admin → Round** and save the fixed £6 Monzo payment link. Players will only see the link after submitting an entry and while their payment is still genuinely unpaid.
