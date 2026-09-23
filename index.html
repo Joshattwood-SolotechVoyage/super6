@@ -71,10 +71,11 @@
           <div id="playerPaymentBody"></div>
         </section>
         <section id="personalResultSection" class="card hidden"></section>
+        <section id="latestWeekPredictionsSection" class="card hidden"></section>
       </div>
 
       <div class="screen hidden" id="playerTables">
-        <section class="card"><div class="section-head"><div><div class="kicker">Season tables</div><h3>League standings</h3><div class="muted">All leagues are visible.</div></div></div><div class="icon-key" aria-label="Super 6 icon key"><b>Icon key</b><span>👑 Reigning league winner</span><span>🏆 Weekly winner</span><span>🥈 2nd place</span><span>🥄 Wooden spoon</span><small>👑 is league-only and moves when the next league results are final. Extra competitions do not use the crown.</small></div><div class="tabs" id="leagueTabs"></div><div class="table-wrap"><table><thead><tr><th>Pos</th><th>Player</th><th>Pts</th><th>Wins</th><th>Correct scores</th><th>Correct results</th><th>Played</th><th>Spoons</th></tr></thead><tbody id="leagueTableBody"></tbody></table></div></section>
+        <section class="card"><div class="section-head"><div><div class="kicker">Season tables</div><h3>League standings</h3><div class="muted">All leagues are visible.</div></div></div><div class="icon-key" aria-label="Super 6 icon key"><b>Latest league-week awards</b><span>👑 1st place</span><span>🥈 2nd place</span><span>🥄 Wooden spoon</span><small>These badges sit beside a player until the next league results are final, then they move to the new award holders. Historical wins/seconds/spoons remain stored. League rounds only.</small></div><div class="tabs" id="leagueTabs"></div><div class="table-wrap"><table><thead><tr><th>Pos</th><th>Player</th><th>Pts</th><th>Wins</th><th>Correct scores</th><th>Correct results</th><th>Played</th><th>Spoons</th></tr></thead><tbody id="leagueTableBody"></tbody></table></div></section>
       </div>
 
       <div class="screen hidden" id="playerHistory">
@@ -105,7 +106,7 @@
           <button data-admin-tab="players" type="button"><b>Players</b><small>Accounts & leagues</small></button>
         </nav>
 
-        <div class="icon-key admin-icon-key" aria-label="Super 6 icon key"><b>Icon key</b><span>👑 Reigning league winner</span><span>🏆 Weekly winner</span><span>🥈 2nd place</span><span>🥄 Wooden spoon</span><small>👑 is league-only and moves when the next league results are final. Extra competitions do not use the crown.</small></div>
+        <div class="icon-key admin-icon-key" aria-label="Super 6 icon key"><b>Latest league-week awards</b><span>👑 1st place</span><span>🥈 2nd place</span><span>🥄 Wooden spoon</span><small>Badges show the latest completed league week only. They move when the next league results are final; historical records stay stored. Extra competitions do not use them.</small></div>
 
         <div class="admin-tab-panel" data-admin-panel="overview">
           <section class="card">

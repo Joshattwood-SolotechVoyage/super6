@@ -12,3 +12,12 @@ This build adds:
 3. Wait for Cloudflare Pages to redeploy, then hard-refresh the site.
 
 The published-predictions SQL only exposes predictions once a round is `completed`, only for counted entries, and only within the signed-in player's league.
+
+## v0.26 — league-week awards + all predictions
+- Latest league-week badges are now 👑 1st, 🥈 2nd and 🥄 wooden spoon.
+- 1st is points first, then closest first-goal prediction; an unresolved tie shares the crown and removes 2nd place.
+- A crown holder can never also receive the wooden spoon.
+- Latest badges move when the next league results are completed while historic award flags remain stored.
+- Player Home now includes the latest completed week's counted predictions across every league, grouped league-by-league with partial-name search.
+- The £6 Monzo payment link remains configured.
+- Run `supabase/upgrade-v0.26-awards-all-predictions.sql` before uploading the site files.

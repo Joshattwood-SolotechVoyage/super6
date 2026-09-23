@@ -1,1 +1,8 @@
-Super 6 v0.25: run the v0.25 SQL first, then upload everything in this folder to the GitHub repository root and replace matching files.
+SUPER 6 v0.26
+
+1. Run: supabase/upgrade-v0.26-awards-all-predictions.sql
+2. Upload all website files in this package to the GitHub repo root and replace matching files.
+3. Wait for Cloudflare Pages to redeploy and hard-refresh.
+
+No Edge Function changes are required.
+The £6 Monzo link remains included.

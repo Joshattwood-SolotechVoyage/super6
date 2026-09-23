@@ -412,6 +412,13 @@
       p_paid: Boolean(paid)
     });
     if (error) throw new Error(error.message || 'Could not update payment status.');
+
+    // A payment change can alter who counts in a completed week, so refresh
+    // crown / second / spoon flags immediately. On an open round this is a no-op.
+    const { error: awardError } = await sb.rpc('normalise_round_awards', {
+      p_round_id: roundId
+    });
+    if (awardError) throw new Error(awardError.message || 'Payment updated, but league awards could not be refreshed. Run the v0.26 Supabase upgrade SQL.');
   }
 
   async function loadAdminPlayerEntry(roundId, playerId){
@@ -464,6 +471,12 @@
     });
 
     if (error) throw new Error(error.message || 'Could not complete the round.');
+
+    const { error: awardError } = await sb.rpc('normalise_round_awards', {
+      p_round_id: roundId
+    });
+    if (awardError) throw new Error(awardError.message || 'Results saved, but the league awards could not be refreshed. Run the v0.26 Supabase upgrade SQL.');
+
     return loadRoundById(roundId);
   }
 
@@ -556,13 +569,22 @@
     return Array.isArray(data) ? data : [];
   }
 
+
+  async function loadLatestPublishedPredictions(){
+    const sb = getClient();
+    await requireSession();
+    const { data, error } = await sb.rpc('get_latest_published_predictions');
+    if (error) throw new Error(error.message || 'Could not load the latest published predictions. Run the v0.26 Supabase upgrade SQL first.');
+    return data && typeof data === 'object' ? data : { round: null, predictions: [] };
+  }
+
   async function signOut(){
     if (!client) return;
     await client.auth.signOut();
   }
 
   window.Super6Backend = {
-    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-live-payment-pending-live-results-published-league-picks',
+    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-live-payment-pending-live-results-all-league-picks-awards-v026',
     schema: cfg.SUPABASE_SCHEMA || 'super6',
     isConfigured(){ return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY); },
     configuration(){
@@ -593,6 +615,7 @@
     loadRoundResults,
     loadLatestLeagueWinners,
     loadPublishedLeaguePredictions,
+    loadLatestPublishedPredictions,
     signOut,
     client: getClient
   };

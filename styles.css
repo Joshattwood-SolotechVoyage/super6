@@ -389,3 +389,40 @@ button{touch-action:manipulation}
  .published-picks-hint{display:grid;gap:4px}.published-picks-hint b{white-space:normal}.published-picks-hint span{text-align:left}
  .picks-btn{min-height:32px;padding:6px 10px}
 }
+
+/* v0.26 — latest-week awards + all-league prediction browser */
+.latest-award{margin-left:6px;white-space:nowrap;font-size:.92em}
+.latest-picks-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px}
+.latest-picks-head h3{margin:3px 0 2px}
+.latest-picks-count{flex:0 0 auto;border:1px solid var(--line);background:#f0e7cf;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;color:var(--muted);white-space:nowrap}
+.latest-picks-search{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;background:#fffaf0;padding:8px 11px;margin-bottom:14px}
+.latest-picks-search span{font-size:15px;line-height:1}
+.latest-picks-search input{border:0!important;background:transparent!important;padding:4px 0!important;margin:0!important;box-shadow:none!important;outline:none;width:100%;font-size:15px}
+.latest-picks-league{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fffdf7;margin-top:12px}
+.latest-picks-league:first-child{margin-top:0}
+.latest-picks-league-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:#efe5c9;border-bottom:1px solid var(--line)}
+.latest-picks-league-head h4{margin:0;color:var(--green);font-size:16px}
+.latest-picks-league-head span{min-width:28px;text-align:center;border-radius:999px;background:var(--green);color:var(--cream);font-size:11px;font-weight:900;padding:4px 7px}
+.latest-picks-list{display:grid}
+.latest-picks-row{display:grid;grid-template-columns:32px minmax(0,1fr) 54px auto;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid rgba(88,75,48,.14)}
+.latest-picks-row:first-child{border-top:0}
+.latest-picks-row.me{background:#f1ead6}
+.latest-picks-pos{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#ece1c4;color:var(--green);font-weight:900;font-size:12px}
+.latest-picks-person{min-width:0}
+.latest-picks-person b{display:block;color:var(--green);font-size:13px;line-height:1.25;overflow-wrap:anywhere}
+.latest-picks-person small{display:block;margin-top:3px;color:var(--muted);font-size:10px;line-height:1.3}
+.latest-picks-points{text-align:center;color:var(--green)}
+.latest-picks-points strong{display:block;font-family:Impact,Haettenschweiler,"Arial Narrow Bold",sans-serif;font-size:21px;line-height:1}
+.latest-picks-points span{display:block;margin-top:2px;font-size:9px;font-weight:900;letter-spacing:.08em;color:var(--muted)}
+.latest-picks-row .picks-btn{margin:0;white-space:nowrap}
+@media(max-width:650px){
+  .latest-picks-head{display:grid;gap:8px}
+  .latest-picks-count{justify-self:start}
+  .latest-picks-row{grid-template-columns:30px minmax(0,1fr) 48px;gap:8px;padding:10px}
+  .latest-picks-row .picks-btn{grid-column:2/4;justify-self:start;margin-top:1px}
+  .latest-picks-person b{font-size:12px}
+}
+@media(max-width:390px){
+  .latest-picks-row{grid-template-columns:28px minmax(0,1fr) 44px}
+  .latest-picks-row .picks-btn{width:100%;justify-self:stretch}
+}
