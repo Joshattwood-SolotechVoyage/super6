@@ -1,8 +1,10 @@
-SUPER 6 v0.28 — CHUMPIONS KNOCKOUTS
+SUPER 6 v0.29.1 — WEBSITE UPDATE ONLY
 
-1. Run: supabase/upgrade-v0.28-chumpions-knockouts.sql
-2. Upload all website files to the GitHub repo root and replace matching files.
-3. Wait for Cloudflare deployment and hard-refresh.
+No SQL required.
 
-New: Admin confirms final group standings, Round of 16 is generated automatically,
-and future manually ticked Chumpions weeks run R16 -> QF -> SF -> Final.
+Upload the files in this package to the GitHub repository root and replace matching files.
+Cloudflare Pages should redeploy automatically.
+
+Chumpions group-stage pairing is now automatic. The old manual Player 1 / Player 2 controls are removed from the website.
+
+If the current Chumpions round was already ticked before the database rotation stages were installed, go to Admin > Round and press Save once after this deployment.

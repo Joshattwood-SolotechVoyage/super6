@@ -490,3 +490,11 @@ button{touch-action:manipulation}
 .chumpions-champion>span{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}.chumpions-champion>strong{margin-left:auto;font-size:17px}
 @media(min-width:760px){.chumpions-confirm-box{grid-template-columns:minmax(0,1fr) 280px;align-items:center}.chumpions-confirm-box .big-action{width:auto}.chumpions-finalists{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:759px){.chumpions-bracket{grid-template-columns:1fr;overflow:visible}.chumpions-current-ko{grid-template-columns:1fr}.chumpions-finalists{grid-template-columns:1fr}.chumpions-champion{align-items:flex-start;flex-wrap:wrap}.chumpions-champion>strong{margin-left:0;width:100%}.chumpions-ko-line{gap:5px}.chumpions-ko-line b{font-size:10px}.chumpions-admin-choice>div{grid-template-columns:1fr}}
+
+/* v0.29 automatic Chumpions group rotation */
+.chumpions-auto-note{margin:0 0 12px;padding:10px 12px;border:1px dashed #b8a97e;border-radius:11px;background:#f3ead0;color:var(--ink);font-size:11px;line-height:1.45}
+.chumpions-auto-note b{color:var(--green)}
+.chumpions-bye{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;margin-top:7px;border:1px dashed #c7b985;border-radius:10px;background:#f3ead0}
+.chumpions-bye span{font-size:9px;font-weight:900;letter-spacing:.12em;color:var(--muted)}
+.chumpions-bye b{font-size:12px;color:var(--green);text-align:right}
+@media(max-width:620px){.chumpions-bye{align-items:flex-start}.chumpions-auto-note{font-size:10px}}
