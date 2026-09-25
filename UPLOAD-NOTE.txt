@@ -1,8 +1,9 @@
-SUPER 6 v0.26
+SUPER 6 v0.27 — CHUMPIONS LEAGUE GROUP STAGE
 
-1. Run: supabase/upgrade-v0.26-awards-all-predictions.sql
-2. Upload all website files in this package to the GitHub repo root and replace matching files.
-3. Wait for Cloudflare Pages to redeploy and hard-refresh.
+1. Run: supabase/upgrade-v0.27-chumpions-group-stage.sql
+2. Upload every website file in this package to the GitHub repo root and replace matching files.
+3. Wait for Cloudflare Pages to redeploy.
+4. Hard-refresh the site.
 
 No Edge Function changes are required.
-The £6 Monzo link remains included.
+The £6 Monzo payment flow remains included.

@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
 <link rel="manifest" href="manifest.webmanifest" />
-<link rel="stylesheet" href="styles.css?v=0.25" />
+<link rel="stylesheet" href="styles.css?v=0.27" />
 </head>
 <body>
 <div class="app" id="app">
@@ -42,7 +42,7 @@
 
     <main id="playerArea" class="hidden">
       <nav class="player-nav" aria-label="Player navigation">
-        <button data-player-tab="home" class="active" type="button">Home</button><button data-player-tab="tables" type="button">Tables</button><button data-player-tab="history" type="button">History</button>
+        <button data-player-tab="home" class="active" type="button">Home</button><button data-player-tab="tables" type="button">Tables</button><button data-player-tab="chumpions" type="button">Chumpions</button><button data-player-tab="history" type="button">History</button>
       </nav>
 
       <div class="screen" id="playerHome">
@@ -78,6 +78,13 @@
         <section class="card"><div class="section-head"><div><div class="kicker">Season tables</div><h3>League standings</h3><div class="muted">All leagues are visible.</div></div></div><div class="icon-key" aria-label="Super 6 icon key"><b>Latest league-week awards</b><span>👑 1st place</span><span>🥈 2nd place</span><span>🥄 Wooden spoon</span><small>These badges sit beside a player until the next league results are final, then they move to the new award holders. Historical wins/seconds/spoons remain stored. League rounds only.</small></div><div class="tabs" id="leagueTabs"></div><div class="table-wrap"><table><thead><tr><th>Pos</th><th>Player</th><th>Pts</th><th>Wins</th><th>Correct scores</th><th>Correct results</th><th>Played</th><th>Spoons</th></tr></thead><tbody id="leagueTableBody"></tbody></table></div></section>
       </div>
 
+      <div class="screen hidden" id="playerChumpions">
+        <section class="card chumpions-hero">
+          <div class="section-head"><div><div class="kicker">Extra competition</div><h3>🏆 Chumpions League</h3><div class="muted">Four groups · top four qualify · normal Super 6 points decide each head-to-head.</div></div><span class="chip" id="playerChumpionsStatus">Group stage</span></div>
+          <div id="playerChumpionsBody"><div class="muted">Loading Chumpions League…</div></div>
+        </section>
+      </div>
+
       <div class="screen hidden" id="playerHistory">
         <section class="card"><div class="section-head"><div><div class="kicker">Your league only</div><h3>Round history</h3><div class="muted" id="historyLeagueName"></div></div></div><div id="historyList"></div></section>
         <section class="card"><div class="section-head"><div><div class="kicker">Season archive</div><h3>Previous final tables</h3></div></div><div class="notice">Prototype note: the production app will keep final season standings while old detailed weekly data can be exported to Excel and cleared.</div></section>
@@ -103,6 +110,7 @@
           <button data-admin-tab="round" type="button"><b>Round</b><small>Fixtures & cutoff</small></button>
           <button data-admin-tab="results" type="button"><b>Results</b><small>Scores & winners</small></button>
           <button data-admin-tab="tables" type="button"><b>Tables</b><small>League standings</small></button>
+          <button data-admin-tab="chumpions" type="button"><b>Chumpions</b><small>Groups & fixtures</small></button>
           <button data-admin-tab="players" type="button"><b>Players</b><small>Accounts & leagues</small></button>
         </nav>
 
@@ -128,6 +136,7 @@
               <div class="section-head"><div><div class="kicker">Current round</div><h3>Fixtures & cutoff</h3><div class="muted">One shared fixture sheet for every league.</div></div><span id="roundState" class="chip"></span></div>
               <label class="field">Round name<input id="adminRoundName" /></label>
               <label class="field">Cutoff date & time<input id="adminCutoffInput" type="datetime-local" /></label>
+              <label class="chumpions-toggle"><input id="chumpionsWeekCheckbox" type="checkbox" /><span><b>🏆 Chumpions League week</b><small>Tick this manually only when this Super 6 round should also count for Chumpions League.</small></span></label>
               <div id="fixtureEditor"></div>
               <div class="btnrow"><button id="saveRoundBtn" class="big-action" type="button">Save & publish round</button><button id="startNextRoundBtn" class="secondary hidden" type="button">Start next round</button></div>
             </section>
@@ -171,6 +180,23 @@
             <div class="tabs" id="adminTableLeagueTabs"></div>
             <div class="admin-table-heading" id="adminLeagueTableTitle"></div>
             <div class="table-wrap"><table><thead><tr><th>Pos</th><th>Player</th><th>Pts</th><th>Wins</th><th>Correct scores</th><th>Correct results</th><th>Played</th><th>Spoons</th></tr></thead><tbody id="adminLeagueTableBody"></tbody></table></div>
+          </section>
+        </div>
+
+        <div class="admin-tab-panel hidden" data-admin-panel="chumpions">
+          <section class="card">
+            <div class="section-head"><div><div class="kicker">Competition control</div><h3>🏆 Chumpions League</h3><div class="muted">Group stage only in this build. Assign players to A–D and manually create the head-to-heads for each round you tick as a Chumpions week.</div></div><span class="chip good">4 groups</span></div>
+            <div class="notice">Scoring: 3 group points for a win · 1 for a draw · 0 for a loss. Head-to-head score comes directly from that player's normal counted Super 6 score.</div>
+            <div id="adminChumpionsCurrentWeek"></div>
+          </section>
+          <section class="card">
+            <div class="section-head"><div><div class="kicker">Group setup</div><h3>Players & groups</h3><div class="muted">Choose A, B, C, D or Not entered. Changes save immediately.</div></div></div>
+            <label class="latest-picks-search"><span>🔎</span><input id="chumpionsPlayerSearch" type="search" placeholder="Search player…" autocomplete="off" /></label>
+            <div id="adminChumpionsRoster"></div>
+          </section>
+          <section class="card">
+            <div class="section-head"><div><div class="kicker">Live group stage</div><h3>Standings</h3><div class="muted">Order: group points → head-to-head mini-table → Chumpions Super 6 points → first-goal accuracy. Exact ties are left for Admin to decide later.</div></div></div>
+            <div id="adminChumpionsStandings"></div>
           </section>
         </div>
 
@@ -219,7 +245,7 @@
 <div id="modalRoot"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script src="backend.js?v=0.25"></script>
-<script src="app.js?v=0.25"></script>
+<script src="backend.js?v=0.27"></script>
+<script src="app.js?v=0.27"></script>
 </body>
 </html>

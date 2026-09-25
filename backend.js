@@ -200,7 +200,7 @@
 
     const { data: round, error: roundError } = await sb
       .from('rounds')
-      .select('id, name, cutoff_at, entry_fee, status, official_first_goal_minute, completed_at, created_at')
+      .select('id, name, cutoff_at, entry_fee, status, official_first_goal_minute, completed_at, created_at, chumpions_league')
       .eq('id', roundId)
       .single();
 
@@ -249,7 +249,7 @@
     return loadRoundById(round.id);
   }
 
-  async function saveAndPublishRound({ roundId=null, name, cutoffAt, fixtures }){
+  async function saveAndPublishRound({ roundId=null, name, cutoffAt, fixtures, chumpionsLeague=false }){
     const sb = getClient();
     await requireSession();
 
@@ -266,7 +266,28 @@
     });
 
     if (error) throw new Error(error.message || 'Could not save the round.');
-    return data;
+
+    // admin_save_round predates Chumpions League, so keep the competition flag
+    // as an explicit second admin action. This avoids changing the proven round RPC.
+    let savedId = roundId || (typeof data === 'string' ? data : (data?.id || data?.round_id || null));
+    if (!savedId) {
+      const latest = await sb.from('rounds')
+        .select('id')
+        .eq('status', 'published')
+        .order('cutoff_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (latest.error) throw new Error(latest.error.message || 'Round saved, but could not find it to set Chumpions League.');
+      savedId = latest.data?.id || null;
+    }
+    if (!savedId) throw new Error('Round saved, but its ID could not be resolved.');
+
+    const { error: cupError } = await sb.rpc('admin_set_chumpions_round', {
+      p_round_id: savedId,
+      p_enabled: Boolean(chumpionsLeague)
+    });
+    if (cupError) throw new Error(cupError.message || 'Round saved, but Chumpions League could not be updated. Run the v0.27 SQL upgrade.');
+    return loadRoundById(savedId);
   }
 
 
@@ -419,6 +440,10 @@
       p_round_id: roundId
     });
     if (awardError) throw new Error(awardError.message || 'Payment updated, but league awards could not be refreshed. Run the v0.26 Supabase upgrade SQL.');
+    const { error: cupError } = await sb.rpc('chumpions_recalculate_round', { p_round_id: roundId });
+    if (cupError && !/function.*does not exist|Could not find the function/i.test(cupError.message || '')) {
+      throw new Error(cupError.message || 'Payment updated, but Chumpions League could not be refreshed.');
+    }
   }
 
   async function loadAdminPlayerEntry(roundId, playerId){
@@ -476,6 +501,9 @@
       p_round_id: roundId
     });
     if (awardError) throw new Error(awardError.message || 'Results saved, but the league awards could not be refreshed. Run the v0.26 Supabase upgrade SQL.');
+
+    const { error: cupError } = await sb.rpc('chumpions_recalculate_round', { p_round_id: roundId });
+    if (cupError) throw new Error(cupError.message || 'League results saved, but Chumpions League could not be calculated. Run the v0.27 SQL upgrade.');
 
     return loadRoundById(roundId);
   }
@@ -578,13 +606,97 @@
     return data && typeof data === 'object' ? data : { round: null, predictions: [] };
   }
 
+  async function loadChumpionsState(){
+    const sb = getClient();
+    await requireSession();
+
+    const { data: season, error: seasonError } = await sb
+      .from('seasons')
+      .select('id, name')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (seasonError) throw new Error(seasonError.message || 'Could not load the active season.');
+    if (!season?.id) return { season: null, members: [], matches: [], players: [], rounds: [] };
+
+    const [memberRes, matchRes, playerRes, roundRes] = await Promise.all([
+      sb.from('chumpions_members')
+        .select('season_id, player_id, group_code, updated_at')
+        .eq('season_id', season.id),
+      sb.from('chumpions_matches')
+        .select('id, season_id, round_id, group_code, player1_id, player2_id, player1_score, player2_score, player1_tiebreak, player2_tiebreak, status, winner_id, is_draw, calculated_at, created_at')
+        .eq('season_id', season.id)
+        .order('created_at'),
+      sb.from('profiles')
+        .select('id, username, league_id')
+        .eq('role', 'player')
+        .order('username'),
+      sb.from('rounds')
+        .select('id, name, status, completed_at, created_at, chumpions_league')
+        .eq('season_id', season.id)
+        .eq('chumpions_league', true)
+        .order('created_at')
+    ]);
+
+    if (memberRes.error) throw new Error(memberRes.error.message || 'Could not load Chumpions groups. Run the v0.27 SQL upgrade.');
+    if (matchRes.error) throw new Error(matchRes.error.message || 'Could not load Chumpions fixtures.');
+    if (playerRes.error) throw new Error(playerRes.error.message || 'Could not load Chumpions players.');
+    if (roundRes.error) throw new Error(roundRes.error.message || 'Could not load Chumpions weeks.');
+
+    return {
+      season,
+      members: memberRes.data || [],
+      matches: matchRes.data || [],
+      players: playerRes.data || [],
+      rounds: roundRes.data || []
+    };
+  }
+
+  async function setChumpionsMember(playerId, groupCode){
+    const sb = getClient();
+    await requireSession();
+    const { error } = await sb.rpc('admin_set_chumpions_member', {
+      p_player_id: playerId,
+      p_group_code: groupCode || null
+    });
+    if (error) throw new Error(error.message || 'Could not update the Chumpions group.');
+  }
+
+  async function addChumpionsMatch(roundId, groupCode, player1Id, player2Id){
+    const sb = getClient();
+    await requireSession();
+    const { data, error } = await sb.rpc('admin_add_chumpions_match', {
+      p_round_id: roundId,
+      p_group_code: groupCode,
+      p_player1_id: player1Id,
+      p_player2_id: player2Id
+    });
+    if (error) throw new Error(error.message || 'Could not add the Chumpions fixture.');
+    return data;
+  }
+
+  async function deleteChumpionsMatch(matchId){
+    const sb = getClient();
+    await requireSession();
+    const { error } = await sb.rpc('admin_delete_chumpions_match', { p_match_id: matchId });
+    if (error) throw new Error(error.message || 'Could not remove the Chumpions fixture.');
+  }
+
+  async function recalculateChumpionsRound(roundId){
+    const sb = getClient();
+    await requireSession();
+    const { error } = await sb.rpc('chumpions_recalculate_round', { p_round_id: roundId });
+    if (error) throw new Error(error.message || 'Could not recalculate Chumpions League.');
+  }
+
   async function signOut(){
     if (!client) return;
     await client.auth.signOut();
   }
 
   window.Super6Backend = {
-    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-live-payment-pending-live-results-all-league-picks-awards-v026',
+    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-payment-results-chumpions-v027',
     schema: cfg.SUPABASE_SCHEMA || 'super6',
     isConfigured(){ return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY); },
     configuration(){
@@ -616,6 +728,11 @@
     loadLatestLeagueWinners,
     loadPublishedLeaguePredictions,
     loadLatestPublishedPredictions,
+    loadChumpionsState,
+    setChumpionsMember,
+    addChumpionsMatch,
+    deleteChumpionsMatch,
+    recalculateChumpionsRound,
     signOut,
     client: getClient
   };
