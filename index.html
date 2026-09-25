@@ -80,7 +80,7 @@
 
       <div class="screen hidden" id="playerChumpions">
         <section class="card chumpions-hero">
-          <div class="section-head"><div><div class="kicker">Extra competition</div><h3>🏆 Chumpions League</h3><div class="muted">Four groups · top four qualify · normal Super 6 points decide each head-to-head.</div></div><span class="chip" id="playerChumpionsStatus">Group stage</span></div>
+          <div class="section-head"><div><div class="kicker">Extra competition</div><h3>🏆 Chumpions League</h3><div class="muted">Four groups · top four qualify · then Round of 16 through to the Final. Normal Super 6 points decide every tie.</div></div><span class="chip" id="playerChumpionsStatus">Group stage</span></div>
           <div id="playerChumpionsBody"><div class="muted">Loading Chumpions League…</div></div>
         </section>
       </div>
@@ -110,7 +110,7 @@
           <button data-admin-tab="round" type="button"><b>Round</b><small>Fixtures & cutoff</small></button>
           <button data-admin-tab="results" type="button"><b>Results</b><small>Scores & winners</small></button>
           <button data-admin-tab="tables" type="button"><b>Tables</b><small>League standings</small></button>
-          <button data-admin-tab="chumpions" type="button"><b>Chumpions</b><small>Groups & fixtures</small></button>
+          <button data-admin-tab="chumpions" type="button"><b>Chumpions</b><small>Groups & knockouts</small></button>
           <button data-admin-tab="players" type="button"><b>Players</b><small>Accounts & leagues</small></button>
         </nav>
 
@@ -185,7 +185,7 @@
 
         <div class="admin-tab-panel hidden" data-admin-panel="chumpions">
           <section class="card">
-            <div class="section-head"><div><div class="kicker">Competition control</div><h3>🏆 Chumpions League</h3><div class="muted">Group stage only in this build. Assign players to A–D and manually create the head-to-heads for each round you tick as a Chumpions week.</div></div><span class="chip good">4 groups</span></div>
+            <div class="section-head"><div><div class="kicker">Competition control</div><h3>🏆 Chumpions League</h3><div class="muted">Assign players to Groups A–D, run the group stage, then confirm the final tables when you are ready. The app builds and advances the knockout bracket automatically.</div></div><span class="chip good">4 groups</span></div>
             <div class="notice">Scoring: 3 group points for a win · 1 for a draw · 0 for a loss. Head-to-head score comes directly from that player's normal counted Super 6 score.</div>
             <div id="adminChumpionsCurrentWeek"></div>
           </section>
@@ -195,8 +195,12 @@
             <div id="adminChumpionsRoster"></div>
           </section>
           <section class="card">
-            <div class="section-head"><div><div class="kicker">Live group stage</div><h3>Standings</h3><div class="muted">Order: group points → head-to-head mini-table → Chumpions Super 6 points → first-goal accuracy. Exact ties are left for Admin to decide later.</div></div></div>
+            <div class="section-head"><div><div class="kicker">Live group stage</div><h3>Standings</h3><div class="muted">Order: group points → head-to-head mini-table → Chumpions Super 6 points → first-goal accuracy. Admin tie only appears when played results still cannot separate players.</div></div></div>
             <div id="adminChumpionsStandings"></div>
+          </section>
+          <section class="card">
+            <div class="section-head"><div><div class="kicker">Knockout stage</div><h3>Road to the Final</h3><div class="muted">When you are happy the group stage is finished, confirm the tables here. After that, your normal Chumpions checkbox decides which future Super 6 weeks play each knockout stage.</div></div><span class="chip">R16 → Final</span></div>
+            <div id="adminChumpionsKnockout"></div>
           </section>
         </div>
 

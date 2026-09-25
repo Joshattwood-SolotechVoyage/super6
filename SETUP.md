@@ -1,23 +1,25 @@
-# Super 6 v0.27 setup
+# Super 6 v0.28 setup
 
 ## 1. Supabase
-Run this once in the Supabase SQL Editor:
+Run this file in Supabase SQL Editor:
 
-`supabase/upgrade-v0.27-chumpions-group-stage.sql`
+`supabase/upgrade-v0.28-chumpions-knockouts.sql`
 
-If Supabase says **No rows returned**, that is successful.
+"No rows returned" is a successful result.
 
-## 2. Website
-Upload the contents of the v0.27 package to the root of the Super 6 GitHub repository, replacing matching files.
+## 2. GitHub
+Upload the contents of the v0.28 package to the root of the Super 6 GitHub repository, replacing matching files.
 
-Cloudflare Pages should redeploy automatically.
+Do not upload only the ZIP file itself.
 
-## 3. First Chumpions setup
-1. Log in as Admin.
-2. Open **Chumpions**.
-3. Assign the participating players to Group A, B, C or D.
-4. When creating a Super 6 round that should also count for Chumpions League, tick **Chumpions League week** in the Round tab.
-5. Return to **Chumpions** and manually add the head-to-head fixtures for that week.
-6. Complete the normal Super 6 results as usual. Chumpions scores are calculated from the same normal weekly points.
+## 3. Cloudflare
+Wait for the automatic Pages deployment to finish, then hard-refresh the Super 6 website.
 
-No Edge Function changes are required.
+## 4. Chumpions workflow
+- Continue assigning groups and running manual Chumpions group weeks as before.
+- When Admin is happy the group stage is complete, open **Admin → Chumpions** and press **Confirm groups & create Round of 16**.
+- Group membership then locks.
+- For each knockout stage, create the normal Super 6 round and manually tick **Chumpions League week** when you want that stage played.
+- The app attaches the next knockout stage to that chosen week.
+- When normal results are completed, Chumpions results calculate automatically.
+- Exact knockout ties after first-goal accuracy are shown to Admin for a manual decision.

@@ -1,48 +1,55 @@
-# Super 6 v0.27
+# Super 6 v0.28.3
 
-This build starts the **Chumpions League** as a separate competition layered on top of the normal Super 6 leagues.
+This build adds the Chumpions League knockout stage on top of the v0.27 group-stage system.
 
-## Chumpions League rules in this build
-- Four groups: **A, B, C and D**.
-- Admin decides manually, round by round, whether a Super 6 week also counts for Chumpions League.
-- In **Admin → Round**, tick **Chumpions League week** only when that week should count.
-- Admin manually creates that week's head-to-head fixtures inside **Admin → Chumpions**.
-- Each head-to-head uses the player's normal counted Super 6 points from that same week.
-- Group scoring: **3 points win · 1 point draw · 0 points loss**.
-- Group ranking order:
-  1. Group points
-  2. Head-to-head mini-table between tied players
-  3. Total Super 6 points scored across Chumpions group matches
-  4. Cumulative first-goal accuracy across those Chumpions weeks
-  5. If still tied, the app flags **Admin tie** for a manual decision later
-- The **top 4 from each group** are the qualifying places for the future Round of 16.
-- Normal league 👑 / 🥈 / 🥄 awards remain league-only and are not affected by Chumpions League.
+## Chumpions League format
+- 4 groups: A, B, C and D.
+- Group matches use the normal Super 6 score from a week manually ticked as a **Chumpions League week**.
+- Win = 3 group points, draw = 1, loss = 0.
+- Group ranking remains: group points → head-to-head mini-table → total Chumpions Super 6 points → first-goal accuracy.
+- Exact unresolved group-order ties remain an Admin decision.
+- Top 4 from each group qualify.
 
-## New Admin tools
-- **Chumpions** tab in the Admin navigation.
-- Assign any player to Group A, B, C, D or Not entered.
-- Search players by partial name while setting groups.
-- When the current Super 6 round is ticked as a Chumpions week, manually pair players within each group.
-- Completed Super 6 results automatically fill the Chumpions head-to-head score.
-- Payment/result recalculation during the existing grace window also refreshes the Chumpions result.
-
-## Player view
-- New **Chumpions** item in the top player navigation.
-- Players can see their group, the latest Chumpions fixtures/results and all four live group tables.
-- Current Chumpions weeks are clearly labelled.
+## New in v0.28
+- Admin gets a **Confirm groups & create Round of 16** button when the group stage is ready.
+- Confirming the groups locks group membership and snapshots the top four positions in each group.
+- Round of 16 is seeded automatically:
+  - A1 v B4
+  - B1 v A4
+  - C1 v D4
+  - D1 v C4
+  - A2 v B3
+  - B2 v A3
+  - C2 v D3
+  - D2 v C3
+- Admin still chooses Chumpions weeks manually, round by round, with the existing checkbox.
+- After the group stage is confirmed, ticking the next chosen Super 6 week automatically attaches the next unfinished knockout stage.
+- Knockout stages progress automatically: Round of 16 → Quarter Finals → Semi Finals → Final.
+- Knockout winner is decided by:
+  1. Highest Super 6 score that week
+  2. Closest first-goal prediction
+  3. Admin choice if still exactly tied
+- Players and Admin can both view the knockout bracket.
+- The winning finalist is stored and displayed as Chumpions League Champion.
+- Mobile layouts stack the bracket vertically; desktop shows a four-stage bracket.
 
 ## Existing features retained
-- Latest completed-week predictions across all three normal leagues with partial-name search.
-- Latest league-week 👑 / 🥈 / 🥄 badges.
-- £6 Monzo payment flow and fixed payment link.
-- Normal Super 6 scoring, league tables, payment grace and Admin controls.
+- Normal league standings and weekly 👑 / 🥈 / 🥄 awards remain separate from Chumpions.
+- Latest-week All Predictions browser remains available after results are published.
+- £6 Monzo payment flow remains configured and unchanged.
 
 ## Upgrade order
-1. Run `supabase/upgrade-v0.27-chumpions-group-stage.sql` in Supabase SQL Editor.
-2. Upload all website files in this package to the GitHub repository root, replacing matching files.
+1. Run `supabase/upgrade-v0.28-chumpions-knockouts.sql` in Supabase SQL Editor.
+2. Upload the website files to the GitHub repository root, replacing matching files.
 3. Wait for Cloudflare Pages to redeploy, then hard-refresh the site.
 
-No Edge Function changes are required.
+The v0.28 SQL is designed to be safe to re-run.
 
-### Current scope
-v0.27 deliberately builds the **group stage first**. The Round of 16 / Quarter Final / Semi Final / Final bracket will be added after the group-stage workflow has been tested with real data. The final exact-tie Admin decision method can also be added later without changing the group scoring already stored.
+
+## v0.28.3 standings tidy-up
+- Before any Chumpions matches are completed, group positions show as a dash rather than false tied 1st places.
+- `ADMIN TIE` is hidden until played results genuinely remain inseparable after the configured tiebreaks.
+- Qualification highlighting begins only after a group has a completed Chumpions result.
+- Group headings now clarify that the top four qualify after the group stage.
+- Admin cannot confirm a group that has no completed Chumpions match.
+- No database change is required for this front-end update.

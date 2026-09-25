@@ -286,7 +286,7 @@
       p_round_id: savedId,
       p_enabled: Boolean(chumpionsLeague)
     });
-    if (cupError) throw new Error(cupError.message || 'Round saved, but Chumpions League could not be updated. Run the v0.27 SQL upgrade.');
+    if (cupError) throw new Error(cupError.message || 'Round saved, but Chumpions League could not be updated. Run the latest Chumpions SQL upgrade.');
     return loadRoundById(savedId);
   }
 
@@ -503,7 +503,7 @@
     if (awardError) throw new Error(awardError.message || 'Results saved, but the league awards could not be refreshed. Run the v0.26 Supabase upgrade SQL.');
 
     const { error: cupError } = await sb.rpc('chumpions_recalculate_round', { p_round_id: roundId });
-    if (cupError) throw new Error(cupError.message || 'League results saved, but Chumpions League could not be calculated. Run the v0.27 SQL upgrade.');
+    if (cupError) throw new Error(cupError.message || 'League results saved, but Chumpions League could not be calculated. Run the latest Chumpions SQL upgrade.');
 
     return loadRoundById(roundId);
   }
@@ -618,9 +618,9 @@
       .limit(1)
       .maybeSingle();
     if (seasonError) throw new Error(seasonError.message || 'Could not load the active season.');
-    if (!season?.id) return { season: null, members: [], matches: [], players: [], rounds: [] };
+    if (!season?.id) return { season: null, members: [], matches: [], players: [], rounds: [], competition: null, finalists: [], knockoutMatches: [] };
 
-    const [memberRes, matchRes, playerRes, roundRes] = await Promise.all([
+    const [memberRes, matchRes, playerRes, roundRes, compRes, finalistRes, knockoutRes] = await Promise.all([
       sb.from('chumpions_members')
         .select('season_id, player_id, group_code, updated_at')
         .eq('season_id', season.id),
@@ -636,20 +636,39 @@
         .select('id, name, status, completed_at, created_at, chumpions_league')
         .eq('season_id', season.id)
         .eq('chumpions_league', true)
+        .order('created_at'),
+      sb.from('chumpions_competition_state')
+        .select('season_id, group_stage_confirmed, group_stage_confirmed_at, group_stage_confirmed_by, champion_id, completed_at, updated_at')
+        .eq('season_id', season.id)
+        .maybeSingle(),
+      sb.from('chumpions_group_finalists')
+        .select('season_id, group_code, position, player_id, created_at')
+        .eq('season_id', season.id)
+        .order('group_code')
+        .order('position'),
+      sb.from('chumpions_knockout_matches')
+        .select('id, season_id, stage, slot_no, round_id, player1_id, player2_id, player1_score, player2_score, player1_tiebreak, player2_tiebreak, status, winner_id, decided_by, calculated_at, created_at, updated_at')
+        .eq('season_id', season.id)
         .order('created_at')
     ]);
 
-    if (memberRes.error) throw new Error(memberRes.error.message || 'Could not load Chumpions groups. Run the v0.27 SQL upgrade.');
+    if (memberRes.error) throw new Error(memberRes.error.message || 'Could not load Chumpions groups. Run the latest Chumpions SQL upgrade.');
     if (matchRes.error) throw new Error(matchRes.error.message || 'Could not load Chumpions fixtures.');
     if (playerRes.error) throw new Error(playerRes.error.message || 'Could not load Chumpions players.');
     if (roundRes.error) throw new Error(roundRes.error.message || 'Could not load Chumpions weeks.');
+    if (compRes.error) throw new Error(compRes.error.message || 'Could not load Chumpions knockout state. Run the v0.28 SQL upgrade.');
+    if (finalistRes.error) throw new Error(finalistRes.error.message || 'Could not load Chumpions qualifiers.');
+    if (knockoutRes.error) throw new Error(knockoutRes.error.message || 'Could not load Chumpions knockout bracket.');
 
     return {
       season,
       members: memberRes.data || [],
       matches: matchRes.data || [],
       players: playerRes.data || [],
-      rounds: roundRes.data || []
+      rounds: roundRes.data || [],
+      competition: compRes.data || null,
+      finalists: finalistRes.data || [],
+      knockoutMatches: knockoutRes.data || []
     };
   }
 
@@ -690,13 +709,35 @@
     if (error) throw new Error(error.message || 'Could not recalculate Chumpions League.');
   }
 
+  async function confirmChumpionsGroups(groups){
+    const sb = getClient();
+    await requireSession();
+    const { error } = await sb.rpc('admin_confirm_chumpions_groups', {
+      p_group_a: groups.A || [],
+      p_group_b: groups.B || [],
+      p_group_c: groups.C || [],
+      p_group_d: groups.D || []
+    });
+    if (error) throw new Error(error.message || 'Could not confirm the Chumpions group stage.');
+  }
+
+  async function chooseChumpionsKnockoutWinner(matchId, playerId){
+    const sb = getClient();
+    await requireSession();
+    const { error } = await sb.rpc('admin_choose_chumpions_knockout_winner', {
+      p_match_id: matchId,
+      p_player_id: playerId
+    });
+    if (error) throw new Error(error.message || 'Could not save the Chumpions knockout decision.');
+  }
+
   async function signOut(){
     if (!client) return;
     await client.auth.signOut();
   }
 
   window.Super6Backend = {
-    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-payment-results-chumpions-v027',
+    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-payment-results-chumpions-v028',
     schema: cfg.SUPABASE_SCHEMA || 'super6',
     isConfigured(){ return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY); },
     configuration(){
@@ -733,6 +774,8 @@
     addChumpionsMatch,
     deleteChumpionsMatch,
     recalculateChumpionsRound,
+    confirmChumpionsGroups,
+    chooseChumpionsKnockoutWinner,
     signOut,
     client: getClient
   };

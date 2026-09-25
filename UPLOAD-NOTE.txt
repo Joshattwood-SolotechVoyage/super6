@@ -1,9 +1,8 @@
-SUPER 6 v0.27 — CHUMPIONS LEAGUE GROUP STAGE
+SUPER 6 v0.28 — CHUMPIONS KNOCKOUTS
 
-1. Run: supabase/upgrade-v0.27-chumpions-group-stage.sql
-2. Upload every website file in this package to the GitHub repo root and replace matching files.
-3. Wait for Cloudflare Pages to redeploy.
-4. Hard-refresh the site.
+1. Run: supabase/upgrade-v0.28-chumpions-knockouts.sql
+2. Upload all website files to the GitHub repo root and replace matching files.
+3. Wait for Cloudflare deployment and hard-refresh.
 
-No Edge Function changes are required.
-The £6 Monzo payment flow remains included.
+New: Admin confirms final group standings, Round of 16 is generated automatically,
+and future manually ticked Chumpions weeks run R16 -> QF -> SF -> Final.

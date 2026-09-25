@@ -32,7 +32,7 @@ let adminRoundOverview={leagues:[],players:[]};
 let adminOverviewLastFetch=0;
 let adminOverviewFetching=false;
 let appSettings={default_entry_fee:6,payment_grace_hours:12,payment_url:DEFAULT_PAYMENT_URL};
-let chumpionsState={season:null,members:[],matches:[],players:[],rounds:[]};
+let chumpionsState={season:null,members:[],matches:[],players:[],rounds:[],competition:null,finalists:[],knockoutMatches:[]};
 let chumpionsError='';
 function cleanRoundDraft(){
  return {id:null,name:'',cutoff:'',fee:6,fixtures:Array.from({length:6},(_,i)=>({id:null,home:'',away:'',removed:false,result:null,sortOrder:i+1})),officialMinute:null,completed:false,completedAt:null,chumpionsLeague:false,audit:[]};
@@ -106,7 +106,7 @@ async function refreshChumpionsState(){
   chumpionsError='';
  }catch(err){
   console.warn('Could not load Chumpions League',err);
-  chumpionsState={season:null,members:[],matches:[],players:[],rounds:[]};
+  chumpionsState={season:null,members:[],matches:[],players:[],rounds:[],competition:null,finalists:[],knockoutMatches:[]};
   chumpionsError=err?.message||'Could not load Chumpions League.';
  }
  return chumpionsState;
@@ -138,24 +138,26 @@ function computeChumpionsStandings(){
  }
  for(const group of Object.keys(groups)){
   const rows=groups[group];
+  const groupCompleted=completed.filter(x=>x.group_code===group);
+  const hasPlayed=groupCompleted.length>0;
   const cohorts=new Map();rows.forEach(r=>{const k=r.groupPoints;if(!cohorts.has(k))cohorts.set(k,[]);cohorts.get(k).push(r)});
   for(const cohort of cohorts.values()){
    if(cohort.length<2)continue;const ids=new Set(cohort.map(r=>String(r.player_id)));
-   for(const m of completed.filter(x=>x.group_code===group&&ids.has(String(x.player1_id))&&ids.has(String(x.player2_id)))){
+   for(const m of groupCompleted.filter(x=>ids.has(String(x.player1_id))&&ids.has(String(x.player2_id)))){
     const a=allRows.get(String(m.player1_id)),b=allRows.get(String(m.player2_id));
     if(Number(m.player1_score)>Number(m.player2_score))a.h2h+=3;else if(Number(m.player2_score)>Number(m.player1_score))b.h2h+=3;else{a.h2h++;b.h2h++}
    }
   }
   rows.sort((a,b)=>b.groupPoints-a.groupPoints||b.h2h-a.h2h||b.super6Points-a.super6Points||((a.accuracySamples?a.firstGoalAccuracy:999999)-(b.accuracySamples?b.firstGoalAccuracy:999999))||a.username.localeCompare(b.username));
   let lastKey='',position=0;
-  rows.forEach((r,i)=>{const acc=r.accuracySamples?r.firstGoalAccuracy:'x';const key=`${r.groupPoints}|${r.h2h}|${r.super6Points}|${acc}`;if(key!==lastKey){position=i+1;lastKey=key}r.position=position;r.tieKey=key;r.qualifying=position<=4});
-  rows.forEach(r=>r.adminTie=rows.filter(x=>x.tieKey===r.tieKey).length>1);
+  rows.forEach((r,i)=>{const acc=r.accuracySamples?r.firstGoalAccuracy:'x';const key=`${r.groupPoints}|${r.h2h}|${r.super6Points}|${acc}`;if(key!==lastKey){position=i+1;lastKey=key}r.position=position;r.tieKey=key;r.preMatch=!hasPlayed;r.qualifying=hasPlayed&&position<=4});
+  rows.forEach(r=>{const tied=rows.filter(x=>x.tieKey===r.tieKey);r.adminTie=hasPlayed&&r.played>0&&tied.length>1&&tied.every(x=>x.played>0)});
  }
  return groups;
 }
 function chumpionsStandingsHTML({compact=false}={}){
  const groups=computeChumpionsStandings();
- return `<div class="chumpions-groups">${['A','B','C','D'].map(group=>{const rows=groups[group]||[];return `<section class="chumpions-group-card"><div class="chumpions-group-title"><h4>Group ${group}</h4><span>Top 4 qualify</span></div>${rows.length?`<div class="table-wrap"><table class="chumpions-table"><thead><tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th><th>S6</th>${compact?'':'<th>H2H</th>'}</tr></thead><tbody>${rows.map(r=>`<tr class="${r.qualifying?'qualifying':''}"><td>${r.position}${r.adminTie?'*':''}</td><td>${escapeHtml(r.username)}${r.adminTie?'<small class="admin-tie">Admin tie</small>':''}</td><td>${r.played}</td><td>${r.wins}</td><td>${r.draws}</td><td>${r.losses}</td><td><b>${r.groupPoints}</b></td><td>${r.super6Points}</td>${compact?'':`<td>${r.h2h}</td>`}</tr>`).join('')}</tbody></table></div>`:`<div class="notice">No players assigned to Group ${group} yet.</div>`}</section>`}).join('')}</div>`;
+ return `<div class="chumpions-groups">${['A','B','C','D'].map(group=>{const rows=groups[group]||[];const hasPlayed=rows.some(r=>r.played>0);const qualifierText=rows.length<4?'Top 4 qualify once group is complete':'Top 4 qualify after group stage';return `<section class="chumpions-group-card"><div class="chumpions-group-title"><h4>Group ${group}</h4><span>${qualifierText}</span></div>${rows.length?`<div class="table-wrap"><table class="chumpions-table"><thead><tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th><th>S6</th>${compact?'':'<th>H2H</th>'}</tr></thead><tbody>${rows.map(r=>`<tr class="${r.qualifying?'qualifying':''}"><td>${hasPlayed?`${r.position}${r.adminTie?'*':''}`:'—'}</td><td>${escapeHtml(r.username)}${r.adminTie?'<small class="admin-tie">Admin tie</small>':''}</td><td>${r.played}</td><td>${r.wins}</td><td>${r.draws}</td><td>${r.losses}</td><td><b>${r.groupPoints}</b></td><td>${r.super6Points}</td>${compact?'':`<td>${r.h2h}</td>`}</tr>`).join('')}</tbody></table></div>${!hasPlayed?'<div class="chumpions-prestart-note">Standings begin once the first Chumpions head-to-head result is completed.</div>':''}`:`<div class="notice">No players assigned to Group ${group} yet.</div>`}</section>`}).join('')}</div>`;
 }
 function chumpionsMatchesForRound(roundId){return (chumpionsState.matches||[]).filter(m=>String(m.round_id)===String(roundId))}
 function chumpionsMatchRow(m,{admin=false}={}){
@@ -164,6 +166,50 @@ function chumpionsMatchRow(m,{admin=false}={}){
  if(m.status==='completed'){score=`<b class="chumpions-score">${Number(m.player1_score)} – ${Number(m.player2_score)}</b>`;state=m.is_draw?'Draw':`${escapeHtml(chumpionsName(m.winner_id))} won`}
  else if(m.status==='review'){score='<b class="chumpions-review">Review</b>';state='One or both normal Super 6 entries did not count'}
  return `<div class="chumpions-match"><div><b>${a}</b><small>${escapeHtml(state)}</small></div>${score}<div class="right"><b>${b}</b>${admin&&m.status!=='completed'?`<button class="link-danger" data-delete-chumpions="${escapeAttr(m.id)}" type="button">Remove</button>`:''}</div></div>`;
+}
+
+
+function chumpionsGroupConfirmed(){return Boolean(chumpionsState.competition?.group_stage_confirmed)}
+function chumpionsStageLabel(stage){return stage==='R16'?'Round of 16':stage==='QF'?'Quarter Finals':stage==='SF'?'Semi Finals':stage==='F'?'Final':'Knockout'}
+function chumpionsKnockoutForStage(stage){return (chumpionsState.knockoutMatches||[]).filter(m=>m.stage===stage).sort((a,b)=>Number(a.slot_no)-Number(b.slot_no))}
+function chumpionsKnockoutForRound(roundId){return (chumpionsState.knockoutMatches||[]).filter(m=>String(m.round_id||'')===String(roundId||''))}
+function chumpionsRoundName(roundId){return chumpionsRoundMap().get(String(roundId))?.name||''}
+function chumpionsKnockoutMatchHTML(m,{admin=false}={}){
+ const a=escapeHtml(chumpionsName(m.player1_id)),b=escapeHtml(chumpionsName(m.player2_id));
+ const roundName=m.round_id?chumpionsRoundName(m.round_id):'';
+ let middle='<span class="chumpions-vs">vs</span>',note=roundName?escapeHtml(roundName):'Waiting for a Chumpions week';
+ if(m.status==='completed'){
+  middle=`<b class="chumpions-score">${Number(m.player1_score)} – ${Number(m.player2_score)}</b>`;
+  const why=m.decided_by==='first_goal'?' · first-goal tie-break':m.decided_by==='admin'?' · Admin decision':'';
+  note=`${escapeHtml(chumpionsName(m.winner_id))} through${why}`;
+ }else if(m.status==='review'){
+  middle=`<b class="chumpions-review">Decision</b>`;
+  note=(m.player1_score!=null&&m.player2_score!=null)?`Level ${Number(m.player1_score)}–${Number(m.player2_score)} · Admin decides`:'Admin review required';
+ }else if(m.status==='scheduled') note=roundName?`${escapeHtml(roundName)} · awaiting results`:'Awaiting results';
+ const controls=admin&&m.status==='review'?`<div class="chumpions-admin-choice"><small>Who goes through?</small><div><button class="secondary small" data-chumpions-advance="${escapeAttr(m.id)}" data-player="${escapeAttr(m.player1_id)}" type="button">${a}</button><button class="secondary small" data-chumpions-advance="${escapeAttr(m.id)}" data-player="${escapeAttr(m.player2_id)}" type="button">${b}</button></div></div>`:'';
+ return `<div class="chumpions-ko-match"><div class="chumpions-ko-line"><div><b>${a}</b><small>${m.player1_score==null?'':`${Number(m.player1_score)} pts`}</small></div>${middle}<div class="right"><b>${b}</b><small>${m.player2_score==null?'':`${Number(m.player2_score)} pts`}</small></div></div><div class="chumpions-ko-note">${note}</div>${controls}</div>`;
+}
+function chumpionsBracketHTML({admin=false}={}){
+ if(!chumpionsGroupConfirmed())return '';
+ const champion=chumpionsState.competition?.champion_id;
+ const champ=champion?`<div class="chumpions-champion">🏆 <span>Chumpions League Champion</span><strong>${escapeHtml(chumpionsName(champion))}</strong></div>`:'';
+ return `${champ}<div class="chumpions-bracket">${['R16','QF','SF','F'].map(stage=>{const ms=chumpionsKnockoutForStage(stage);return `<section class="chumpions-stage"><div class="chumpions-stage-head"><b>${chumpionsStageLabel(stage)}</b><span>${ms.length?`${ms.filter(m=>m.status==='completed').length}/${ms.length} decided`:'Waiting'}</span></div>${ms.length?ms.map(m=>chumpionsKnockoutMatchHTML(m,{admin})).join(''):'<div class="chumpions-stage-wait">Created automatically when the previous stage is complete.</div>'}</section>`}).join('')}</div>`;
+}
+function chumpionsQualifierPayload(){
+ const groups=computeChumpionsStandings(),out={A:[],B:[],C:[],D:[]};
+ for(const g of ['A','B','C','D'])out[g]=(groups[g]||[]).slice(0,4).map(r=>r.player_id);
+ return out;
+}
+function chumpionsQualifierProblem(){
+ const groups=computeChumpionsStandings();
+ for(const g of ['A','B','C','D']){
+  const rows=groups[g]||[];
+  if(rows.length<4)return `Group ${g} needs at least four players before the group stage can be confirmed.`;
+  if(!rows.some(r=>r.played>0))return `Group ${g} has no completed Chumpions matches yet.`;
+  const top=rows.slice(0,4);
+  if(top.some(r=>r.adminTie))return `Group ${g} still has an exact tie affecting the qualifying order. Leave the group stage open until Admin is ready to decide it.`;
+ }
+ return '';
 }
 
 function cutoff(){return state.round?.cutoff?new Date(state.round.cutoff):null}
@@ -460,18 +506,26 @@ function renderPlayerChumpions(){
  const body=$('#playerChumpionsBody'),status=$('#playerChumpionsStatus');if(!body)return;
  if(chumpionsError){body.innerHTML=`<div class="notice bad">${escapeHtml(chumpionsError)}</div>`;return}
  const member=chumpionsMemberMap().get(String(session.authUserId));
- if(status){status.textContent=member?`Group ${member.group_code}`:'View only';status.className=member?'chip good':'chip'}
- const current=state.round?.chumpionsLeague&&state.round?.id?chumpionsMatchesForRound(state.round.id):[];
- const myCurrent=member?current.find(m=>String(m.player1_id)===String(session.authUserId)||String(m.player2_id)===String(session.authUserId)):null;
+ const confirmed=chumpionsGroupConfirmed();
+ if(status){status.textContent=confirmed?'Knockout stage':member?`Group ${member.group_code}`:'View only';status.className=(member||confirmed)?'chip good':'chip'}
+ const groupCurrent=state.round?.chumpionsLeague&&state.round?.id?chumpionsMatchesForRound(state.round.id):[];
+ const koCurrent=state.round?.chumpionsLeague&&state.round?.id?chumpionsKnockoutForRound(state.round.id):[];
+ const myGroupCurrent=member?groupCurrent.find(m=>String(m.player1_id)===String(session.authUserId)||String(m.player2_id)===String(session.authUserId)):null;
+ const myKoCurrent=koCurrent.find(m=>String(m.player1_id)===String(session.authUserId)||String(m.player2_id)===String(session.authUserId));
  let top='';
  if(state.round?.chumpionsLeague){
-  top=`<div class="chumpions-week-banner"><b>🏆 ${escapeHtml(state.round.name)} is a Chumpions League week</b><span>${myCurrent?`Your tie: ${escapeHtml(chumpionsName(myCurrent.player1_id))} vs ${escapeHtml(chumpionsName(myCurrent.player2_id))}`:'No head-to-head has been assigned to you for this week.'}</span></div>`;
- }else if(member){top='<div class="notice">This Super 6 round is not a Chumpions League week. Your group table is still shown below.</div>'}
+  const stage=koCurrent[0]?.stage;
+  top=`<div class="chumpions-week-banner"><b>🏆 ${escapeHtml(state.round.name)} is a Chumpions League week${stage?` · ${escapeHtml(chumpionsStageLabel(stage))}`:''}</b><span>${myKoCurrent?`Your tie: ${escapeHtml(chumpionsName(myKoCurrent.player1_id))} vs ${escapeHtml(chumpionsName(myKoCurrent.player2_id))}`:myGroupCurrent?`Your tie: ${escapeHtml(chumpionsName(myGroupCurrent.player1_id))} vs ${escapeHtml(chumpionsName(myGroupCurrent.player2_id))}`:'You do not have a Chumpions tie in this round.'}</span></div>`;
+ }else if(member||confirmed){top='<div class="notice">This Super 6 round is not a Chumpions League week. Competition progress is shown below.</div>'}
  const recentRounds=[...(chumpionsState.rounds||[])].sort((a,b)=>new Date(b.completed_at||b.created_at)-new Date(a.completed_at||a.created_at));
  const latestRound=recentRounds.find(r=>r.status==='completed');
- const latestMatches=latestRound?chumpionsMatchesForRound(latestRound.id):[];
- const latest=`${latestRound&&latestMatches.length?`<div class="chumpions-latest"><div class="kicker">Latest Chumpions results</div><h4>${escapeHtml(latestRound.name)}</h4>${latestMatches.map(m=>chumpionsMatchRow(m)).join('')}</div>`:''}`;
- body.innerHTML=`${top}${member?`<div class="chumpions-membership"><span>Your group</span><strong>Group ${member.group_code}</strong></div>`:'<div class="notice">You are not currently entered in a Chumpions League group, but you can still view the competition.</div>'}${latest}<div class="weekly-full-table-title">Group tables</div>${chumpionsStandingsHTML({compact:true})}<div class="chumpions-rule-note">Top 4 from each group progress to the Round of 16. Exact unresolved ties are marked for an Admin decision.</div>`;
+ const latestGroupMatches=latestRound?chumpionsMatchesForRound(latestRound.id):[];
+ const latestKoMatches=latestRound?chumpionsKnockoutForRound(latestRound.id):[];
+ const latestMatches=latestKoMatches.length?latestKoMatches:latestGroupMatches;
+ const latest=`${latestRound&&latestMatches.length?`<div class="chumpions-latest"><div class="kicker">Latest Chumpions results</div><h4>${escapeHtml(latestRound.name)}</h4>${latestKoMatches.length?latestKoMatches.map(m=>chumpionsKnockoutMatchHTML(m)).join(''):latestGroupMatches.map(m=>chumpionsMatchRow(m)).join('')}</div>`:''}`;
+ const groupBlock=`${member?`<div class="chumpions-membership"><span>Your group</span><strong>Group ${member.group_code}</strong></div>`:'<div class="notice">You are not currently entered in a Chumpions League group, but you can still view the competition.</div>'}<div class="weekly-full-table-title">Group tables</div>${chumpionsStandingsHTML({compact:true})}`;
+ const knockout=confirmed?`<div class="weekly-full-table-title">Knockout bracket</div>${chumpionsBracketHTML()}<div class="chumpions-rule-note">Knockout ties are decided by Super 6 points, then closest first-goal prediction. If both are still level, Admin chooses who progresses.</div>`:'<div class="chumpions-rule-note">Top 4 from each group progress to the Round of 16. Admin will confirm the final group tables when the group stage is ready.</div>';
+ body.innerHTML=`${top}${latest}${groupBlock}${knockout}`;
 }
 
 function renderLeagueTabs(){const holder=$('#leagueTabs');holder.innerHTML=state.leagues.map(l=>`<button type="button" data-league-tab="${l.id}" class="${activeLeague===l.id?'active':''}">${l.name}</button>`).join('');holder.querySelectorAll('button').forEach(b=>b.onclick=()=>{activeLeague=b.dataset.leagueTab;renderLeagueTabs()});const body=$('#leagueTableBody');const rows=liveRowsForLeague(activeLeague);if(rows.length){body.innerHTML=rows.map(r=>`<tr class="${r.player_id===session.authUserId?'me':''}"><td>${r.position}</td><td>${playerNameWithCrown(r.player_id,r.username)}</td><td>${r.points}</td><td>${r.wins}</td><td>${r.exact_scores}</td><td>${r.correct_results}</td><td>${r.weeks_played}</td><td>${r.wooden_spoons}</td></tr>`).join('');return}const me=currentUser()?.id;body.innerHTML=seasonSortedLocal(activeLeague).map(p=>`<tr class="${p.id===me?'me':''}"><td>${p.pos}</td><td>${playerNameWithCrown(p.id,p.name)}</td><td>${p.points}</td><td>${p.wins}</td><td>${p.exact}</td><td>${p.correct}</td><td>${p.played}</td><td>${p.spoons}</td></tr>`).join('')}
@@ -708,21 +762,42 @@ function showResetPin(userId,name){
  $('#confirmRealReset').onclick=async()=>{const pin=$('#resetRealPin').value.trim(),msg=$('#resetRealStatus'),btn=$('#confirmRealReset');if(!/^\d{4}$/.test(pin)){msg.textContent='PIN must be exactly 4 digits.';return}btn.disabled=true;btn.textContent='Resetting…';try{await window.Super6Backend.resetPlayerPin(userId,pin);closeModal();const status=$('#accountManagerStatus');if(status)status.textContent=`PIN reset for ${name}.`;await renderRealAccountManager()}catch(err){msg.textContent=err?.message||'Could not reset PIN.';btn.disabled=false;btn.textContent='Reset PIN'}}
 }
 function renderAdminChumpions(){
- const week=$('#adminChumpionsCurrentWeek'),roster=$('#adminChumpionsRoster'),standings=$('#adminChumpionsStandings');if(!week||!roster||!standings)return;
- if(chumpionsError){week.innerHTML=`<div class="notice bad">${escapeHtml(chumpionsError)}</div>`;roster.innerHTML='';standings.innerHTML='';return}
- const members=chumpionsMemberMap(),players=chumpionsState.players||[];
+ const week=$('#adminChumpionsCurrentWeek'),roster=$('#adminChumpionsRoster'),standings=$('#adminChumpionsStandings'),knockout=$('#adminChumpionsKnockout');if(!week||!roster||!standings)return;
+ if(chumpionsError){week.innerHTML=`<div class="notice bad">${escapeHtml(chumpionsError)}</div>`;roster.innerHTML='';standings.innerHTML='';if(knockout)knockout.innerHTML='';return}
+ const members=chumpionsMemberMap(),players=chumpionsState.players||[],confirmed=chumpionsGroupConfirmed();
  const currentMatches=state.round?.id?chumpionsMatchesForRound(state.round.id):[];
- if(!liveRoundExists){week.innerHTML='<div class="notice">Create the next Super 6 round first. Tick <b>Chumpions League week</b> in the Round tab whenever you want it to count.</div>'}
- else if(!state.round.chumpionsLeague){week.innerHTML=`<div class="notice">${escapeHtml(state.round.name)} is a normal league week only. To use it for Chumpions League, tick the checkbox in <b>Round</b> before the cutoff.</div>`}
- else{
+ const currentKo=state.round?.id?chumpionsKnockoutForRound(state.round.id):[];
+ if(!liveRoundExists){
+  const nextStage=['R16','QF','SF','F'].find(st=>chumpionsKnockoutForStage(st).some(m=>m.status!=='completed'));
+  week.innerHTML=`<div class="notice">Create the next Super 6 round first. ${confirmed&&nextStage?`When you are ready for the <b>${escapeHtml(chumpionsStageLabel(nextStage))}</b>, tick <b>Chumpions League week</b> on that round.`:'Tick <b>Chumpions League week</b> whenever you want a normal Super 6 round to count for this competition.'}</div>`;
+ }else if(!state.round.chumpionsLeague){
+  const nextStage=confirmed?['R16','QF','SF','F'].find(st=>chumpionsKnockoutForStage(st).some(m=>m.status!=='completed')):null;
+  week.innerHTML=`<div class="notice">${escapeHtml(state.round.name)} is a normal league week only.${nextStage?` When you are ready to play the <b>${escapeHtml(chumpionsStageLabel(nextStage))}</b>, tick the Chumpions checkbox in <b>Round</b> before the cutoff.`:' To use it for Chumpions League, tick the checkbox in <b>Round</b> before the cutoff.'}</div>`;
+ }else if(confirmed){
+  if(currentKo.length){
+   const stage=currentKo[0].stage;
+   week.innerHTML=`<div class="chumpions-week-banner"><b>🏆 ${escapeHtml(state.round.name)} · ${escapeHtml(chumpionsStageLabel(stage))}</b><span>This stage was attached automatically because you manually ticked this round as a Chumpions League week.</span></div><div class="chumpions-current-ko">${currentKo.map(m=>chumpionsKnockoutMatchHTML(m,{admin:true})).join('')}</div>`;
+  }else week.innerHTML=`<div class="notice">${escapeHtml(state.round.name)} is marked as a Chumpions League week, but there is no knockout stage waiting to be attached.</div>`;
+ }else{
   const groupEditors=['A','B','C','D'].map(group=>{const gm=chumpionsMembersFor(group),used=new Set(currentMatches.flatMap(m=>[String(m.player1_id),String(m.player2_id)]));const avail=gm.filter(m=>!used.has(String(m.player_id)));return `<div class="chumpions-fixture-group"><div class="chumpions-group-title"><h4>Group ${group}</h4><span>${gm.length} players</span></div>${currentMatches.filter(m=>m.group_code===group).map(m=>chumpionsMatchRow(m,{admin:true})).join('')||'<div class="muted">No head-to-heads added yet.</div>'}${!state.round.completed&&avail.length>=2?`<div class="chumpions-add-match"><select data-cup-p1="${group}"><option value="">Player 1</option>${avail.map(m=>`<option value="${m.player_id}">${escapeHtml(m.username)}</option>`).join('')}</select><span>vs</span><select data-cup-p2="${group}"><option value="">Player 2</option>${avail.map(m=>`<option value="${m.player_id}">${escapeHtml(m.username)}</option>`).join('')}</select><button class="secondary small" data-add-chumpions="${group}" type="button">Add tie</button></div>`:''}</div>`}).join('');
   week.innerHTML=`<div class="chumpions-week-banner"><b>🏆 ${escapeHtml(state.round.name)} counts for Chumpions League</b><span>Pair the players manually below. Their normal Super 6 points will fill in when results are completed.</span></div><div class="chumpions-fixture-grid">${groupEditors}</div>`;
   week.querySelectorAll('[data-add-chumpions]').forEach(btn=>btn.onclick=async()=>{const g=btn.dataset.addChumpions,p1=week.querySelector(`[data-cup-p1="${g}"]`)?.value,p2=week.querySelector(`[data-cup-p2="${g}"]`)?.value;if(!p1||!p2){alert('Choose both players.');return}btn.disabled=true;try{await window.Super6Backend.addChumpionsMatch(state.round.id,g,p1,p2);await refreshChumpionsState();renderAdminChumpions()}catch(err){alert(err?.message||'Could not add the Chumpions fixture.')}finally{btn.disabled=false}});
   week.querySelectorAll('[data-delete-chumpions]').forEach(btn=>btn.onclick=async()=>{if(!confirm('Remove this Chumpions head-to-head?'))return;btn.disabled=true;try{await window.Super6Backend.deleteChumpionsMatch(btn.dataset.deleteChumpions);await refreshChumpionsState();renderAdminChumpions()}catch(err){alert(err?.message||'Could not remove the fixture.')}});
  }
- const renderRoster=(q='')=>{const term=String(q||'').trim().toLowerCase();const rows=players.filter(p=>!term||String(p.username||'').toLowerCase().includes(term));roster.innerHTML=`<div class="chumpions-roster">${rows.map(p=>{const m=members.get(String(p.id));return `<div class="chumpions-roster-row"><b>${escapeHtml(p.username)}</b><select data-chumpions-member="${escapeAttr(p.id)}" data-last="${escapeAttr(m?.group_code||'')}"><option value="" ${!m?'selected':''}>Not entered</option>${['A','B','C','D'].map(g=>`<option value="${g}" ${m?.group_code===g?'selected':''}>Group ${g}</option>`).join('')}</select></div>`}).join('')}</div>`;roster.querySelectorAll('[data-chumpions-member]').forEach(sel=>sel.onchange=async()=>{const before=sel.dataset.last??'';sel.disabled=true;try{await window.Super6Backend.setChumpionsMember(sel.dataset.chumpionsMember,sel.value||null);await refreshChumpionsState();renderAdminChumpions()}catch(err){alert(err?.message||'Could not update the group.');sel.value=before}finally{sel.disabled=false}})};
+ const renderRoster=(q='')=>{const term=String(q||'').trim().toLowerCase();const rows=players.filter(p=>!term||String(p.username||'').toLowerCase().includes(term));roster.innerHTML=`${confirmed?'<div class="notice good">Group stage confirmed. Player groups are now locked for this Chumpions League.</div>':''}<div class="chumpions-roster">${rows.map(p=>{const m=members.get(String(p.id));return `<div class="chumpions-roster-row"><b>${escapeHtml(p.username)}</b><select data-chumpions-member="${escapeAttr(p.id)}" data-last="${escapeAttr(m?.group_code||'')}" ${confirmed?'disabled':''}><option value="" ${!m?'selected':''}>Not entered</option>${['A','B','C','D'].map(g=>`<option value="${g}" ${m?.group_code===g?'selected':''}>Group ${g}</option>`).join('')}</select></div>`}).join('')}</div>`;if(!confirmed)roster.querySelectorAll('[data-chumpions-member]').forEach(sel=>sel.onchange=async()=>{const before=sel.dataset.last??'';sel.disabled=true;try{await window.Super6Backend.setChumpionsMember(sel.dataset.chumpionsMember,sel.value||null);await refreshChumpionsState();renderAdminChumpions()}catch(err){alert(err?.message||'Could not update the group.');sel.value=before}finally{sel.disabled=false}})};
  const search=$('#chumpionsPlayerSearch');if(search&&!search.dataset.bound){search.dataset.bound='1';search.addEventListener('input',()=>renderRoster(search.value))}renderRoster(search?.value||'');
  standings.innerHTML=chumpionsStandingsHTML();
+ if(knockout){
+  if(!confirmed){
+   const problem=chumpionsQualifierProblem();
+   knockout.innerHTML=`<div class="chumpions-confirm-box"><div><div class="kicker">When the group stage is finished</div><h4>Confirm final standings & build the Round of 16</h4><p>The app will take the top four from Groups A–D and seed A1 v B4, B1 v A4, C1 v D4, D1 v C4, A2 v B3, B2 v A3, C2 v D3 and D2 v C3.</p>${problem?`<div class="notice">${escapeHtml(problem)}</div>`:'<div class="notice good">The displayed top four in every group are ready to be confirmed.</div>'}</div><button class="big-action" id="confirmChumpionsGroupsBtn" type="button" ${problem?'disabled':''}>Confirm groups & create Round of 16</button></div>`;
+   const btn=$('#confirmChumpionsGroupsBtn');if(btn&&!problem)btn.onclick=async()=>{if(!confirm('Lock the final group standings and create the Round of 16? Group membership will be locked after this.'))return;btn.disabled=true;btn.textContent='Building bracket…';try{await window.Super6Backend.confirmChumpionsGroups(chumpionsQualifierPayload());await refreshChumpionsState();renderAdminChumpions()}catch(err){alert(err?.message||'Could not build the Round of 16.');btn.disabled=false;btn.textContent='Confirm groups & create Round of 16'}};
+  }else{
+   const finalists=(chumpionsState.finalists||[]).map(f=>`<span>Group ${f.group_code}${f.position}: <b>${escapeHtml(chumpionsName(f.player_id))}</b></span>`).join('');
+   knockout.innerHTML=`<div class="notice good"><b>Group stage confirmed.</b> The knockout bracket is now locked. To play each stage, simply tick a future Super 6 round as a Chumpions League week.</div><div class="chumpions-finalists">${finalists}</div>${chumpionsBracketHTML({admin:true})}`;
+   knockout.querySelectorAll('[data-chumpions-advance]').forEach(btn=>btn.onclick=async()=>{const matchId=btn.dataset.chumpionsAdvance,playerId=btn.dataset.player,name=chumpionsName(playerId);if(!confirm(`Advance ${name} from this tied Chumpions match?`))return;btn.disabled=true;try{await window.Super6Backend.chooseChumpionsKnockoutWinner(matchId,playerId);await refreshChumpionsState();renderAdminChumpions()}catch(err){alert(err?.message||'Could not save the Admin decision.')}finally{btn.disabled=false}});
+  }
+ }
 }
 
 function renderLeagueManagement(){const list=$('#leagueManageList');list.innerHTML=state.leagues.map(l=>`<div class="inline" style="margin-bottom:7px"><input data-lname="${l.id}" value="${l.name}" style="flex:1"><button data-rename="${l.id}" class="secondary small" type="button">Rename</button></div>`).join('');list.querySelectorAll('[data-rename]').forEach(b=>b.onclick=()=>{const id=b.dataset.rename,v=list.querySelector(`[data-lname="${id}"]`).value.trim();if(v){state.leagues.find(l=>l.id===id).name=v;save();renderAdmin()}});$('#movePlayerSelect').innerHTML=state.players.map(p=>`<option value="${p.id}">${p.name} — ${leagueName(p.leagueId)}</option>`).join('');$('#moveLeagueSelect').innerHTML=state.leagues.map(l=>`<option value="${l.id}">${l.name}</option>`).join('')}
