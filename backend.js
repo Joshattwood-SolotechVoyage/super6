@@ -31,6 +31,22 @@
     // Clear any previous Supabase session before starting a fresh PIN login.
     await sb.auth.signOut().catch(() => {});
 
+    // Resolve the typed name to the exact stored username before checking the PIN.
+    // This makes common apostrophe variants (O'Sullivan / O’Sullivan), case, and
+    // accidental repeated spaces equivalent without changing the display name.
+    let loginName = cleanName;
+    try {
+      const { data: resolvedName, error: resolveError } = await sb.rpc(
+        'resolve_login_username',
+        { p_username: cleanName }
+      );
+      if (!resolveError && typeof resolvedName === 'string' && resolvedName.trim()) {
+        loginName = resolvedName.trim();
+      }
+    } catch (_) {
+      // Backwards-compatible fallback if the resolver migration has not been run yet.
+    }
+
     const response = await fetch(
       cfg.SUPABASE_URL + '/functions/v1/super6-pin-login',
       {
@@ -39,7 +55,7 @@
           'Content-Type': 'application/json',
           'apikey': cfg.SUPABASE_PUBLISHABLE_KEY
         },
-        body: JSON.stringify({ username: cleanName, pin: cleanPin })
+        body: JSON.stringify({ username: loginName, pin: cleanPin })
       }
     );
 
