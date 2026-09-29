@@ -1,15 +1,10 @@
-SUPER 6 v0.30.2 — FULL GITHUB UPLOAD
+SUPER 6 v0.30.3 — FULL GITHUB UPLOAD
 
-Built from the user's v0.29.3 package via v0.30.1. No database-reset SQL is included.
+Built from v0.30.2. No database-reset SQL is included.
 
-Important visible fixes:
-- Chumpions group-stage ties are DRAW only; no ADMIN TIE text.
-- Chumpions table: Pos | Player | P | W | D | L | Pts only.
-- Players & groups moved to bottom of Chumpions admin page.
-- League table header/data order: Pos | Player | Pts | Correct scores | Correct results | Played | Wins | Spoons.
-- Desktop league tables are compact rather than stretching across the page.
-- Mobile league/Chumpions tables remain compressed to avoid lateral scrolling.
-- Asset URLs bumped to v0.30.2 to force a fresh app.js/styles.css load.
+CHANGES
+- Browser-first Monzo payment handoff via pay.html.
+- First-goal minute is typed directly (1–90).
+- Cache-busted app/CSS/backend assets to v0.30.3.
 
-Upload/replace the complete contents of this ZIP in the GitHub repository root.
-Keep all Supabase SQL/database updates already run.
+Upload/replace the full contents of this folder in the GitHub repository root.

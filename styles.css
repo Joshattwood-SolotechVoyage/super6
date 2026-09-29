@@ -624,3 +624,13 @@ button{touch-action:manipulation}
   .standings-table th:nth-child(7),.standings-table td:nth-child(7){width:9%}
   .standings-table th:nth-child(8),.standings-table td:nth-child(8){width:12%}
 }
+
+
+/* v0.30.3 — typed first-goal minute + browser-first payment handoff */
+.minute-input-wrap{display:block;margin-left:auto}
+.minute-input{width:112px;height:46px;border:2px solid var(--green);border-radius:10px;background:#fffdf7;color:var(--green);font:700 22px Georgia,serif;text-align:center;padding:4px 8px;box-sizing:border-box}
+.minute-input::placeholder{color:#8f947f;font-size:16px;font-weight:400}
+.minute-input:focus{outline:3px solid rgba(184,137,43,.24);outline-offset:1px}
+.minute-input:disabled{opacity:.7;background:#eee9dc}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+@media(max-width:430px){.minute-card{flex-direction:row;align-items:center}.minute-input-wrap{margin-left:auto}.minute-input{width:100px;height:44px;font-size:21px}}

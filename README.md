@@ -1,3 +1,13 @@
+# Super 6 v0.30.3
+
+Built directly on v0.30.2. No database reset or scoring changes.
+
+Changes in v0.30.3:
+- Player payment now goes through a same-site `pay.html` browser handoff before opening the Monzo web checkout. This is intended to reduce immediate Monzo-app handoff on iPhone and give the browser/Apple Pay checkout a chance to appear. iOS/Monzo can still override universal-link behaviour, so this is not a guaranteed app-block.
+- Payment button wording changed to browser checkout rather than “with Monzo”.
+- First-goal minute is now a typed numeric field (1–90) with the phone numeric keyboard instead of +/- buttons.
+- Asset versions bumped to v0.30.3.
+
 # Super 6 v0.30.2
 
 Latest front-end package, built on v0.30.1 / v0.29.3 without database resets.

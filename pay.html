@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#173f2a" />
+<title>Super 6 · Payment</title>
+<style>
+:root{--green:#173f2a;--cream:#f8f0d9;--paper:#fffaf0;--gold:#b8892b;--muted:#687064;--line:#d9cfb5}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--cream);color:#1d281f;font-family:Georgia,serif}body{display:grid;place-items:center;padding:20px;background-image:linear-gradient(rgba(23,63,42,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(23,63,42,.035) 1px,transparent 1px);background-size:28px 28px}.card{width:min(460px,100%);background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:0 20px 55px rgba(23,63,42,.14);text-align:center}.logo{width:92px;max-width:35%;height:auto;margin-bottom:10px}.kicker{font:700 12px Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--green)}h1{margin:7px 0 8px;color:var(--green);font-size:30px}.muted{color:var(--muted);line-height:1.5;font-size:14px}.spinner{width:38px;height:38px;border:4px solid #ded4bb;border-top-color:var(--green);border-radius:50%;margin:20px auto 14px;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}button{width:100%;border:0;border-radius:13px;padding:14px 16px;margin-top:14px;background:var(--green);color:#fff7df;font:700 16px Arial,sans-serif;cursor:pointer}.small{font-size:12px;margin-top:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main class="card">
+  <img class="logo" src="super6-logo.png" alt="Super 6" />
+  <div class="kicker">Secure payment</div>
+  <h1>Opening browser checkout…</h1>
+  <p class="muted">We’re opening the Monzo web payment page in your browser. On supported iPhones, Apple Pay can appear there.</p>
+  <div class="spinner" id="spinner" aria-hidden="true"></div>
+  <button id="continueBtn" type="button" hidden>Continue to payment</button>
+  <div class="small" id="status">Please wait…</div>
+</main>
+<script>
+(function(){
+  const params=new URLSearchParams(location.search);
+  const raw=params.get('target')||'';
+  const status=document.getElementById('status');
+  const btn=document.getElementById('continueBtn');
+  const spinner=document.getElementById('spinner');
+  let target=null;
+  try{
+    const u=new URL(raw);
+    const host=u.hostname.toLowerCase();
+    if(u.protocol==='https:' && (host==='monzo.me' || host.endsWith('.monzo.me'))) target=u.href;
+  }catch(e){}
+  if(!target){
+    spinner.hidden=true;status.textContent='The payment link is not valid. Please go back to Super 6.';return;
+  }
+  const go=()=>{ status.textContent='Opening payment…'; window.location.replace(target); };
+  // Deliberately navigate from our browser page rather than linking straight
+  // from Super 6. This gives iOS/Safari a browser-first handoff to try before
+  // Monzo's universal-link behaviour takes over.
+  setTimeout(go,650);
+  setTimeout(()=>{spinner.hidden=true;btn.hidden=false;status.textContent='If the payment page did not open, tap below.';},2500);
+  btn.addEventListener('click',go);
+})();
+</script>
+</body>
+</html>
