@@ -1,5 +1,5 @@
 // Super 6 backend adapter — Supabase-backed authentication and competition data.
-// v0.25 adds published same-league prediction viewing after results are final, plus the v0.24 payment flow.
+// v0.29.3 adds tolerant username resolution for apostrophes/case/spacing before PIN authentication.
 (function(){
   const cfg = window.SUPER6_CONFIG || {};
   let client = null;
@@ -42,6 +42,8 @@
       );
       if (!resolveError && typeof resolvedName === 'string' && resolvedName.trim()) {
         loginName = resolvedName.trim();
+      } else if (resolveError) {
+        console.warn('Username resolver unavailable; using canonical name from the app roster.', resolveError.message || resolveError);
       }
     } catch (_) {
       // Backwards-compatible fallback if the resolver migration has not been run yet.
@@ -622,6 +624,19 @@
     return data && typeof data === 'object' ? data : { round: null, predictions: [] };
   }
 
+  async function loadAdminSeasonPotHistory(){
+    const sb = getClient();
+    await requireSession();
+    const { data, error } = await sb
+      .from('admin_season_pot_history')
+      .select('season_id, round_id, round_name, cutoff_at, counted_players, total_weekly_prize_funds, year_end_contribution, season_pot_running_total')
+      .order('cutoff_at', { ascending: true })
+      .order('round_id', { ascending: true });
+    if (error) throw new Error(error.message || 'Could not load the £1 season-pot history. Run the v0.30 Super 6 SQL update first.');
+    return data || [];
+  }
+
+
   async function loadChumpionsState(){
     const sb = getClient();
     await requireSession();
@@ -753,7 +768,7 @@
   }
 
   window.Super6Backend = {
-    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-payment-results-chumpions-v028',
+    mode: 'supabase-auth-admin-users-live-standings-live-round-live-predictions-payment-results-chumpions-v0301',
     schema: cfg.SUPABASE_SCHEMA || 'super6',
     isConfigured(){ return Boolean(cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY); },
     configuration(){
@@ -785,6 +800,7 @@
     loadLatestLeagueWinners,
     loadPublishedLeaguePredictions,
     loadLatestPublishedPredictions,
+    loadAdminSeasonPotHistory,
     loadChumpionsState,
     setChumpionsMember,
     addChumpionsMatch,

@@ -498,3 +498,129 @@ button{touch-action:manipulation}
 .chumpions-bye span{font-size:9px;font-weight:900;letter-spacing:.12em;color:var(--muted)}
 .chumpions-bye b{font-size:12px;color:var(--green);text-align:right}
 @media(max-width:620px){.chumpions-bye{align-items:flex-start}.chumpions-auto-note{font-size:10px}}
+
+/* v0.30.1 — mobile table compression, Chumpions draw/table cleanup, £6 split */
+.standings-table{width:100%;table-layout:auto}
+.standings-table th,.standings-table td{white-space:nowrap}
+.standings-table td:nth-child(2){font-weight:700}
+
+.chumpions-table-wrap{overflow:hidden}
+.chumpions-table{width:100%;min-width:0;table-layout:fixed}
+.chumpions-table th,.chumpions-table td{padding:8px 5px;text-align:center;font-size:11px;white-space:nowrap}
+.chumpions-table th:nth-child(1),.chumpions-table td:nth-child(1){width:9%}
+.chumpions-table th:nth-child(2),.chumpions-table td:nth-child(2){width:37%;text-align:left}
+.chumpions-table th:nth-child(n+3),.chumpions-table td:nth-child(n+3){width:10.8%}
+.chumpions-table td:nth-child(2){min-width:0;font-weight:800;overflow:hidden;text-overflow:ellipsis}
+.admin-tie{display:none!important}
+
+.money-split{display:grid;gap:8px;padding:12px}
+.money-title{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px dashed #a8935f;padding-bottom:8px}
+.money-title>span{font-size:11px;color:var(--muted);font-weight:800}
+.money-league{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(91,74,37,.15)}
+.money-league>b{color:var(--green)}
+.money-league>span{font-size:11px;color:var(--muted);white-space:nowrap}
+.money-league strong{font-size:15px}
+.money-total{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;align-items:center;padding-top:4px}
+.money-total span{font-size:11px;font-weight:800;color:var(--muted)}
+.money-total strong{font-size:19px}
+.season-pot-history{margin-top:10px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fffaf0}
+.season-pot-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:#eee4ca}
+.season-pot-head b{display:block;color:var(--green)}
+.season-pot-head small{display:block;margin-top:2px;color:var(--muted);font-size:10px}
+.season-pot-head>strong{font-size:25px;color:var(--green)}
+.season-pot-weeks>div{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px 11px;border-top:1px solid #e7dfca;font-size:11px}
+.season-pot-weeks>div>span:first-child{font-weight:800;color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.season-pot-weeks>div>span:nth-child(2){color:var(--muted);white-space:nowrap}
+.season-pot-weeks>div>strong{white-space:nowrap}
+
+.weekly-tiebreak{margin-top:2px;padding:9px 10px;border:1px solid #d7bd76;border-radius:10px;background:#fff2ca;color:#65470d;font-size:10px;line-height:1.35}
+.weekly-tiebreak>b,.weekly-tiebreak>span{display:block}
+.weekly-tiebreak>span{margin:2px 0 4px;color:#7f6528}
+.weekly-tiebreak strong{color:var(--green)}
+.weekly-tiebreak small{color:var(--muted)}
+.poster-tiebreak{margin-top:7px;padding:6px 7px;border:1px dashed #a45a45;background:#f5dfb8;font-size:9px;line-height:1.3}
+.poster-tiebreak b,.poster-tiebreak span,.poster-tiebreak strong{display:block}
+.poster-tiebreak b{color:#8a3a2d;letter-spacing:.05em}
+.poster-tiebreak strong{margin-top:2px;color:var(--green)}
+
+@media(max-width:759px){
+  #leagueTabs,#adminTableLeagueTabs{flex-wrap:wrap;overflow:visible;gap:5px}
+  #leagueTabs button,#adminTableLeagueTabs button{padding:7px 9px;font-size:11px;white-space:normal;line-height:1.15}
+
+  .standings-table-wrap{overflow:hidden}
+  .table-wrap .standings-table{width:100%;min-width:0!important;table-layout:fixed}
+  .standings-table th,.standings-table td{padding:7px 2px;font-size:9px;text-align:center;white-space:normal;line-height:1.15;overflow-wrap:anywhere}
+  .standings-table th:nth-child(1),.standings-table td:nth-child(1){width:7%}
+  .standings-table th:nth-child(2),.standings-table td:nth-child(2){width:32%;text-align:left;padding-left:5px;padding-right:3px;font-size:11px;overflow-wrap:normal;word-break:normal}
+  .standings-table th:nth-child(3),.standings-table td:nth-child(3){width:8%}
+  .standings-table th:nth-child(4),.standings-table td:nth-child(4){width:11%}
+  .standings-table th:nth-child(5),.standings-table td:nth-child(5){width:11%}
+  .standings-table th:nth-child(6),.standings-table td:nth-child(6){width:10%}
+  .standings-table th:nth-child(7),.standings-table td:nth-child(7){width:9%}
+  .standings-table th:nth-child(8),.standings-table td:nth-child(8){width:12%}
+  .standings-table .league-crown{display:inline;font-size:9px;margin-left:2px}
+
+  .chumpions-table{min-width:0!important}
+  .chumpions-table th,.chumpions-table td{padding:7px 2px;font-size:9px}
+  .chumpions-table th:nth-child(1),.chumpions-table td:nth-child(1){width:9%}
+  .chumpions-table th:nth-child(2),.chumpions-table td:nth-child(2){width:37%;padding-left:5px;font-size:10px}
+  .chumpions-table th:nth-child(n+3),.chumpions-table td:nth-child(n+3){width:10.8%}
+
+  .money-league{grid-template-columns:1fr;gap:3px;padding:8px 0}
+  .money-league>span{white-space:normal}
+  .season-pot-weeks>div{grid-template-columns:1fr auto;gap:3px 8px}
+  .season-pot-weeks>div>span:nth-child(2){grid-column:1/2;white-space:normal}
+  .season-pot-weeks>div>strong{grid-column:2;grid-row:1/3;align-self:center}
+}
+
+@media(max-width:420px){
+  .standings-table th,.standings-table td{font-size:8px;padding-left:1px;padding-right:1px}
+  .standings-table th:nth-child(2),.standings-table td:nth-child(2){font-size:10px;padding-left:4px}
+  .chumpions-table th,.chumpions-table td{font-size:8.5px}
+  .chumpions-table th:nth-child(2),.chumpions-table td:nth-child(2){font-size:9.5px}
+}
+
+
+/* v0.30.2 — compact standings + cache-safe Chumpions cleanup */
+/* Keep season/admin league tables intentionally compact on wider screens. */
+.standings-table-wrap{
+  width:min(100%,900px);
+  max-width:100%;
+  margin-right:auto;
+}
+.table-wrap .standings-table{
+  width:100%;
+  min-width:0;
+  table-layout:fixed;
+}
+.standings-table th,.standings-table td{
+  padding:8px 6px;
+  font-size:12px;
+  line-height:1.2;
+  white-space:normal;
+  overflow-wrap:normal;
+}
+.standings-table th:nth-child(1),.standings-table td:nth-child(1){width:6%;text-align:center}
+.standings-table th:nth-child(2),.standings-table td:nth-child(2){width:25%;text-align:left}
+.standings-table th:nth-child(3),.standings-table td:nth-child(3){width:7%;text-align:center}
+.standings-table th:nth-child(4),.standings-table td:nth-child(4){width:14%;text-align:center}
+.standings-table th:nth-child(5),.standings-table td:nth-child(5){width:15%;text-align:center}
+.standings-table th:nth-child(6),.standings-table td:nth-child(6){width:11%;text-align:center}
+.standings-table th:nth-child(7),.standings-table td:nth-child(7){width:9%;text-align:center}
+.standings-table th:nth-child(8),.standings-table td:nth-child(8){width:13%;text-align:center}
+
+/* Group-stage ties never need a visible admin-tie label. */
+.admin-tie{display:none!important}
+
+@media(max-width:759px){
+  .standings-table-wrap{width:100%;max-width:100%;margin:0}
+  .standings-table th,.standings-table td{padding:6px 1px;font-size:8px;line-height:1.1}
+  .standings-table th:nth-child(1),.standings-table td:nth-child(1){width:7%}
+  .standings-table th:nth-child(2),.standings-table td:nth-child(2){width:31%;font-size:10px;padding-left:4px;padding-right:2px}
+  .standings-table th:nth-child(3),.standings-table td:nth-child(3){width:7%}
+  .standings-table th:nth-child(4),.standings-table td:nth-child(4){width:12%}
+  .standings-table th:nth-child(5),.standings-table td:nth-child(5){width:12%}
+  .standings-table th:nth-child(6),.standings-table td:nth-child(6){width:10%}
+  .standings-table th:nth-child(7),.standings-table td:nth-child(7){width:9%}
+  .standings-table th:nth-child(8),.standings-table td:nth-child(8){width:12%}
+}

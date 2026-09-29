@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
 <link rel="manifest" href="manifest.webmanifest" />
-<link rel="stylesheet" href="styles.css?v=0.29" />
+<link rel="stylesheet" href="styles.css?v=0.30.2" />
 </head>
 <body>
 <div class="app" id="app">
@@ -75,7 +75,7 @@
       </div>
 
       <div class="screen hidden" id="playerTables">
-        <section class="card"><div class="section-head"><div><div class="kicker">Season tables</div><h3>League standings</h3><div class="muted">All leagues are visible.</div></div></div><div class="icon-key" aria-label="Super 6 icon key"><b>Latest league-week awards</b><span>👑 1st place</span><span>🥈 2nd place</span><span>🥄 Wooden spoon</span><small>These badges sit beside a player until the next league results are final, then they move to the new award holders. Historical wins/seconds/spoons remain stored. League rounds only.</small></div><div class="tabs" id="leagueTabs"></div><div class="table-wrap"><table><thead><tr><th>Pos</th><th>Player</th><th>Pts</th><th>Wins</th><th>Correct scores</th><th>Correct results</th><th>Played</th><th>Spoons</th></tr></thead><tbody id="leagueTableBody"></tbody></table></div></section>
+        <section class="card"><div class="section-head"><div><div class="kicker">Season tables</div><h3>League standings</h3><div class="muted">All leagues are visible.</div></div></div><div class="icon-key" aria-label="Super 6 icon key"><b>Latest league-week awards</b><span>👑 1st place</span><span>🥈 2nd place</span><span>🥄 Wooden spoon</span><small>These badges sit beside a player until the next league results are final, then they move to the new award holders. Historical wins/seconds/spoons remain stored. League rounds only.</small></div><div class="tabs" id="leagueTabs"></div><div class="table-wrap standings-table-wrap"><table class="standings-table"><thead><tr><th>Pos</th><th>Player</th><th>Pts</th><th>Correct scores</th><th>Correct results</th><th>Played</th><th>Wins</th><th>Spoons</th></tr></thead><tbody id="leagueTableBody"></tbody></table></div></section>
       </div>
 
       <div class="screen hidden" id="playerChumpions">
@@ -169,7 +169,7 @@
             <section class="card">
               <div class="section-head"><div><div class="kicker">Weekly outcome</div><h3>Winners & spoons</h3></div><button id="posterBtn" class="secondary small" type="button">Weekly summary poster</button></div>
               <div id="weeklyResults" class="week-results"></div>
-              <div id="moneySummary"></div>
+              <div id="moneySummary"></div><div id="seasonPotHistory"></div>
             </section>
           </div>
         </div>
@@ -179,7 +179,7 @@
             <div class="section-head"><div><div class="kicker">Season tables</div><h3>League standings</h3><div class="muted">Live Supabase standings for every league.</div></div></div>
             <div class="tabs" id="adminTableLeagueTabs"></div>
             <div class="admin-table-heading" id="adminLeagueTableTitle"></div>
-            <div class="table-wrap"><table><thead><tr><th>Pos</th><th>Player</th><th>Pts</th><th>Wins</th><th>Correct scores</th><th>Correct results</th><th>Played</th><th>Spoons</th></tr></thead><tbody id="adminLeagueTableBody"></tbody></table></div>
+            <div class="table-wrap standings-table-wrap"><table class="standings-table"><thead><tr><th>Pos</th><th>Player</th><th>Pts</th><th>Correct scores</th><th>Correct results</th><th>Played</th><th>Wins</th><th>Spoons</th></tr></thead><tbody id="adminLeagueTableBody"></tbody></table></div>
           </section>
         </div>
 
@@ -190,17 +190,17 @@
             <div id="adminChumpionsCurrentWeek"></div>
           </section>
           <section class="card">
-            <div class="section-head"><div><div class="kicker">Group setup</div><h3>Players & groups</h3><div class="muted">Choose A, B, C, D or Not entered. Changes save immediately.</div></div></div>
-            <label class="latest-picks-search"><span>🔎</span><input id="chumpionsPlayerSearch" type="search" placeholder="Search player…" autocomplete="off" /></label>
-            <div id="adminChumpionsRoster"></div>
-          </section>
-          <section class="card">
-            <div class="section-head"><div><div class="kicker">Live group stage</div><h3>Standings</h3><div class="muted">Order: group points → head-to-head mini-table → Chumpions Super 6 points → first-goal accuracy. Admin tie only appears when played results still cannot separate players.</div></div></div>
+            <div class="section-head"><div><div class="kicker">Live group stage</div><h3>Standings</h3><div class="muted">3 points for a win · 1 for a draw · 0 for a loss. A tied group fixture is simply a draw.</div></div></div>
             <div id="adminChumpionsStandings"></div>
           </section>
           <section class="card">
             <div class="section-head"><div><div class="kicker">Knockout stage</div><h3>Road to the Final</h3><div class="muted">When you are happy the group stage is finished, confirm the tables here. After that, your normal Chumpions checkbox decides which future Super 6 weeks play each knockout stage.</div></div><span class="chip">R16 → Final</span></div>
             <div id="adminChumpionsKnockout"></div>
+          </section>
+          <section class="card">
+            <div class="section-head"><div><div class="kicker">Group setup</div><h3>Players & groups</h3><div class="muted">Choose A, B, C, D or Not entered. Changes save immediately.</div></div></div>
+            <label class="latest-picks-search"><span>🔎</span><input id="chumpionsPlayerSearch" type="search" placeholder="Search player…" autocomplete="off" /></label>
+            <div id="adminChumpionsRoster"></div>
           </section>
         </div>
 
@@ -249,7 +249,7 @@
 <div id="modalRoot"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-<script src="backend.js?v=0.27"></script>
-<script src="app.js?v=0.29"></script>
+<script src="backend.js?v=0.30.2"></script>
+<script src="app.js?v=0.30.2"></script>
 </body>
 </html>
