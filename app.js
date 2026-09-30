@@ -1,4 +1,4 @@
-console.info('Super 6 v0.30.3');
+console.info('Super 6 v0.30.4');
 (()=>{
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const STORAGE='super6_v03_state';
@@ -480,9 +480,20 @@ function renderPlayerPayment(){
  if(!e.paymentStarted){
   body.innerHTML=`<div class="payment-state unpaid-state"><div class="payment-copy"><b>${feeText} entry fee</b><span>Open the payment in your browser. On a supported iPhone, Monzo's web checkout can offer Apple Pay; other devices will show the payment options available to them.</span></div><button class="big-action payment-pay-btn" id="payMonzoBtn" type="button">Pay ${feeText} · browser checkout</button></div>`;
   $('#payMonzoBtn').onclick=()=>{
-   e.paymentStarted=true;save();
+   // Keep Super 6 open on the confirmation step while payment opens separately.
+   // That way, when the player returns from Monzo/Safari they can immediately
+   // tap "Yes, I've paid" without closing and reopening Super 6.
+   e.paymentStarted=true;
+   save();
+   renderPlayerPayment();
    const browserPayUrl=`pay.html?target=${encodeURIComponent(appSettings.payment_url)}`;
-   window.location.href=browserPayUrl;
+   const paymentWindow=window.open(browserPayUrl,'_blank');
+   if(paymentWindow){
+    try{paymentWindow.opener=null}catch(err){}
+   }else{
+    // Fallback for browsers that block a new window.
+    window.location.href=browserPayUrl;
+   }
   };
   return;
  }

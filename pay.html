@@ -18,6 +18,7 @@
   <p class="muted">We’re opening the Monzo web payment page in your browser. On supported iPhones, Apple Pay can appear there.</p>
   <div class="spinner" id="spinner" aria-hidden="true"></div>
   <button id="continueBtn" type="button" hidden>Continue to payment</button>
+  <button id="returnBtn" type="button" style="background:#efe4c8;color:#173f2a;border:1px solid #d9cfb5;margin-top:10px">Back to Super 6</button>
   <div class="small" id="status">Please wait…</div>
 </main>
 <script>
@@ -27,6 +28,7 @@
   const status=document.getElementById('status');
   const btn=document.getElementById('continueBtn');
   const spinner=document.getElementById('spinner');
+  const returnBtn=document.getElementById('returnBtn');
   let target=null;
   try{
     const u=new URL(raw);
@@ -43,6 +45,7 @@
   setTimeout(go,650);
   setTimeout(()=>{spinner.hidden=true;btn.hidden=false;status.textContent='If the payment page did not open, tap below.';},2500);
   btn.addEventListener('click',go);
+  returnBtn.addEventListener('click',()=>{ window.location.href='index.html'; });
 })();
 </script>
 </body>

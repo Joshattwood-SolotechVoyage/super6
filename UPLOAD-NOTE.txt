@@ -1,10 +1,6 @@
-SUPER 6 v0.30.3 — FULL GITHUB UPLOAD
+Super 6 v0.30.4
 
-Built from v0.30.2. No database-reset SQL is included.
-
-CHANGES
-- Browser-first Monzo payment handoff via pay.html.
-- First-goal minute is typed directly (1–90).
-- Cache-busted app/CSS/backend assets to v0.30.3.
-
-Upload/replace the full contents of this folder in the GitHub repository root.
+Payment return fix:
+- Payment opens in a separate browser window/tab, leaving Super 6 open on the "Yes, I've paid" confirmation step.
+- First-goal minute remains direct numeric entry.
+- Includes all v0.30.3 changes.
