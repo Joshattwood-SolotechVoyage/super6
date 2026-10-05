@@ -1,3 +1,9 @@
+# Super 6 v0.31.0 — SHART
+
+This build keeps the proven v0.30.4 Super 6 + Chumpions + payment flow and adds the SHART straight head-to-head knockout competition.
+
+Before using SHART, run `super6-v0.31-shart-knockout.sql` in Supabase.
+
 # Super 6 v0.30.3
 
 Built directly on v0.30.2. No database reset or scoring changes.
