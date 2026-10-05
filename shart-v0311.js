@@ -143,7 +143,7 @@
   document.addEventListener('click',e=>{if(e.target.closest('[data-admin-tab="shart"],[data-player-tab="shart"]'))setTimeout(()=>render(true),80)});
   const watch=new MutationObserver(()=>{
     const a=document.querySelector('[data-admin-tab="shart"].active'),p=document.querySelector('[data-player-tab="shart"].active');
-    if(a&&!document.querySelector('#adminShartRoster .shart-v0311-sentinel'))setTimeout(()=>renderAdmin(false),20);
+    if(a&&(!document.querySelector('#adminShartCurrentWeek .shart-v0311-sentinel')||!document.querySelector('#adminShartBracket .shart-v0311-sentinel')||!document.querySelector('#adminShartRoster .shart-v0311-sentinel')))setTimeout(()=>renderAdmin(false),20);
     if(p&&!document.querySelector('#playerShartBody .shart-v0311-sentinel'))setTimeout(()=>renderPlayer(false),20);
   });
   const app=document.querySelector('#app');if(app)watch.observe(app,{subtree:true,childList:true});
