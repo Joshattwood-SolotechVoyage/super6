@@ -1,6 +1,18 @@
-Super 6 v0.30.4
+SUPER 6 v0.31.0 — SHART
 
-Payment return fix:
-- Payment opens in a separate browser window/tab, leaving Super 6 open on the "Yes, I've paid" confirmation step.
-- First-goal minute remains direct numeric entry.
-- Includes all v0.30.3 changes.
+This build is based on v0.30.4 and keeps the working Super 6, Chumpions and payment flow.
+
+NEW:
+- SHART player tab
+- SHART admin tab
+- Admin selects exactly 32 entrants
+- One-time random Round-of-32 draw
+- R32 -> R16 -> QF -> SF -> Final bracket
+- Normal counted Super 6 points decide each head-to-head
+- First-goal accuracy breaks tied points
+- Admin chooses only if still tied
+- Winners advance automatically
+- Round editor has a SHART week checkbox to attach the next ready stage
+
+DATABASE:
+Run super6-v0.31-shart-knockout.sql in Supabase before using SHART.
