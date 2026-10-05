@@ -1,0 +1,34 @@
+/* v0.31 — SHART straight knockout */
+.player-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
+.shart-toggle{display:flex;gap:11px;align-items:flex-start;margin:10px 0 14px;padding:12px 13px;border:1px solid #bf9f79;border-radius:12px;background:#f4e6d2;cursor:pointer}
+.shart-toggle input{width:22px;height:22px;flex:0 0 auto;margin:1px 0 0;accent-color:#7a442b}
+.shart-toggle span{display:grid;gap:3px}.shart-toggle b{color:#6c3926;font-size:14px}.shart-toggle small{color:var(--muted);line-height:1.35}
+.shart-hero{border-color:#c6a27e;background:linear-gradient(180deg,#fff9ec,#f5ead7)}
+.shart-week-banner,.shart-player-banner{display:grid;gap:4px;margin:0 0 12px;padding:12px 13px;border:1px solid #c99d72;border-radius:12px;background:#f8e8d3;color:#522d22}
+.shart-week-banner b,.shart-player-banner b{font-size:14px}.shart-week-banner span,.shart-player-banner span{font-size:11px;color:#77655a;line-height:1.4}
+.shart-player-banner.out{background:#f3dfd8;border-color:#d3a99c}.shart-player-banner.champion{background:#efe1a9;border-color:#bca75c;color:var(--green)}
+.shart-bracket{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:11px;align-items:start;overflow-x:auto;padding:4px 1px 10px}
+.shart-stage{min-width:0;border:1px solid var(--line);border-radius:13px;background:#fff9eb;overflow:hidden}
+.shart-stage-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 11px;background:#6b3c2b;color:#fff2dd}
+.shart-stage-head b{font-size:12px}.shart-stage-head span{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;opacity:.8}
+.shart-match{margin:7px;border:1px solid #dfceb5;border-radius:10px;overflow:hidden;background:#fffaf0}
+.shart-match.mine{border-color:#7d9a63;box-shadow:0 0 0 1px rgba(71,112,57,.12)}
+.shart-match.done{background:#faf3e5}
+.shart-match-main{display:grid;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr);gap:5px;align-items:center;padding:8px}
+.shart-match-main>div{min-width:0}.shart-match-main .right{text-align:right}.shart-match-main b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px}.shart-match-main small{display:block;margin-top:2px;color:var(--muted);font-size:8px}.shart-match-main strong{text-align:center;color:#6b3c2b;font-size:11px}.shart-match-main .me b{color:var(--green)}
+.shart-match-note{padding:6px 8px;border-top:1px solid #eee0ca;background:#f6ecd9;color:var(--muted);font-size:8.5px;line-height:1.35}
+.shart-admin-choice{padding:8px;border-top:1px solid #e2c4a2;background:#fff0d7}.shart-admin-choice small{display:block;margin-bottom:6px;color:#7a442b;font-weight:900;text-transform:uppercase;font-size:9px}.shart-admin-choice>div{display:grid;grid-template-columns:1fr 1fr;gap:5px}.shart-admin-choice button{white-space:normal;line-height:1.1}
+.shart-current-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.shart-current-grid .shart-match{margin:0}
+.shart-champion{display:flex;align-items:center;gap:10px;margin:4px 0 14px;padding:14px;border-radius:14px;background:#efe1a9;border:1px solid #bca75c;color:var(--green)}.shart-champion span{font-size:10px;font-weight:900;text-transform:uppercase}.shart-champion strong{margin-left:auto;font-size:17px}
+.shart-roster-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin:10px 0 12px;padding:12px;border:1px solid #d5bea3;border-radius:12px;background:#f7ecd9}.shart-roster-actions b{display:block;color:#6b3c2b}.shart-roster-actions small{display:block;margin-top:3px;color:var(--muted);font-size:10px}.shart-roster-actions .big-action{width:auto}
+.shart-roster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.shart-roster-row{display:flex;gap:9px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fffaf0;cursor:pointer}.shart-roster-row input{width:20px;height:20px;accent-color:#6b3c2b;flex:0 0 auto}.shart-roster-row span{min-width:0}.shart-roster-row b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}.shart-roster-row small{display:block;margin-top:2px;color:var(--muted);font-size:9px}
+@media(min-width:760px){.admin-tabs{grid-template-columns:repeat(7,minmax(0,1fr))}}
+@media(max-width:759px){
+ .player-nav button{font-size:10px;padding:10px 2px}
+ .shart-bracket{grid-template-columns:1fr;overflow:visible}
+ .shart-current-grid,.shart-roster{grid-template-columns:1fr}
+ .shart-roster-actions{grid-template-columns:1fr}.shart-roster-actions .big-action{width:100%}
+ .shart-admin-choice>div{grid-template-columns:1fr}
+ .shart-champion{align-items:flex-start;flex-wrap:wrap}.shart-champion strong{margin-left:0;width:100%}
+}
