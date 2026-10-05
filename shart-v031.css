@@ -48,3 +48,15 @@
  .shart-qualifier-head{font-size:9px}
  .shart-qualifier-row>span:last-child{font-size:8px}
 }
+
+/* v0.31.2 — SHART league-table byes */
+.shart-bye-panel{margin:10px 0}
+.shart-bye-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.shart-bye-card{border:1px solid rgba(23,63,42,.15);background:rgba(32,122,69,.08);border-radius:10px;padding:10px;display:grid;gap:3px;min-width:0}
+.shart-bye-card span{font-size:9px;font-weight:900;letter-spacing:.08em;opacity:.65}
+.shart-bye-card b{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shart-bye-card.mine{outline:2px solid rgba(32,122,69,.45);background:rgba(32,122,69,.14)}
+@media(max-width:700px){
+ .shart-bye-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .shart-bye-card:last-child{grid-column:span 2}
+}
