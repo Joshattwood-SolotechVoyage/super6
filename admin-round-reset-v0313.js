@@ -15,6 +15,7 @@
   };
 
   let resetWindowUntil=0;
+  let pendingNewRound=false;
 
   const el=id=>document.getElementById(id);
 
@@ -45,6 +46,7 @@
   }
 
   function beginNewRoundReset(){
+    pendingNewRound=true;
     resetWindowUntil=Date.now()+2500;
     cleanEditor(true);
     cleanOutcome();
@@ -80,7 +82,8 @@
       // Run after the app's own click handler has begun the new-round flow.
       setTimeout(beginNewRoundReset,0);
     }
-    if(target.id===ids.save && Date.now()<=resetWindowUntil+60000){
+    if(target.id===ids.save && pendingNewRound){
+      pendingNewRound=false;
       setTimeout(afterRoundSaved,0);
     }
   },true);
