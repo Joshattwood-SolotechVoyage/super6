@@ -1,0 +1,40 @@
+// Super 6 v0.31.5 — SHART: 5 byes + 54-player Round 1 H2H + shootouts.
+(()=>{
+  const B=window.Super6Backend;
+  if(!B||typeof B.loadShartState!=='function') return;
+
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const originalLoad=B.loadShartState.bind(B);
+  let cache=null,loading=null;
+
+  B.loadShartState=async function(){
+    const base=await originalLoad();
+    if(!base?.season?.id) return {...base,shootouts:[],shootoutPredictions:[]};
+    const sb=B.client(),seasonId=base.season.id;
+    const [memberRes,compRes,shootoutRes,predRes]=await Promise.all([
+      sb.from('shart_members').select('season_id,player_id,source,created_at').eq('season_id',seasonId),
+      sb.from('shart_competition_state').select('season_id,round1_round_id,round1_generated_at,round1_generated_by,bye_snapshot_at,draw_generated_at,draw_generated_by,champion_id,completed_at,updated_at').eq('season_id',seasonId).maybeSingle(),
+      sb.from('shart_shootouts').select('id,season_id,match_id,attempt_no,home_team,away_team,cutoff_at,actual_home,actual_away,player1_points,player2_points,status,winner_id,completed_at,created_at,updated_at').eq('season_id',seasonId).order('attempt_no',{ascending:true}),
+      sb.from('shart_shootout_predictions').select('shootout_id,player_id,home_score,away_score,submitted_at,updated_at')
+    ]);
+    for(const r of [memberRes,compRes,shootoutRes,predRes]) if(r.error) throw new Error(r.error.message||'Run the SHART v0.31.5 SQL update.');
+    return {...base,members:memberRes.data||[],competition:compRes.data||base.competition||null,shootouts:shootoutRes.data||[],shootoutPredictions:predRes.data||[]};
+  };
+
+  const rpc=async(name,args)=>{const {data,error}=await B.client().rpc(name,args);if(error)throw new Error(error.message||'SHART action failed.');return data};
+  B.createShartShootout=(matchId,home,away,cutoff)=>rpc('admin_create_shart_shootout',{p_match_id:matchId,p_home_team:home,p_away_team:away,p_cutoff_at:cutoff});
+  B.submitShartShootoutPrediction=(shootoutId,home,away)=>rpc('submit_shart_shootout_prediction',{p_shootout_id:shootoutId,p_home_score:Number(home),p_away_score:Number(away)});
+  B.completeShartShootout=(shootoutId,home,away)=>rpc('admin_complete_shart_shootout',{p_shootout_id:shootoutId,p_actual_home:Number(home),p_actual_away:Number(away)});
+  B.mode=(B.mode||'')+'-shart-r1-shootout-v0315';
+
+  const names=s=>new Map((s.players||[]).map(p=>[String(p.id),p.username||'Player']));
+  const memberSet=s=>new Set((s.members||[]).map(m=>String(m.player_id)));
+  const sourceMap=s=>new Map((s.members||[]).map(m=>[String(m.player_id),m.source||'']));
+  const byeIds=s=>(s.members||[]).filter(m=>m.source==='bye').map(m=>String(m.player_id));
+  const stageLabel=x=>x==='R1'?'Round 1':x==='R32'?'Round of 32':x==='R16'?'Round of 16':x==='QF'?'Quarter-finals':x==='SF'?'Semi-finals':x==='F'?'Final':'SHART';
+  const roundName=(s,id)=>(s.rounds||[]).find(r=>String(r.id)===String(id))?.name||'';
+  const r1Matches=s=>(s.matches||[]).filter(m=>m.stage==='R1').sort((a,b)=>a.slot_no-b.slot_no);
+  const koMatches=s=>(s.matches||[]).filter(m=>m.stage!=='R1');
+  const drawExists=s=>Boolean(s.competition?.draw_generated_at)||(s.matches||[]).some(m=>m.stage==='R32');
+  const latestShootout=(s,matchId)=>(s.shootouts||[]).filter(x=>String(x.match_id)===String(matchId)).sort((a,b)=>b.attempt_no-a.attempt_no)[0]||null;
+  const predictions=(s,shootoutId)=>(s.shootoutPredictions||
