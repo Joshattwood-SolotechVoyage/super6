@@ -1,0 +1,28 @@
+[]).filter(p=>String(p.shootout_id)===String(shootoutId));
+  const fmtDate=v=>{if(!v)return'';try{return new Date(v).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}catch{return v}};
+  const toLocalInput=v=>{if(!v)return'';const d=new Date(v);if(Number.isNaN(d.getTime()))return'';const pad=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`};
+
+  function byePanel(s,me=''){
+    const nm=names(s),ids=byeIds(s);
+    if(!ids.length)return '<div class="notice shart-v0315-sentinel"><b>5 byes are locked when the first SHART week starts:</b><br>Top 2 Serie-As · Top 2 Trampionship · Top 1 MLS.</div>';
+    return `<div class="shart-v0315-sentinel shart-bye-panel"><div class="section-head"><div><div class="kicker">Straight to the Round of 32</div><h3>🎟️ League-table byes</h3><div class="muted">Snapshotted when Round 1 is started.</div></div><span class="chip good">5 byes</span></div><div class="shart-bye-grid">${ids.map(id=>`<div class="shart-bye-card ${me===id?'mine':''}"><span>BYE</span><b>${esc(nm.get(id)||'Player')}</b></div>`).join('')}</div></div>`;
+  }
+
+  function shootoutSummary(s,m){
+    const so=latestShootout(s,m.id),nm=names(s);
+    if(!so)return '<div class="shart-shootout-note">⚔️ One-match shootout required — waiting for Admin to choose the fixture.</div>';
+    const ps=predictions(s,so.id),p1=ps.find(p=>String(p.player_id)===String(m.player1_id)),p2=ps.find(p=>String(p.player_id)===String(m.player2_id));
+    if(so.status==='open')return `<div class="shart-shootout-note"><b>⚔️ Shootout ${so.attempt_no}:</b> ${esc(so.home_team)} v ${esc(so.away_team)} · closes ${esc(fmtDate(so.cutoff_at))}<br><small>${esc(nm.get(String(m.player1_id))||'Player')}: ${p1?'submitted':'waiting'} · ${esc(nm.get(String(m.player2_id))||'Player')}: ${p2?'submitted':'waiting'}</small></div>`;
+    if(so.status==='tied')return `<div class="shart-shootout-note"><b>⚔️ Shootout ${so.attempt_no} also tied.</b> Final ${so.actual_home}–${so.actual_away}; shootout points ${so.player1_points}–${so.player2_points}. Another one-match shootout is required.</div>`;
+    return '';
+  }
+
+  function matchHTML(s,m,{admin=false,me=''}={}){
+    const nm=names(s),p1=String(m.player1_id||''),p2=String(m.player2_id||''),mine=me&&(me===p1||me===p2);
+    const score=m.player1_score!=null&&m.player2_score!=null?`${m.player1_score} – ${m.player2_score}`:'vs';
+    let note='';
+    if(m.status==='completed') note=`${esc(nm.get(String(m.winner_id))||'Winner')} through${m.decided_by==='first_goal'?' · first-goal tiebreak':m.decided_by==='shootout'?' · one-match shootout':''}`;
+    else if(m.status==='shootout') note='⚔️ ONE-MATCH SHOOTOUT REQUIRED';
+    else if(m.status==='review') note='Result data needs checking';
+    else note=m.round_id?(esc(roundName(s,m.round_id))||'Scheduled'):'Waiting for a SHART week';
+    return `<div class="shart-match ${m.status==='completed'?'done':''} ${m.status==='shootout'?'shootout':''} ${mine?'mine':''}" data-shart-match="${esc(m.id)}"><div class="shart-match-main"><div><b>${esc(nm.get(p1)||'TBC')}</b><small>${m.player1_score==null?'':m.player1_score+' pts'}${m.player1_tiebreak==null?'':` · FG ±${m.player1_tiebreak}m`}</small></div><strong>${score}</strong><div class="right"><b>${esc(nm.get(p2)||'TBC')}</b><small>${m.player2_score==null?'':m.player2_score+' pts'}${m.player2_tiebreak==null?'':` · FG ±${m.player2_tiebreak}m`}</smal
