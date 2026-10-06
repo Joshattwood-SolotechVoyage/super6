@@ -1,0 +1,38 @@
+-entry'),h=box.querySelector('[data-player-so-home]').value,a=box.querySelector('[data-player-so-away]').value;
+      if(h===''||a===''){alert('Enter both scores.');return}
+      btn.disabled=true;try{await B.submitShartShootoutPrediction(btn.dataset.playerSoSave,h,a);cache=null;await renderPlayer(true)}catch(e){alert(e.message||'Could not save your shootout prediction.')}finally{btn.disabled=false}
+    });
+  }
+
+  async function renderAdmin(force=false){
+    if(!active('#adminArea'))return;
+    const week=document.querySelector('#adminShartCurrentWeek'),br=document.querySelector('#adminShartBracket'),roster=document.querySelector('#adminShartRoster'),count=document.querySelector('#shartEntrantCount');
+    if(!week||!br||!roster)return;
+    try{
+      const s=await getState(force),members=memberSet(s),byes=byeIds(s),r1=r1Matches(s),current=await B.loadCurrentRound().catch(()=>null),drawn=drawExists(s);
+      const r1Done=r1.filter(m=>m.status==='completed').length,shootouts=r1.filter(m=>m.status==='shootout').length;
+      if(count){count.textContent=`${members.size} / 32 through`;count.className='chip '+(members.size===32?'good':'')}
+
+      if(!r1.length&&!drawn){
+        week.innerHTML=`<div class="notice shart-v0315-sentinel"><b>SHART has not started.</b><br>Tick <b>💨 SHART week</b> on the first SHART round. At that moment the 5 league-table byes are locked and the other 54 players are randomly drawn into 27 head-to-head ties.</div>`;
+      }else if(r1.length){
+        const rn=esc(roundName(s,s.competition?.round1_round_id)||'Round 1');
+        week.innerHTML=`<div class="shart-v0315-sentinel shart-week-banner"><b>💨 ${rn} · Round 1</b><span>54 players · 27 head-to-head ties. ${r1Done}/27 decided${shootouts?` · ${shootouts} shootout${shootouts===1?'':'s'} required`:''}.</span></div>${byePanel(s)}${r1Panel(s,{admin:true})}`;
+      }else week.innerHTML='<div class="notice shart-v0315-sentinel">Round 1 complete. The knockout draw is ready.</div>';
+
+      br.innerHTML=bracket(s,{admin:true});
+      if(drawn){
+        roster.innerHTML='<div class="notice good shart-v0315-sentinel"><b>Round of 32 locked.</b><br>The knockout bracket is live.</div>';
+      }else if(!r1.length){
+        roster.innerHTML=`<div class="shart-v0315-sentinel">${byePanel(s)}<div class="notice"><b>59-player format:</b><br>5 byes + 54 players randomly paired into 27 Round 1 ties. The 27 winners join the 5 byes to make the Round of 32.</div></div>`;
+      }else{
+        const ready=r1.length===27&&r1Done===27&&members.size===32;
+        roster.innerHTML=`<div class="shart-v0315-sentinel"><div class="shart-roster-actions"><div><b>${members.size} / 32 through</b><small>${byes.length} byes · ${Math.max(0,members.size-byes.length)} Round 1 winners</small></div><button class="big-action" data-shart-r32-draw ${ready?'':'disabled'}>Generate random Round of 32</button></div>${!ready?`<div class="notice">${r1Done}/27 Round 1 ties are decided.${shootouts?` ${shootouts} still need one-match shootouts.`:''}</div>`:'<div class="notice good"><b>Round 1 complete.</b> All 27 winners + 5 byes are ready for the Round-of-32 draw.</div>'}</div>`;
+      }
+      bindAdmin(week);bindAdmin(br);bindAdmin(roster);
+    }catch(e){week.innerHTML=`<div class="notice bad shart-v0315-sentinel">${esc(e.message||'SHART setup error. Run the v0.31.5 SQL update.')}</div>`;br.innerHTML='';roster.innerHTML=''}
+  }
+
+  async function renderPlayer(force=false){
+    if(!active('#playerArea'))return;
+    const b
