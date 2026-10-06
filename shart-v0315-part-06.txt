@@ -1,0 +1,24 @@
+ody=document.querySelector('#playerShartBody'),status=document.querySelector('#playerShartStatus');if(!body)return;
+    try{
+      const s=await getState(force),me=String(await authId()),sources=sourceMap(s),members=memberSet(s),isBye=sources.get(me)==='bye',myR1=r1Matches(s).find(m=>String(m.player1_id)===me||String(m.player2_id)===me),drawn=drawExists(s);
+      if(!r1Matches(s).length&&!drawn){if(status)status.textContent='Waiting';body.innerHTML='<div class="notice shart-v0315-sentinel"><b>59 players start SHART.</b><br>Top 2 Serie-As, Top 2 Trampionship and Top 1 MLS get byes. The other 54 are drawn into 27 Round 1 head-to-head ties.</div>';return}
+
+      let top='';
+      if(isBye)top='<div class="shart-player-banner champion"><b>🎟️ BYE — straight to the Round of 32</b><span>Your league position when Round 1 started put you straight through.</span></div>';
+      else if(myR1){
+        const opp=String(myR1.player1_id)===me?String(myR1.player2_id):String(myR1.player1_id),nm=names(s);
+        if(myR1.status==='completed') top=myR1.winner_id===me?`<div class="shart-player-banner champion"><b>✅ Through to the Round of 32</b><span>You beat ${esc(nm.get(opp)||'your opponent')}${myR1.decided_by==='shootout'?' in the one-match shootout':''}.</span></div>`:`<div class="shart-player-banner out"><b>Round 1 — eliminated</b><span>${esc(nm.get(opp)||'Your opponent')} goes through.</span></div>`;
+        else if(myR1.status==='shootout') top=`<div class="shart-player-banner"><b>⚔️ Your Round 1 tie needs a shootout</b><span>Points and first-goal minute could not split you.</span></div>${playerShootout(s,myR1,me)}`;
+        else top=`<div class="shart-player-banner"><b>💨 Round 1: ${esc(nm.get(me)||'You')} v ${esc(nm.get(opp)||'Opponent')}</b><span>Highest Super 6 score goes through; tied score uses closest first-goal minute.</span></div>`;
+      }
+      if(status)status.textContent=isBye?'BYE':myR1?.status==='shootout'?'Shootout':members.has(me)?'Through':myR1?.status==='completed'?'Out':'Round 1';
+      body.innerHTML=`<div class="shart-v0315-sentinel">${top}${byePanel(s,me)}${!drawn?r1Panel(s,{me}):bracket(s,{me})}</div>`;
+      bindPlayer(body);
+    }catch(e){body.innerHTML=`<div class="notice bad shart-v0315-sentinel">${esc(e.message||'SHART setup error. Run the v0.31.5 SQL update.')}</div>`;if(status)status.textContent='Setup needed'}
+  }
+
+  async function render(force=false){const a=document.querySelector('[data-admin-tab="shart"].active'),p=document.querySelector('[data-player-tab="shart"].active');if(a)await renderAdmin(force);if(p)await renderPlayer(force)}
+  document.addEventListener('click',e=>{if(e.target.closest('[data-admin-tab="shart"],[data-player-tab="shart"]'))setTimeout(()=>render(true),80)});
+  const watch=new MutationObserver(()=>{const a=document.querySelector('[data-admin-tab="shart"].active'),p=document.querySelector('[data-player-tab="shart"].active');if(a&&(!document.querySelector('#adminShartCurrentWeek .shart-v0315-sentinel')||!document.querySelector('#adminShartBracket .shart-v0315-sentinel')||!document.querySelector('#adminShartRoster .shart-v0315-sentinel')))setTimeout(()=>renderAdmin(false),20);if(p&&!document.querySelector('#playerShartBody .shart-v0315-sentinel'))setTimeout(()=>renderPlayer(false),20)});
+  const app=document.querySelector('#app');if(app)watch.observe(app,{subtree:true,childList:true});
+})();
