@@ -1,0 +1,29 @@
+us==='tied')return `<div class="notice"><b>⚔️ Shootout ${so.attempt_no} was also tied.</b><br>Another one-match shootout will be set.</div>`;
+    if(so.status!=='open')return '';
+    const mine=predictions(s,so.id).find(p=>String(p.player_id)===String(me));
+    const locked=Date.now()>=new Date(so.cutoff_at).getTime();
+    return `<div class="shart-player-shootout"><div class="kicker">⚔️ One-match shootout ${so.attempt_no}</div><h3>${esc(so.home_team)} v ${esc(so.away_team)}</h3><div class="muted">Prediction closes ${esc(fmtDate(so.cutoff_at))}. Standard Super 6 scoring: 5 exact · 2 correct result · 0 otherwise.</div>${locked?`<div class="notice">Predictions are locked.${mine?` Your prediction: <b>${mine.home_score}–${mine.away_score}</b>.`:''}</div>`:`<div class="shart-player-shootout-entry"><input data-player-so-home type="number" min="0" inputmode="numeric" value="${mine?.home_score??''}" placeholder="${esc(so.home_team)}" /><span>–</span><input data-player-so-away type="number" min="0" inputmode="numeric" value="${mine?.away_score??''}" placeholder="${esc(so.away_team)}" /><button class="big-action" data-player-so-save="${esc(so.id)}">${mine?'Update prediction':'Submit prediction'}</button></div>`}</div>`;
+  }
+
+  async function getState(force=false){if(cache&&!force)return cache;if(loading)return loading;loading=B.loadShartState().then(s=>cache=s).finally(()=>loading=null);return loading}
+  async function authId(){try{return (await B.client().auth.getSession()).data?.session?.user?.id||''}catch{return''}}
+  const active=id=>{const e=document.querySelector(id);return e&&!e.classList.contains('hidden')};
+
+  function bindAdmin(root){
+    root.querySelectorAll('[data-so-create]').forEach(btn=>btn.onclick=async()=>{
+      const box=btn.closest('.shart-shootout-admin'),home=box.querySelector('[data-so-home]').value.trim(),away=box.querySelector('[data-so-away]').value.trim(),cut=box.querySelector('[data-so-cutoff]').value;
+      if(!home||!away||!cut){alert('Enter the real match, both teams and the shootout cutoff.');return}
+      btn.disabled=true;try{await B.createShartShootout(btn.dataset.soCreate,home,away,new Date(cut).toISOString());cache=null;await renderAdmin(true)}catch(e){alert(e.message||'Could not create shootout.')}finally{btn.disabled=false}
+    });
+    root.querySelectorAll('[data-so-complete]').forEach(btn=>btn.onclick=async()=>{
+      const box=btn.closest('.shart-shootout-admin'),h=box.querySelector('[data-so-ah]').value,a=box.querySelector('[data-so-aa]').value;
+      if(h===''||a===''){alert('Enter the final score for the shootout match.');return}
+      btn.disabled=true;try{const result=await B.completeShartShootout(btn.dataset.soComplete,h,a);cache=null;await renderAdmin(true);if(result==='tied')alert('That shootout is also tied. Set another one-match shootout for the same two players.')}catch(e){alert(e.message||'Could not complete shootout.')}finally{btn.disabled=false}
+    });
+    const draw=root.querySelector('[data-shart-r32-draw]');
+    if(draw)draw.onclick=async()=>{if(!confirm('Generate the random Round-of-32 draw from the 27 Round 1 winners + 5 byes?'))return;draw.disabled=true;try{await B.generateShartDraw();cache=null;await renderAdmin(true)}catch(e){alert(e.message||'Could not generate Round-of-32 draw.')}finally{draw.disabled=false}};
+  }
+
+  function bindPlayer(root){
+    root.querySelectorAll('[data-player-so-save]').forEach(btn=>btn.onclick=async()=>{
+      const box=btn.closest('.shart-player-shootout
