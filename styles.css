@@ -664,3 +664,63 @@ button{touch-action:manipulation}
   .shart-shootout-setup [data-so-cutoff],.shart-shootout-setup button{grid-column:1/-1}
   .shart-shootout-result{grid-template-columns:52px 14px 52px minmax(0,1fr)}
 }
+
+/* v0.31.6 — weekly poster export tidy-up */
+.poster-preview .poster-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  align-items:stretch;
+}
+.poster-preview .poster-box{
+  min-width:0;
+  max-width:100%;
+  overflow:hidden;
+  padding:11px 12px;
+}
+.poster-preview .poster-box h4{
+  min-width:0;
+  min-height:34px;
+  margin:0 0 8px;
+  display:flex;
+  align-items:flex-end;
+  font-size:15px;
+  line-height:1.05;
+  letter-spacing:0;
+  white-space:normal!important;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.poster-preview .poster-box .award{
+  min-width:0;
+  max-width:100%;
+  padding:6px 0;
+  font-size:12px;
+  line-height:1.25;
+  white-space:normal!important;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.poster-preview .poster-box .award>*{
+  min-width:0;
+  max-width:100%;
+}
+.poster-preview .poster-box .award b,
+.poster-preview .poster-box .award strong,
+.poster-preview .poster-box .award span{
+  white-space:normal!important;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.poster-preview .poster-box .award-label{
+  font-size:9px;
+  line-height:1.15;
+  margin-bottom:2px;
+}
+.poster-preview .poster-match{
+  min-width:0;
+}
+.poster-preview .poster-match span{
+  min-width:0;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
