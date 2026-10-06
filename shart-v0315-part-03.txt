@@ -1,0 +1,33 @@
+l></div></div><div class="shart-match-note">${note}</div>${m.status==='shootout'?shootoutSummary(s,m):''}${admin&&m.status==='shootout'?shootoutAdmin(s,m):''}</div>`;
+  }
+
+  function shootoutAdmin(s,m){
+    const so=latestShootout(s,m.id),ps=so?predictions(s,so.id):[];
+    if(!so||so.status==='tied'){
+      const attempt=(so?.attempt_no||0)+1;
+      return `<div class="shart-shootout-admin"><div class="kicker">${so?'Replay again':'Set the shootout'}</div><div class="shart-shootout-setup"><input data-so-home placeholder="Home team" /><input data-so-away placeholder="Away team" /><input data-so-cutoff type="datetime-local" /><button class="secondary small" data-so-create="${esc(m.id)}">Create shootout ${attempt}</button></div><small>One real match. Both players predict the score privately. 5 exact / 2 correct result / 0 otherwise.</small></div>`;
+    }
+    if(so.status==='open'){
+      const p1=ps.some(p=>String(p.player_id)===String(m.player1_id)),p2=ps.some(p=>String(p.player_id)===String(m.player2_id));
+      return `<div class="shart-shootout-admin"><div class="kicker">Shootout ${so.attempt_no}</div><b>${esc(so.home_team)} v ${esc(so.away_team)}</b><small>Cutoff ${esc(fmtDate(so.cutoff_at))} · Player 1 ${p1?'✓':'waiting'} · Player 2 ${p2?'✓':'waiting'}</small><div class="shart-shootout-result"><input data-so-ah type="number" min="0" inputmode="numeric" placeholder="H" /><span>–</span><input data-so-aa type="number" min="0" inputmode="numeric" placeholder="A" /><button class="secondary small" data-so-complete="${esc(so.id)}">Complete shootout</button></div></div>`;
+    }
+    return '';
+  }
+
+  function r1Panel(s,{admin=false,me=''}={}){
+    const ms=r1Matches(s);
+    if(!ms.length)return '<div class="notice shart-v0315-sentinel">Round 1 has not been drawn yet.</div>';
+    const done=ms.filter(m=>m.status==='completed').length,shoot=ms.filter(m=>m.status==='shootout').length;
+    return `<div class="shart-v0315-sentinel"><div class="section-head"><div><div class="kicker">54 players · 27 ties</div><h3>Round 1 head-to-head draw</h3><div class="muted">Winner = higher Super 6 points → closest first-goal minute → one-match shootout if still tied.</div></div><span class="chip ${done===27?'good':''}">${done}/27 decided${shoot?` · ${shoot} shootout${shoot===1?'':'s'}`:''}</span></div><div class="shart-r1-grid">${ms.map(m=>matchHTML(s,m,{admin,me})).join('')}</div></div>`;
+  }
+
+  function bracket(s,{admin=false,me=''}={}){
+    if(!drawExists(s))return '<div class="notice shart-v0315-sentinel">Finish all 27 Round 1 ties first. Then generate the random Round-of-32 draw.</div>';
+    const nm=names(s),champ=s.competition?.champion_id?`<div class="shart-champion"><span>🏆 SHART Champion</span><strong>${esc(nm.get(String(s.competition.champion_id))||'Player')}</strong></div>`:'';
+    return `<div class="shart-v0315-sentinel">${champ}<div class="shart-bracket">${['R32','R16','QF','SF','F'].map(st=>{const ms=(s.matches||[]).filter(m=>m.stage===st).sort((a,b)=>a.slot_no-b.slot_no);return `<section class="shart-stage"><div class="shart-stage-head"><b>${stageLabel(st)}</b><span>${ms.filter(m=>m.status==='completed').length}/${ms.length} decided</span></div>${ms.map(m=>matchHTML(s,m,{admin,me})).join('')}</section>`}).join('')}</div></div>`;
+  }
+
+  function playerShootout(s,m,me){
+    const so=latestShootout(s,m.id);
+    if(!so)return '<div class="notice"><b>⚔️ Shootout required.</b><br>Waiting for Admin to choose the one-match fixture.</div>';
+    if(so.stat
