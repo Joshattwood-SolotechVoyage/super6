@@ -1,7 +1,9 @@
-// Super 6 v0.32.1 — F-All Cup UI + integration (plain JS, no compressed loader)
-(()=>{
+// Super 6 v0.32.2 — F-All Cup UI + integration (plain JS, no compressed loader)
+(async()=>{
+  // backend.js initialises asynchronously; wait for it before looking for Super6Backend.
+  if(window.__SUPER6_BACKEND_READY) await window.__SUPER6_BACKEND_READY;
   const B=window.Super6Backend;
-  if(!B||typeof B.client!=='function') return;
+  if(!B||typeof B.client!=='function') throw new Error('Super 6 backend is not ready.');
   const sb=B.client();
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let state=null,loading=null,currentUserId=null;
@@ -174,4 +176,4 @@
   const mo=new MutationObserver(()=>{boot()});
   mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
   window.addEventListener('focus',()=>{if(!isHidden(q('#playerFall')))renderPlayer(true);if(!isHidden(q('[data-admin-panel="fall"]')))renderAdmin(true)});
-})();
+})().catch(err=>{console.error(err);const el=document.getElementById('app')||document.body;if(el){const d=document.createElement('div');d.className='notice bad';d.textContent='F-All failed to start: '+(err?.message||err);el.prepend(d)}});
