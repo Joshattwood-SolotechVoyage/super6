@@ -1,0 +1,83 @@
+/* Super 6 v0.33.0 — No-Hope-A League */
+.nohope-toggle{display:flex;gap:10px;align-items:flex-start;margin:10px 0;padding:12px;border:1px solid #b9aa84;border-radius:12px;background:#f3ead4}
+.nohope-toggle input{width:20px;height:20px;margin-top:2px}
+.nohope-toggle span{display:grid;gap:3px}
+.nohope-toggle small{color:var(--muted);line-height:1.35}
+.nohope-toggle em{font-style:normal;font-size:11px;color:var(--green);font-weight:700}
+.nohope-toggle input:disabled+span{opacity:.55}
+
+.nohope-hero,.nohope-admin-hero{border-top:5px solid #7a5530}
+.nohope-block{margin-top:18px}
+.nohope-block h3{margin:3px 0 10px}
+.nohope-champion{padding:14px 16px;border:2px solid #b18d43;border-radius:14px;background:#efe3bf;color:var(--green);margin-bottom:14px}
+.nohope-champion b{display:block;font-size:22px;margin-top:3px}
+
+.nohope-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.nohope-group-card{min-width:0;border:1px solid var(--line);border-radius:14px;background:#fffaf0;overflow:hidden}
+.nohope-group-title{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 12px;background:#173f2a;color:#f3ead0}
+.nohope-group-title h4{margin:0;font-size:15px}
+.nohope-group-title span{font-size:10px;opacity:.82}
+
+.nohope-table-wrap{width:100%;overflow:hidden}
+.nohope-table{width:100%;table-layout:fixed;border-collapse:collapse}
+.nohope-table th,.nohope-table td{padding:8px 4px;border-bottom:1px solid #e7dec8;text-align:center;font-size:11px}
+.nohope-table th{font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:#6f7569;background:#f8f0dc}
+.nohope-table th:nth-child(1),.nohope-table td:nth-child(1){width:9%}
+.nohope-table th:nth-child(2),.nohope-table td:nth-child(2){width:37%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nohope-table th:nth-child(n+3),.nohope-table td:nth-child(n+3){width:9%}
+.nohope-table th:last-child,.nohope-table td:last-child{width:10%}
+.nohope-table tr.qualifying{background:#f4eedb}
+.nohope-table tr.me{box-shadow:inset 4px 0 0 #b56b2e;background:#fff3dd}
+.nohope-table tbody tr:last-child td{border-bottom:0}
+.nohope-table td:last-child b{color:var(--green);font-size:14px}
+
+.nohope-counts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 10px}
+.nohope-counts span{padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fffaf0;font-size:11px;text-align:center}
+.nohope-counts span.good{background:#e5efe1;border-color:#a9c49f;color:var(--green)}
+.nohope-counts b{display:block;font-size:16px;margin-top:2px}
+.nohope-roster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.nohope-roster-row{display:grid;grid-template-columns:minmax(0,1fr) 125px;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:#fffdf7;min-width:0}
+.nohope-roster-row b{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+.nohope-roster-row select{width:100%;min-width:0;padding:8px;border:1px solid #cfc4a9;border-radius:9px;background:#fff}
+
+.nohope-current{margin-top:10px;border:1px solid var(--line);border-radius:12px;background:#fffaf0;overflow:hidden}
+.nohope-current>div:first-child{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;background:#f2ead7}
+.nohope-current>div:first-child b{color:var(--green)}
+.nohope-current>div:first-child span{font-size:11px;color:var(--muted)}
+.nohope-current-fixtures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:10px}
+.nohope-current-fixtures>div{padding:8px 9px;border:1px solid #e1d7bf;border-radius:9px;background:#fffdf8;min-width:0}
+.nohope-current-fixtures span{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:3px}
+.nohope-current-fixtures b{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nohope-current-fixtures i{font-style:normal;color:#8b6235;padding:0 3px}
+
+.nohope-knockout{display:grid;gap:12px}
+.nohope-stage{border:1px solid var(--line);border-radius:13px;background:#fffaf0;overflow:hidden}
+.nohope-stage-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;background:#f2ead7}
+.nohope-stage-head b{color:var(--green)}
+.nohope-stage-head span{font-size:10px;color:var(--muted)}
+.nohope-match-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px}
+.nohope-ko-match{padding:10px;border:1px solid #ddd2b6;border-radius:10px;background:#fffdf7}
+.nohope-ko-match.mine{border:2px solid #b56b2e}
+.nohope-ko-match.review{border-color:#c98d2d;background:#fff6df}
+.nohope-ko-match>div:not(.nohope-admin-decision){display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:4px 0}
+.nohope-ko-match>div.winner b{color:var(--green)}
+.nohope-ko-match>div.winner:before{content:"✓";font-size:10px;color:var(--green);margin-right:4px}
+.nohope-ko-match strong{color:var(--green);font-size:16px}
+.nohope-ko-match>small{display:block;margin-top:5px;color:var(--muted);font-size:9px}
+.nohope-admin-decision{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.nohope-admin-decision small{grid-column:1/-1;color:#8a5c16;font-size:10px}
+.nohope-admin-decision button{padding:8px;border:1px solid #cda75e;border-radius:8px;background:#fff8e7;color:var(--green);font-weight:700;font-size:10px;cursor:pointer}
+
+@media(max-width:760px){
+  .nohope-groups{grid-template-columns:1fr}
+  .nohope-roster{grid-template-columns:1fr}
+  .nohope-current-fixtures{grid-template-columns:1fr}
+  .nohope-match-grid{grid-template-columns:1fr}
+  .nohope-counts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:430px){
+  .nohope-table th,.nohope-table td{padding:7px 2px;font-size:10px}
+  .nohope-table th{font-size:8px;letter-spacing:0}
+  .nohope-table th:nth-child(2),.nohope-table td:nth-child(2){width:36%}
+  .nohope-roster-row{grid-template-columns:minmax(0,1fr) 115px}
+}
