@@ -1,4 +1,4 @@
-// Super 6 v0.31.4 — payment actions: Open Monzo + Copy link.
+// Super 6 v0.32.3 — payment actions: Pay by Monzo + Copy link.
 (()=>{
   const ROOT_ID='playerPaymentBody';
   const SENTINEL='payment-dual-actions-v0314';
@@ -85,7 +85,7 @@
     const row=document.createElement('div');
     row.className='payment-dual-actions '+SENTINEL;
     row.innerHTML=
-      '<a class="payment-action payment-action-monzo" href="'+esc(direct)+'">Open Monzo</a>'+
+      '<a class="payment-action payment-action-monzo" href="'+esc(direct)+'">Pay by Monzo</a>'+
       '<button class="payment-action payment-action-copy" type="button">Copy payment link</button>';
 
     const copyBtn=row.querySelector('.payment-action-copy');
