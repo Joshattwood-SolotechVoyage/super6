@@ -1,4 +1,4 @@
-// Super 6 v0.33.3 — safer Admin workflow: 48h payment corrections, clean new rounds, ordered tabs.
+// Super 6 v0.33.4 — safer Admin workflow: 48h payment corrections, clean new rounds, ordered tabs.
 (async()=>{
   if(window.__SUPER6_BACKEND_READY) await window.__SUPER6_BACKEND_READY;
   const B=window.Super6Backend;
@@ -38,7 +38,6 @@
       .admin-correction-note b{display:block;margin-bottom:2px}
       .admin-correction-note.closed{background:#f2eee4;color:#686256;border-color:#d8d0bf}
       .admin-correction-note.good{background:#e5efe1;border-color:#a9c49f}
-      .admin-draft-badge{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;background:#efe4c8;color:#173f2a;font-size:10px;font-weight:800}
     `;
     document.head.appendChild(st);
   }
