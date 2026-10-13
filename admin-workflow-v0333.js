@@ -114,7 +114,7 @@
       group=document.createElement('div');
       group.id='competitionSwitchGroup';
       group.className='competition-switch-group';
-      group.innerHTML='<div class="competition-switch-group-head"><b>This round also counts for…</b><small>Main League always counts. Extra competitions are OFF by default on every new round — tick only the ones you want this week.</small></div>';
+      group.innerHTML='<div class="competition-switch-group-head"><b>Round counts for</b><small>Main League always counts. Extra competitions are OFF by default on every new round — tick only the ones you want this week.</small></div>';
       const editor=q('#fixtureEditor',panel);
       editor?.parentNode?.insertBefore(group,editor);
     }
@@ -159,10 +159,6 @@
     const enforce=()=>{
       ensureCompetitionGroup();
       applyDraftChoices();
-      const state=q('#roundState');
-      if(state&&!q('.admin-draft-badge',state)){
-        state.insertAdjacentHTML('beforeend','<span class="admin-draft-badge">extras off</span>');
-      }
     };
     enforce();
     draftTimer=setInterval(enforce,180);
@@ -179,7 +175,6 @@
       drafting=false;
       clearInterval(draftTimer);
       draftTimer=null;
-      q('.admin-draft-badge')?.remove();
       setTimeout(()=>loadAdminWindow(true).then(syncAll).catch(()=>{}),400);
     },2600);
   }
