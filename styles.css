@@ -735,3 +735,8 @@ button{touch-action:manipulation}
 .payment-after-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .payment-after-actions .big-action,.payment-after-actions .secondary{min-height:46px;margin:0}
 @media(max-width:420px){.payment-after-actions{grid-template-columns:1fr 1fr}.payment-after-actions .big-action,.payment-after-actions .secondary{font-size:12px;padding:10px 8px}}
+
+
+/* v0.33.5 — readable neutral status chips inside the dark player hero.
+   Semantic good/warn/bad colours remain unchanged. */
+.hero .status-row .chip:not(.good):not(.warn):not(.bad){color:#173f2a}
