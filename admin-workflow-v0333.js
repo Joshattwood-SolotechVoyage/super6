@@ -1,4 +1,4 @@
-// Super 6 v0.33.4 — safer Admin workflow: 48h payment corrections, clean new rounds, ordered tabs.
+// Super 6 v0.33.6 — smoother, idempotent Admin workflow: 48h payment corrections, clean new rounds, ordered tabs.
 (async()=>{
   if(window.__SUPER6_BACKEND_READY) await window.__SUPER6_BACKEND_READY;
   const B=window.Super6Backend;
@@ -77,17 +77,21 @@
 
   function reorderButtons(nav,attr,order,rename={}){
     if(!nav)return;
-    for(const key of order){
-      const btn=q(`button[${attr}="${key}"]`,nav);
-      if(!btn)continue;
+    const buttons=order.map(key=>q(`button[${attr}="${key}"]`,nav)).filter(Boolean);
+    for(const btn of buttons){
+      const key=btn.getAttribute(attr);
       if(rename[key]){
         if(attr==='data-admin-tab'){
-          const b=q('b',btn);if(b)b.textContent=rename[key].label;
-          const small=q('small',btn);if(small)small.textContent=rename[key].small||'';
-        }else btn.textContent=rename[key].label;
+          const b=q('b',btn);
+          if(b&&b.textContent!==rename[key].label)b.textContent=rename[key].label;
+          const small=q('small',btn),next=rename[key].small||'';
+          if(small&&small.textContent!==next)small.textContent=next;
+        }else if(btn.textContent!==rename[key].label)btn.textContent=rename[key].label;
       }
-      nav.appendChild(btn);
     }
+    // Avoid removing and re-inserting every tab on every DOM mutation.
+    const current=[...nav.querySelectorAll('button['+attr+']')].filter(b=>buttons.includes(b));
+    if(buttons.some((btn,i)=>current[i]!==btn))buttons.forEach(btn=>nav.appendChild(btn));
   }
 
   function orderTabs(){
@@ -122,11 +126,10 @@
       const label=q(selector,panel);
       if(label&&label.parentNode!==group)group.appendChild(label);
     }
-    // Reorder again because dynamic competition scripts may insert labels relative to one another.
-    for(const selector of selectors){
-      const label=q(selector,group);
-      if(label)group.appendChild(label);
-    }
+    // Reorder only when necessary; unconditional appendChild caused a render loop.
+    const wanted=selectors.map(selector=>q(selector,group)).filter(Boolean);
+    const present=[...group.children].filter(el=>wanted.includes(el));
+    if(wanted.some((label,i)=>present[i]!==label))wanted.forEach(label=>group.appendChild(label));
   }
 
   function setDraftHelp(id){
@@ -204,6 +207,12 @@
     },true);
   }
 
+  function setNote(note,cls,html){
+    // MutationObserver watches this subtree: only modify DOM when content changed.
+    if(note.className!==cls)note.className=cls;
+    if(note.innerHTML!==html)note.innerHTML=html;
+  }
+
   async function syncAdminPaymentControls(){
     const overview=q('[data-admin-panel="overview"]');
     if(!overview)return;
@@ -214,13 +223,16 @@
     // The legacy UI disables these at the 12-hour PLAYER payment deadline.
     // Admin now has its own 48-hour correction window.
     qa('input[data-paid]',overview).forEach(input=>{
+      // Leave a saving checkbox locked until its write completes.
+      if(input.dataset.paymentSaving==='1')return;
       if(open&&input.disabled)input.disabled=false;
       if(!open&&!input.disabled)input.disabled=true;
-      input.title=open?`Admin payment correction open until ${fmt(end)}`:'Admin payment correction window closed';
+      const title=open?`Admin payment correction open until ${fmt(end)}`:'Admin payment correction window closed';
+      if(input.title!==title)input.title=title;
     });
 
     const head=q('.section-head .muted',overview);
-    if(head)head.textContent='Tap a player to inspect their entry. Admin can correct scores and payment status for 48 hours after cutoff.';
+    if(head&&head.textContent!=='Tap a player to inspect their entry. Admin can correct scores and payment status for 48 hours after cutoff.')head.textContent='Tap a player to inspect their entry. Admin can correct scores and payment status for 48 hours after cutoff.';
 
     let note=q('#adminPaymentCorrectionNote',overview);
     if(!note){
@@ -231,14 +243,11 @@
     }
     if(!note)return;
     if(!roundCache||!end){
-      note.className='admin-correction-note closed';
-      note.innerHTML='<b>Admin corrections</b>No round is available.';
+      setNote(note,'admin-correction-note closed','<b>Admin corrections</b>No round is available.');
     }else if(open){
-      note.className='admin-correction-note good';
-      note.innerHTML=`<b>Admin corrections stay open after Complete Round.</b>Scores and payment status can be corrected until ${esc(fmt(end))}. Any completed-round payment change is recalculated automatically.`;
+      setNote(note,'admin-correction-note good',`<b>Admin corrections stay open after Complete Round.</b>Scores and payment status can be corrected until ${esc(fmt(end))}. Any completed-round payment change is recalculated automatically.`);
     }else{
-      note.className='admin-correction-note closed';
-      note.innerHTML='<b>Admin correction window closed.</b>The 48-hour period after cutoff has ended.';
+      setNote(note,'admin-correction-note closed','<b>Admin correction window closed.</b>The 48-hour period after cutoff has ended.');
     }
   }
 
@@ -259,19 +268,15 @@
     if(!note)return;
 
     if(!roundCache||!end){
-      note.className='admin-correction-note closed';
-      note.innerHTML='<b>Admin corrections</b>No round is available.';
+      setNote(note,'admin-correction-note closed','<b>Admin corrections</b>No round is available.');
       return;
     }
     if(open&&String(roundCache.status)==='completed'){
-      note.className='admin-correction-note good';
-      note.innerHTML=`<b>Results calculated — this is not irreversible.</b>Admin can still correct player scores and payments until ${esc(fmt(end))}. Changes recalculate the round automatically.`;
+      setNote(note,'admin-correction-note good',`<b>Results calculated — this is not irreversible.</b>Admin can still correct player scores and payments until ${esc(fmt(end))}. Changes recalculate the round automatically.`);
     }else if(open){
-      note.className='admin-correction-note';
-      note.innerHTML=`<b>Complete Round does not close Admin editing.</b>After results are calculated, Admin corrections remain available until ${esc(fmt(end))}.`;
+      setNote(note,'admin-correction-note',`<b>Complete Round does not close Admin editing.</b>After results are calculated, Admin corrections remain available until ${esc(fmt(end))}.`);
     }else{
-      note.className='admin-correction-note closed';
-      note.innerHTML='<b>Round is final for Admin corrections.</b>The 48-hour correction window has ended.';
+      setNote(note,'admin-correction-note closed','<b>Round is final for Admin corrections.</b>The 48-hour correction window has ended.');
     }
   }
 
