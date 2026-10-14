@@ -25,7 +25,7 @@
     '.comp-round-card .section-head{align-items:center;gap:10px}',
     '.comp-round-intro{font-size:12px;line-height:1.5;color:var(--muted)}',
     '.comp-round-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}',
-    '.comp-round-refresh{font:800 11px inherit;border:1px solid #cabb9a;background:#f7efdb;color:var(--green);border-radius:9px;padding:9px 12px;cursor:pointer}',
+    '.comp-round-refresh{font-size:11px;font-weight:800;border:1px solid #cabb9a;background:#f7efdb;color:var(--green);border-radius:9px;padding:9px 12px;cursor:pointer}',
     '.comp-round-refresh:disabled{opacity:.5}',
     '.comp-round-tabs{display:flex;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;max-width:100%;min-width:0;padding:6px 2px 12px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}',
     '.comp-round-tabs button{flex:0 0 auto;min-width:91px;max-width:138px;border:1px solid #cabf9f;border-radius:11px;padding:9px 10px;background:#f9f3e6;color:var(--green);text-align:left;cursor:pointer;line-height:1.2}',
