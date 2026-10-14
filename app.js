@@ -55,6 +55,71 @@ const parts=await Promise.all(files.map(async f=>{const r=await fetch(f+'?v=0.31
 const b64=parts.join('');
 const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
 const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-const source=await new Response(stream).text();
+let source=await new Response(stream).text();
+// v0.33.6 — keep Admin payment rows mounted while saving individual Paid checkboxes.
+// The original handler rebuilt all league panels after each tick, moving the list
+// and recreating every checkbox. Preserve backend writes and completed-round recalculation.
+const adminPaymentHelper = [
+"let adminPaymentSaveQueue=Promise.resolve();",
+"function syncAdminPaymentRowUI(){",
+" const wrap=$('#adminLeaguePanels');if(!wrap)return;",
+" const leagues=adminRoundOverview.leagues||[],players=adminRoundOverview.players||[];",
+" const byId=new Map(players.map(p=>[String(p.id),p]));",
+" wrap.querySelectorAll('.league-panel').forEach((panel,index)=>{",
+"  const league=leagues[index];if(!league)return;",
+"  const ps=players.filter(p=>String(p.league_id)===String(league.id));",
+"  const numbers={submitted:ps.filter(p=>p.submitted).length,paid:ps.filter(p=>p.paid).length,pending:ps.filter(p=>p.submitted&&!p.paid&&p.payment_pending).length,unpaid:ps.filter(p=>p.submitted&&!p.paid&&!p.payment_pending).length,missing:ps.filter(p=>!p.submitted).length};",
+"  for(const [name,num] of Object.entries(numbers)){const node=panel.querySelector('.status-summary .status-pill.'+name+' b');if(node&&node.textContent!==String(num))node.textContent=String(num)}",
+"  const pot=panel.querySelector('.money strong');const amount='£'+(ps.filter(p=>p.submitted&&p.paid).length*Number(state.round?.fee||0));if(pot&&pot.textContent!==amount)pot.textContent=amount;",
+" });",
+" wrap.querySelectorAll('input[data-paid]').forEach(input=>{",
+"  if(input.dataset.paymentSaving==='1')return;",
+"  const p=byId.get(String(input.dataset.paid));if(!p)return;",
+"  if(input.checked!==Boolean(p.paid))input.checked=Boolean(p.paid);",
+"  const badges=input.closest('.player-row')?.querySelector('.player-statuses');if(!badges)return;",
+"  const old=badges.querySelector('.status-pill.mini.paid,.status-pill.mini.pending,.status-pill.mini.unpaid');",
+"  const klass=p.paid?'paid':p.submitted?(p.payment_pending?'pending':'unpaid'):null;",
+"  const label=klass==='paid'?'Paid':klass==='pending'?'Payment pending':'Unpaid';",
+"  if(!klass){old?.remove()}else if(old){const next='status-pill mini '+klass;if(old.className!==next)old.className=next;if(old.textContent!==label)old.textContent=label}else{const chip=document.createElement('span');chip.className='status-pill mini '+klass;chip.textContent=label;badges.appendChild(chip)}",
+"  if(state.round?.completed){const marker=[...badges.querySelectorAll('.status-pill.mini.missing')].find(el=>el.textContent==='Not counted');const needed=Boolean(p.submitted&&p.paid&&!weeklyResultForPlayer(p.id));if(needed&&!marker){const el=document.createElement('span');el.className='status-pill mini missing';el.textContent='Not counted';badges.appendChild(el)}else if(!needed&&marker)marker.remove()}",
+" });",
+"}"
+].join('\n');
+const paymentStart=" wrap.querySelectorAll('[data-paid]').forEach(x=>x.onchange=async()=>{";
+const paymentEnd=" wrap.querySelectorAll('[data-view]').forEach(x=>x.onclick=";
+const begin=source.indexOf(paymentStart);
+const end=begin<0?-1:source.indexOf(paymentEnd,begin);
+if(begin!==-1&&end>begin&&source.includes('function renderAdminLeaguePanels(){')){
+  const handler=[
+  " wrap.querySelectorAll('[data-paid]').forEach(x=>x.onchange=()=>{",
+  "  const desired=Boolean(x.checked),playerId=String(x.dataset.paid||''),roundId=state.round?.id;",
+  "  if(!playerId||!roundId){x.checked=!desired;return}",
+  "  x.disabled=true;x.dataset.paymentSaving='1';x.closest('.player-row')?.classList.add('payment-saving');",
+  "  adminPaymentSaveQueue=adminPaymentSaveQueue.catch(()=>{}).then(async()=>{",
+  "   try{",
+  "    await window.Super6Backend.setAdminPayment(roundId,playerId,desired);",
+  "    if(state.round?.id!==roundId)return;",
+  "    await refreshAdminRoundOverview();",
+  "    if(state.round.completed){await Promise.all([refreshLiveWeeklyResults(),refreshLiveStandings(),refreshLatestLeagueWinners(),refreshChumpionsState(),refreshShartState(),refreshAdminMoneyHistory()])}",
+  "    renderAdminHero();syncAdminPaymentRowUI();",
+  "    if(state.round.completed){renderWeeklyResults();renderAdminTables();renderAdminChumpions();renderAdminShart()}",
+  "   }catch(err){",
+  "    alert(err?.message||'Could not update payment status.');",
+  "    if(state.round?.id===roundId){await refreshAdminRoundOverview().catch(()=>{});renderAdminHero();x.checked=!desired}",
+  "   }finally{",
+  "    delete x.dataset.paymentSaving;x.closest('.player-row')?.classList.remove('payment-saving');",
+  "    if(state.round?.id===roundId){syncAdminPaymentRowUI();x.disabled=false}",
+  "   }",
+  "  });",
+  " });",
+  ""
+  ].join('\n');
+  source=source.slice(0,begin)+handler+source.slice(end);
+  source=source.replace('function renderAdminLeaguePanels(){',adminPaymentHelper+'\nfunction renderAdminLeaguePanels(){');
+  const oldRefresh="try{await refreshAdminRoundOverview();renderAdminHero();renderAdminLeaguePanels()}";
+  const newRefresh="try{await refreshAdminRoundOverview();renderAdminHero();if($('#adminLeaguePanels')?.querySelector('.player-row'))syncAdminPaymentRowUI();else renderAdminLeaguePanels()}";
+  if(source.includes(oldRefresh))source=source.replace(oldRefresh,newRefresh);
+  else console.warn('Super 6: background payment refresh update not found');
+}else console.warn('Super 6: original payment handler not found; original implementation kept');
 (0,eval)(source);
 })().catch(err=>{console.error(err);const el=document.getElementById('app')||document.body;if(el){const d=document.createElement('div');d.style.cssText='margin:16px;padding:14px;border:1px solid #b44;background:#fff4f2;color:#6b1d1d;border-radius:10px;font:14px Arial';d.textContent='Super 6 failed to load: '+(err?.message||err);el.prepend(d);}});
