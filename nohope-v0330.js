@@ -112,7 +112,7 @@
   function groupTable(g,me=''){
     const rows=groupRows()[g]||[];
     if(!rows.length) return '<div class="notice">No players assigned to this group yet.</div>';
-    return `<div class="nohope-table-wrap"><table class="nohope-table"><thead><tr><th>Pos</th><th>Player</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Points</th></tr></thead><tbody>${rows.map(r=>`<tr class="${me===r.id?'me':''} ${r.qualifying?'qualifying':''}"><td>${r.position}</td><td title="${esc(r.name)}"><b>${esc(r.name)}</b></td><td>${r.played}</td><td>${r.wins}</td><td>${r.draws}</td><td>${r.losses}</td><td><b>${r.points}</b></td></tr>`).join('')}</tbody></table></div>`;
+    return `<div class="nohope-table-wrap"><table class="nohope-table"><thead><tr><th>Pos</th><th>Player</th><th>Played</th><th>W</th><th>D</th><th>L</th><th>League pts</th></tr></thead><tbody>${rows.map(r=>`<tr class="${me===r.id?'me':''} ${r.qualifying?'qualifying':''}"><td>${r.position}</td><td title="${esc(r.name)}"><b>${esc(r.name)}</b></td><td>${r.played}</td><td>${r.wins}</td><td>${r.draws}</td><td>${r.losses}</td><td><b>${r.points}</b></td></tr>`).join('')}</tbody></table></div>`;
   }
 
   function allGroupsHTML(me=''){
