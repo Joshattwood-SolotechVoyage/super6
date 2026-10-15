@@ -1,4 +1,4 @@
-/* Super 6 v0.33.8 — player-side past and future Chumpions / No-Hope-A rounds.
+/* Super 6 v0.34.1 — player-side past and future Chumpions / No-Hope-A rounds with full-season fixture lists.
    Displays Dayle's stored season schedule, without edits or unplayed score predictions. */
 (async function(){
   'use strict';
@@ -120,6 +120,40 @@
       (byes.length&&gm.length?'<div class="cup-round-bye">Bye: '+byes.map(id=>esc(s.map.get(id)||'Player')).join(', ')+'</div>':'')+
       '</article>';
   }
+
+  // F-All-style full season fixture list, without changing the existing quick round tabs.
+  // Show the current player's group first; the group filter also controls this list.
+  function fullFixtureHTML(c,filter){
+    const sel=current[c]||{},showAll=filter==='all',groups=showAll?groupLetters:[filter];
+    const groupsHTML=key=>{
+      const matches=gameSet(c,key);
+      if(stages.includes(key)){
+        if(!matches.length)return '<div class="cup-round-empty">Knockout fixtures appear once this stage is drawn.</div>';
+        return '<div class="cup-round-fixtures"><article class="cup-round-group"><h4>'+esc(keyLabel(key))+'<span>'+
+          matches.filter(x=>x.status==='completed').length+'/'+matches.length+' played</span></h4>'+
+          matches.map(m=>gameHTML(store[c],m)).join('')+'</article></div>';
+      }
+      return '<div class="cup-round-fixtures">'+groups.map(g=>groupHTML(c,g,matches)).join('')+'</div>';
+    };
+    const latestPlayed=(()=>{let last=0;for(let n=1;n<=10;n++)if(progress(c,'R'+n).completed>0)last=n;return last})();
+    const defaultExpanded='R'+Math.min(10,latestPlayed+1);
+    const expanded=sel.expandedRound===undefined?defaultExpanded:sel.expandedRound;
+    const html=keys().map(key=>{
+      const p=progress(c,key),knockout=stages.includes(key);
+      // Do not imply knockout ties have been drawn before qualification.
+      if(knockout&&!p.total)return '';
+      const isDone=p.total&&p.completed===p.total;
+      const text=isDone?'Complete':p.completed?'In progress':'Upcoming';
+      return '<details class="fall-round cup-full-round" data-cup-fixture-round="'+esc(key)+'"'+(expanded===key?' open':'')+'>'+
+        '<summary><span>'+esc(keyLabel(key))+'</span><small>'+esc(text)+' · '+p.completed+'/'+p.total+'</small></summary>'+
+        '<div class="cup-full-round-content">'+groupsHTML(key)+'</div></details>';
+    }).join('');
+    return '<details class="cup-all-fixtures" data-cup-full'+(sel.fullOpen?' open':'')+'>'+
+      '<summary><span><b>View all fixtures</b><small>Full season · F-All-style round list</small></span><span class="cup-full-count">10 rounds <span aria-hidden="true">⌄</span></span></summary>'+
+      '<div class="cup-full-body"><p class="cup-full-intro">Expand any round to see the completed scores and future opponents. Only played matches show a score.</p>'+
+      '<div class="fall-rounds cup-full-rounds">'+html+'</div></div></details>';
+  }
+
   function panelHTML(c){
     const state=store[c],sel=current[c]||{},key=sel.round||defaultKey(c);
     const thisWeek=gameSet(c,key),stats=progress(c,key),related=roundRecord(c,key);
@@ -143,7 +177,7 @@
       '<div class="cup-round-nav" aria-label="'+esc(configs[c].title)+' rounds">'+tabs+'</div>'+
       '<div class="cup-round-meta"><div><strong>'+esc(keyLabel(key))+' · '+esc(status)+'</strong><small>'+esc(stats.completed)+' of '+esc(stats.total)+' ties completed'+meta+'</small></div>'+
       (!stages.includes(key)?'<div class="cup-group-filter"><label for="player-cup-filter-'+c+'">Group</label><select id="player-cup-filter-'+c+'" data-player-group="'+c+'">'+groupOptions.map(o=>'<option value="'+esc(o.id)+'"'+(o.id===filter?' selected':'')+'>'+esc(o.name)+'</option>').join('')+'</select></div>':'')+'</div>'+
-      content+
+      content+fullFixtureHTML(c,filter)+
       '<div class="cup-round-status">Scoring: <strong>3 league points for a win · 1 for a draw.</strong> Future fixtures may move if the Admin corrects a draw.</div>';
   }
   function mount(c){
@@ -166,6 +200,13 @@
       block.addEventListener('change',e=>{
         if(e.target.matches('[data-player-group]')){current[c]=current[c]||{};current[c].group=e.target.value;paint(c,false);}
       });
+      // Preserve the expanded/collapsed state between round changes and refreshes.
+      block.addEventListener('toggle',e=>{
+        if(!block.contains(e.target))return;
+        current[c]=current[c]||{};
+        if(e.target.matches('[data-cup-full]'))current[c].fullOpen=e.target.open;
+        if(e.target.matches('[data-cup-fixture-round]'))current[c].expandedRound=e.target.open?e.target.dataset.cupFixtureRound:'';
+      },true);
     }
     // Paint only when creating a new widget. Painting an existing widget
     // from a MutationObserver would create an infinite render loop.
