@@ -88,10 +88,18 @@
       review:game.filter(x=>x.status==='review').length};
   }
   function defaultKey(c){
+    // Open on the latest actual results, not a future empty fixture list.
+    // Players can move forward to see their next opponent.
+    const activeKnockout=stages.find(k=>{
+      const p=progress(c,k);
+      return p.total>0&&p.completed<p.total;
+    });
+    if(activeKnockout)return activeKnockout;
+    let latestPlayed=null;
     for(let n=1;n<=10;n++){
-      if(progress(c,'R'+n).completed<configs[c].per)return 'R'+n;
+      if(progress(c,'R'+n).completed>0)latestPlayed='R'+n;
     }
-    return stages.find(k=>progress(c,k).completed===0)||'F';
+    return latestPlayed||'R1';
   }
   function gameHTML(s,match){
     const p1=s.map.get(safeId(match.player1_id))||'To be confirmed';
@@ -147,7 +155,10 @@
       block.className='player-cup-rounds';
       block.dataset.playerCupRounds=c;
       block.innerHTML='<div class="muted">Loading previous & upcoming rounds…</div>';
-      host.appendChild(block);
+      // Keep completed and upcoming fixtures visible above the lengthy
+      // standings and knockout tables, especially on an iPhone.
+      const firstTable=host.querySelector('.nohope-block,.chumpions-block,.chumpions-groups,.chumpions-latest,.chumpions-bracket');
+      host.insertBefore(block,firstTable||host.firstChild);
       block.addEventListener('click',e=>{
         const btn=e.target.closest('[data-player-round]');
         if(btn){current[c]=current[c]||{};current[c].round=btn.dataset.playerRound;paint(c,true);return;}
