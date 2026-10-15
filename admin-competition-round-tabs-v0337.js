@@ -1,4 +1,4 @@
-/* Super 6 v0.33.7 — read-only Admin competition round navigator.
+/* Super 6 v0.34.1 — read-only Admin competition round navigator with full fixture accordions.
    Keeps master fixtures/results in Supabase; no round mutation or score overrides.
    Works with dynamically mounted F-All/No-Hope-A panels. */
 (function(){
@@ -12,6 +12,7 @@
   const labels={R1:'Round 1',R32:'Round of 32',R16:'Round of 16',QF:'Quarter-finals',SF:'Semi-finals',F:'Final'};
   const cache={};
   const selected={};
+  const allOpen={},expanded={};
   const epochs={};
   const esc=v=>String(v===null||v===undefined?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const elem=(s,p=document)=>p.querySelector(s);
@@ -90,6 +91,11 @@
         if(newButton)newButton.scrollIntoView({behavior:'smooth',block:'nearest',inline:'nearest'});
       }
     });
+    card.addEventListener('toggle',e=>{
+      if(!card.contains(e.target))return;
+      if(e.target.matches('[data-admin-full-cup]'))allOpen[cup]=e.target.open;
+      if(e.target.matches('[data-admin-fixture-round]'))expanded[cup]=e.target.open?e.target.dataset.adminFixtureRound:'';
+    },true);
     return card;
   }
 
@@ -242,6 +248,45 @@
     return '<div class="comp-round-summary"><div><h4>'+esc(title)+'</h4><p>'+subtitle+'</p></div><div class="comp-round-actions"><span class="comp-round-progress '+style+'">'+(details.total?details.finished+'/'+details.total+' · ':'')+esc(status)+'</span><div class="comp-round-arrows"><button type="button" data-comp-offset="-1" aria-label="Previous round">‹</button><button type="button" data-comp-offset="1" aria-label="Next round">›</button></div></div></div>'+body+'<div class="comp-round-hint">'+esc(hint)+'</div>';
   }
 
+
+  // Match the F-All full-round accordion on other Admin cup pages.
+  // This is an additional read-only view of the existing Supabase schedule.
+  function fullSeasonHTML(cup){
+    const keys=roundKeys(cup),short=cup==='shart'?'Every knockout stage':'All 10 group rounds and knockouts';
+    const roundHTML=keys.map(key=>{
+      const rows=games(cup,key),p=progress(cup,key),stage=key.charAt(0)!=='G';
+      if(stage&&!rows.length&&cup!=='shart')return '';
+      const complete=p.total&&p.finished===p.total;
+      const status=p.review?'Review needed':complete?'Complete':p.finished?'In progress':rows.length?'Upcoming':'Not drawn';
+      let fixtures='';
+      if(!rows.length){
+        fixtures='<div class="comp-round-empty">Fixtures will appear once this stage is drawn.</div>';
+      }else if(!stage&&cups[cup].groups){
+        fixtures='<div class="comp-round-grid">'+['A','B','C','D'].map(g=>{
+          const matches=rows.filter(m=>m.group_code===g);
+          return '<div class="comp-round-group"><h5>Group '+g+'</h5>'+
+            matches.map(m=>gameHTML(cup,m)).join('')+byeFor(cup,g,matches)+'</div>';
+        }).join('')+'</div>';
+      }else{
+        fixtures='<div class="comp-round-group">'+rows.map(m=>gameHTML(cup,m)).join('')+'</div>';
+      }
+      const defaultKey=cup==='shart'?'R1':(() =>{
+        for(let i=1;i<=10;i++){
+          if(progress(cup,'G'+i).finished<cups[cup].total)return 'G'+i;
+        }
+        return 'G10';
+      })();
+      const open=(expanded[cup]===undefined?defaultKey:expanded[cup])===key;
+      return '<details class="fall-round" data-admin-fixture-round="'+esc(key)+'"'+(open?' open':'')+'>'+
+        '<summary><span>'+esc(roundLabel(key))+'</span><small>'+esc(status)+' · '+p.finished+'/'+p.total+'</small></summary>'+
+        '<div class="cup-full-round-content">'+fixtures+'</div></details>';
+    }).join('');
+    return '<details class="cup-all-fixtures admin-full-cup" data-admin-full-cup'+(allOpen[cup]?' open':'')+'>'+
+      '<summary><span><b>View all fixtures</b><small>'+esc(short)+' · full season view</small></span><span class="cup-full-count">'+(cup==='shart'?'SHART draw':'10 rounds')+' <span aria-hidden="true">⌄</span></span></summary>'+
+      '<div class="cup-full-body"><p class="cup-full-intro">Expand a round for fixtures and played results. Unplayed matches do not have scores.</p>'+
+      '<div class="fall-rounds cup-full-rounds">'+roundHTML+'</div></div></details>';
+  }
+
   function paint(cup){
     const card=buildCard(cup),state=cache[cup];if(!card||!state)return;
     const keys=roundKeys(cup);
@@ -253,7 +298,7 @@
       const active=selectedKey===key;
       return '<button type="button" role="tab" data-comp-round="'+esc(key)+'" aria-selected="'+active+'" class="'+(active?'active ':'')+(p.review?'needs-review':'')+'"><strong>'+esc(roundLabel(key))+'</strong><small>'+(p.review?'Review needed':p.total&&p.finished===p.total?'✓ Complete':tiny)+'</small></button>';
     }).join('');
-    body.innerHTML=content(cup,selectedKey);
+    body.innerHTML=content(cup,selectedKey)+(cup==='fall'?'':fullSeasonHTML(cup));
     const prev=elem('[data-comp-offset="-1"]',body),next=elem('[data-comp-offset="1"]',body),index=keys.indexOf(selectedKey);
     if(prev)prev.disabled=index===0;
     if(next)next.disabled=index===keys.length-1;
