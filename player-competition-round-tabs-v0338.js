@@ -22,7 +22,7 @@
   const shown=c=>!$('#playerArea')?.classList.contains('hidden')&&!$('#player'+(c==='chumpions'?'Chumpions':'Nohope'))?.classList.contains('hidden');
   const section=c=>document.querySelector(c==='chumpions'?'#playerChumpionsBody':'#playerNohopeBody');
   const keys=()=>Array.from({length:10},(_,n)=>'R'+(n+1)).concat(stages);
-  const keyLabel=k=>k.charAt(0)==='R'?('Round '+k.slice(1)):(stageNames[k]||k);
+  const keyLabel=k=>stageNames[k]||('Round '+k.slice(1));
   let userId=null,loading=null;
   const dateLabel=iso=>{
     if(!iso)return '';
@@ -156,8 +156,13 @@
         if(e.target.matches('[data-player-group]')){current[c]=current[c]||{};current[c].group=e.target.value;paint(c,false);}
       });
     }
-    if(store[c])paint(c,false);
-    else if(!loading||loading.c!==c)load(c,false);
+    // Paint only when creating a new widget. Painting an existing widget
+    // from a MutationObserver would create an infinite render loop.
+    if(block.dataset.playerCupInitialized!=='1'){
+      block.dataset.playerCupInitialized='1';
+      if(store[c])paint(c,false);
+      else if(!loading||loading.c!==c)load(c,false);
+    }
   }
   function paint(c,scrollToSelected=false){
     const host=section(c),target=host?.querySelector('[data-player-cup-rounds="'+c+'"]');
