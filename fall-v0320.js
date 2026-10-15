@@ -64,7 +64,7 @@
   function tableHTML(me=''){
     const rows=tableRows();
     if(!rows.length)return '<div class="notice">The 15-player F-All roster has not been locked yet.</div>';
-    return `<div class="fall-table-wrap"><table class="fall-table"><thead><tr><th>Pos</th><th>Player</th><th>P</th><th>W</th><th>D</th><th>L</th><th>S6</th><th>Points</th></tr></thead><tbody>${rows.map((r,i)=>`<tr class="${me===r.id?'me':''}"><td>${i+1}</td><td title="${esc(r.name)}"><b>${esc(r.name)}</b></td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.s6}</td><td><b>${r.pts}</b></td></tr>`).join('')}</tbody></table></div>`;
+    return `<div class="fall-table-wrap"><table class="fall-table"><thead><tr><th>Pos</th><th>Player</th><th>Played</th><th>W</th><th>D</th><th>L</th><th>S6</th><th>League pts</th></tr></thead><tbody>${rows.map((r,i)=>`<tr class="${me===r.id?'me':''}"><td>${i+1}</td><td title="${esc(r.name)}"><b>${esc(r.name)}</b></td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.s6}</td><td><b>${r.pts}</b></td></tr>`).join('')}</tbody></table></div>`;
   }
 
   function fixtureHTML(m,me=''){
