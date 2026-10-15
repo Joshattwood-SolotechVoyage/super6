@@ -1,0 +1,39 @@
+/* Super 6 v0.34.1 — accessible F-All-style fixtures for other player cups */
+.player-cup-rounds .cup-all-fixtures,#playerShart .cup-all-fixtures{
+  border:1px solid #cabb95;border-radius:13px;margin:16px 0 10px;background:#fdf8e9;overflow:hidden
+}
+.player-cup-rounds .cup-all-fixtures>summary,#playerShart .cup-all-fixtures>summary{
+  list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:13px 14px;color:#173f2a;background:#eee4ca;min-height:58px
+}
+.player-cup-rounds .cup-all-fixtures>summary::-webkit-details-marker,#playerShart .cup-all-fixtures>summary::-webkit-details-marker{display:none}
+.player-cup-rounds .cup-all-fixtures>summary:focus-visible,#playerShart .cup-all-fixtures>summary:focus-visible{outline:2px solid #bc984d;outline-offset:-3px}
+.player-cup-rounds .cup-all-fixtures>summary span:first-child,#playerShart .cup-all-fixtures>summary span:first-child{display:grid;gap:4px;min-width:0}
+.player-cup-rounds .cup-all-fixtures>summary b,#playerShart .cup-all-fixtures>summary b{font-size:14px;font-weight:900}
+.player-cup-rounds .cup-all-fixtures>summary small,#playerShart .cup-all-fixtures>summary small{font-size:11px;color:#685e4b;line-height:1.3}
+.player-cup-rounds .cup-full-count,#playerShart .cup-full-count{font-size:11px;font-weight:900;color:#315641;white-space:nowrap}
+.player-cup-rounds .cup-all-fixtures[open] .cup-full-count span,#playerShart .cup-all-fixtures[open] .cup-full-count span{display:inline-block;transform:rotate(180deg)}
+.player-cup-rounds .cup-full-body,#playerShart .cup-full-body{padding:12px;min-width:0}
+.player-cup-rounds .cup-full-intro,#playerShart .cup-full-intro{margin:0 0 12px;font-size:11px;line-height:1.5;color:#665c49}
+.player-cup-rounds .cup-full-round-content,#playerShart .cup-full-round-content{padding:11px;min-width:0}
+.player-cup-rounds .cup-full-round-content .cup-round-fixtures{margin:0}
+.player-cup-rounds .cup-full-rounds .fall-round,#playerShart .cup-full-rounds .fall-round{min-width:0}
+.player-cup-rounds .cup-full-rounds .fall-round summary,#playerShart .cup-full-rounds .fall-round summary{background:#fcf6e7}
+.player-cup-rounds .cup-full-rounds .fall-round[open]>summary,#playerShart .cup-full-rounds .fall-round[open]>summary{background:#e7eddf;border-bottom:1px solid #d8d5b8}
+#playerShart .shart-fixture-browser{margin:15px 0 3px}
+#playerShart .shart-fixture-browser .cup-all-fixtures{margin:0}
+#playerShart .shart-fixture-group{display:grid;gap:0}
+#playerShart .shart-fixture-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;padding:9px 8px;border-bottom:1px solid #e8ddc6}
+#playerShart .shart-fixture-row:last-child{border-bottom:0}
+#playerShart .shart-fixture-row.mine{background:#f6eccd}
+#playerShart .shart-fixture-row b{font-size:12px;overflow-wrap:anywhere}
+#playerShart .shart-fixture-row b:last-child{text-align:right}
+#playerShart .shart-fixture-row strong{font-size:15px;color:#173f2a;white-space:nowrap}
+#playerShart .shart-fixture-row .pending{font-size:11px;color:#827761}
+#playerShart .shart-fixture-empty{padding:12px;color:#655d50;font-size:12px;line-height:1.5}
+@media(max-width:600px){
+ .player-cup-rounds .cup-full-body,#playerShart .cup-full-body{padding:8px}
+ .player-cup-rounds .cup-full-round-content,#playerShart .cup-full-round-content{padding:8px}
+ #playerShart .shart-fixture-row{padding:10px 5px;gap:5px}
+ #playerShart .shart-fixture-row b{font-size:11px}
+}
