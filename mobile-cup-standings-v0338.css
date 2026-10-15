@@ -1,0 +1,61 @@
+/* Super 6 v0.33.8 — clear mobile cup points + player cup fixture tabs */
+/* Keep league points visible on small screens rather than shrinking eight columns until unreadable. */
+.nohope-table td:last-child b,
+.fall-table td:last-child b{display:inline-flex;min-width:27px;min-height:27px;align-items:center;justify-content:center;padding:3px 5px;border-radius:8px;background:#173f2a;color:#fff8e9!important;font-size:13px;font-weight:900;line-height:1}
+.nohope-table th:last-child,.fall-table th:last-child{font-weight:900;letter-spacing:.05em}
+.nohope-group-title span{color:#f3ead0;opacity:1}
+.cup-table-guide{font-size:11px;color:#4c5847;margin:7px 0 12px;line-height:1.4}
+@media(max-width:560px){
+  .nohope-table-wrap,.fall-table-wrap{max-width:100%;overflow:hidden}
+  .nohope-table,.fall-table{width:100%!important;min-width:0!important;table-layout:fixed}
+  .nohope-table th:nth-child(4),.nohope-table td:nth-child(4),
+  .nohope-table th:nth-child(5),.nohope-table td:nth-child(5),
+  .nohope-table th:nth-child(6),.nohope-table td:nth-child(6),
+  .fall-table th:nth-child(4),.fall-table td:nth-child(4),
+  .fall-table th:nth-child(5),.fall-table td:nth-child(5),
+  .fall-table th:nth-child(6),.fall-table td:nth-child(6){display:none!important}
+  .nohope-table th,.nohope-table td,.fall-table th,.fall-table td{padding:9px 2px!important;font-size:11px!important;overflow:hidden;line-height:1.25}
+  .nohope-table th:nth-child(1),.nohope-table td:nth-child(1){width:10%!important}
+  .nohope-table th:nth-child(2),.nohope-table td:nth-child(2){width:49%!important;font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;padding-left:7px!important}
+  .nohope-table th:nth-child(3),.nohope-table td:nth-child(3){width:13%!important}
+  .nohope-table th:last-child,.nohope-table td:last-child{width:28%!important;display:table-cell!important}
+  .fall-table th:nth-child(1),.fall-table td:nth-child(1){width:10%!important}
+  .fall-table th:nth-child(2),.fall-table td:nth-child(2){width:38%!important;font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:6px!important;text-align:left}
+  .fall-table th:nth-child(3),.fall-table td:nth-child(3){width:12%!important}
+  .fall-table th:nth-child(7),.fall-table td:nth-child(7){width:16%!important}
+  .fall-table th:last-child,.fall-table td:last-child{width:24%!important;display:table-cell!important}
+  .nohope-table td:last-child b,.fall-table td:last-child b{font-size:14px!important;min-width:34px;min-height:31px}
+  .fall-table th:nth-child(7){font-size:8px!important;letter-spacing:0}
+}
+.player-cup-rounds{margin-top:22px;padding-top:16px;border-top:2px solid #ddceaa}
+.player-cup-rounds h3{margin:2px 0 6px;color:#173f2a;font-size:20px}
+.player-cup-rounds .cup-round-help{color:#625e51;font-size:12px;line-height:1.45;margin-bottom:11px}
+.player-cup-rounds .cup-round-nav{display:flex;gap:7px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding:4px 1px 11px}
+.player-cup-rounds .cup-round-nav button{flex:0 0 auto;min-width:87px;border:1px solid #cdbf9e;border-radius:11px;background:#f6ecd6;color:#173f2a;padding:9px 10px;cursor:pointer;text-align:left}
+.player-cup-rounds .cup-round-nav button b{display:block;font-size:12px}
+.player-cup-rounds .cup-round-nav button small{display:block;margin-top:4px;font-size:10px;color:#605d4f}
+.player-cup-rounds .cup-round-nav button.active{background:#173f2a;border-color:#173f2a;color:#fff7e8}
+.player-cup-rounds .cup-round-nav button.active small{color:#e4dbc5}
+.player-cup-rounds .cup-round-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:9px 0 11px}
+.player-cup-rounds .cup-round-meta>div{display:grid;gap:4px}
+.player-cup-rounds .cup-round-meta strong{font-size:14px;color:#173f2a}
+.player-cup-rounds .cup-round-meta small{color:#655e50;font-size:11px}
+.player-cup-rounds .cup-group-filter{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.player-cup-rounds .cup-group-filter label{font-size:11px;color:#5e584a;font-weight:800}
+.player-cup-rounds .cup-group-filter select{max-width:180px;padding:8px;border-radius:9px;border:1px solid #b6a77f;background:#fffaf1;color:#173f2a;font-size:12px;font-weight:800}
+.player-cup-rounds .cup-round-fixtures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.player-cup-rounds .cup-round-group{border:1px solid #d9cbaa;border-radius:12px;background:#fffbf2;min-width:0;overflow:hidden}
+.player-cup-rounds .cup-round-group h4{margin:0;padding:10px 12px;color:#173f2a;background:#efe5d0;font-size:13px;display:flex;justify-content:space-between;gap:10px}
+.player-cup-rounds .cup-round-group h4 span{font-size:11px;color:#6d6655}
+.player-cup-rounds .cup-round-game{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:6px;padding:11px 8px;border-bottom:1px solid #eae0cd}
+.player-cup-rounds .cup-round-game:last-child{border-bottom:0}
+.player-cup-rounds .cup-round-game.mine{background:#f3ecd4;box-shadow:inset 3px 0 #b18d43}
+.player-cup-rounds .cup-round-game .team{font-size:11px;line-height:1.25;font-weight:800;overflow-wrap:anywhere}
+.player-cup-rounds .cup-round-game .team:last-child{text-align:right}
+.player-cup-rounds .cup-round-game .score{font-size:15px;font-weight:900;color:#173f2a;white-space:nowrap}
+.player-cup-rounds .cup-round-game .score.future{color:#837964;font-size:11px}
+.player-cup-rounds .cup-round-bye{padding:9px 11px;border-top:1px dashed #d9cbaa;color:#746750;font-size:11px}
+.player-cup-rounds .cup-round-status{margin:10px 0;color:#5f5b50;font-size:11px}
+.player-cup-rounds .cup-round-status strong{color:#173f2a}
+.player-cup-rounds .cup-round-empty{padding:13px;background:#f5ead0;border-radius:9px;font-size:12px;line-height:1.45;color:#574e3d}
+@media(max-width:680px){.player-cup-rounds .cup-round-fixtures{grid-template-columns:1fr}.player-cup-rounds .cup-round-game .team{font-size:12px}}
