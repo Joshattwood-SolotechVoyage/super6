@@ -64,7 +64,7 @@
   function tableHTML(me=''){
     const rows=tableRows();
     if(!rows.length)return '<div class="notice">The 15-player F-All roster has not been locked yet.</div>';
-    return `<div class="fall-table-wrap"><table class="fall-table"><thead><tr><th>Pos</th><th>Player</th><th>P</th><th>W</th><th>D</th><th>L</th><th>S6</th><th>Pts</th></tr></thead><tbody>${rows.map((r,i)=>`<tr class="${me===r.id?'me':''}"><td>${i+1}</td><td title="${esc(r.name)}"><b>${esc(r.name)}</b></td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.s6}</td><td><b>${r.pts}</b></td></tr>`).join('')}</tbody></table></div>`;
+    return `<div class="fall-table-wrap"><table class="fall-table"><thead><tr><th>Pos</th><th>Player</th><th>P</th><th>W</th><th>D</th><th>L</th><th>S6</th><th>Points</th></tr></thead><tbody>${rows.map((r,i)=>`<tr class="${me===r.id?'me':''}"><td>${i+1}</td><td title="${esc(r.name)}"><b>${esc(r.name)}</b></td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.s6}</td><td><b>${r.pts}</b></td></tr>`).join('')}</tbody></table></div>`;
   }
 
   function fixtureHTML(m,me=''){
@@ -80,7 +80,7 @@
     const groups=[];
     for(let d=1;d<=15;d++)groups.push({d,matches:state.matches.filter(m=>Number(m.matchday)===d)});
     const current=groups.find(g=>g.matches.some(m=>m.status==='scheduled'))?.d||groups.find(g=>g.matches.some(m=>m.status==='waiting'))?.d||15;
-    return `<div class="fall-rounds">${groups.map(g=>{const completed=g.matches.filter(m=>m.status==='completed').length;const label=completed===8?'Complete':g.matches.some(m=>m.round_id)?(g.matches[0]?.round_name||'Assigned'):'Waiting';return `<details class="fall-round" ${g.d===current?'open':''}><summary><span>Round ${g.d}</span><small>${esc(label)} · ${completed}/8</small></summary><div class="fall-fixtures">${g.matches.map(m=>fixtureHTML(m,me)).join('')}</div></details>`}).join('')}</div>`;
+    return `<div class="fall-rounds">${groups.map(g=>{const completed=g.matches.filter(m=>m.status==='completed').length;const label=completed===7?'Complete':g.matches.some(m=>m.round_id)?(g.matches[0]?.round_name||'Assigned'):'Waiting';return `<details class="fall-round" ${g.d===current?'open':''}><summary><span>Round ${g.d}</span><small>${esc(label)} · ${completed}/7</small></summary><div class="fall-fixtures">${g.matches.map(m=>fixtureHTML(m,me)).join('')}</div></details>`}).join('')}</div>`;
   }
 
   function ensurePlayerUI(){
