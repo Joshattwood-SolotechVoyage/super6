@@ -1,0 +1,69 @@
+/* Super 6 v0.34.3 — fix truncated No-Hope-A standings in narrow desktop windows.
+   The former two-column group grid could shrink seven-column tables to ~240px,
+   then clip the Played / W / D / L / Points columns through overflow:hidden.
+   Let cards stack until each has enough room for the complete table. */
+
+/* Both player and admin tables can expand to a full row when the app window
+   is narrow; keep the original two-up display on genuinely wide desktops. */
+.nohope-groups {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
+  align-items: start;
+}
+.nohope-group-card {
+  min-width: 0;
+  width: 100%;
+}
+.nohope-table-wrap {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* On laptop/desktop, all seven columns remain visible. Points get an
+   explicitly reserved column so the score badge cannot be clipped. */
+@media (min-width: 561px) {
+  .nohope-table {
+    width: 100%;
+    table-layout: fixed;
+  }
+  .nohope-table th,
+  .nohope-table td {
+    box-sizing: border-box;
+    padding: 9px 3px;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+  .nohope-table th {
+    font-size: 9px;
+    letter-spacing: 0;
+    white-space: normal;
+    overflow-wrap: normal;
+  }
+  .nohope-table th:nth-child(1),
+  .nohope-table td:nth-child(1) { width: 8%; }
+  .nohope-table th:nth-child(2),
+  .nohope-table td:nth-child(2) { width: 39%; }
+  .nohope-table th:nth-child(3),
+  .nohope-table td:nth-child(3) { width: 12%; }
+  .nohope-table th:nth-child(4),
+  .nohope-table td:nth-child(4),
+  .nohope-table th:nth-child(5),
+  .nohope-table td:nth-child(5),
+  .nohope-table th:nth-child(6),
+  .nohope-table td:nth-child(6) { width: 7%; }
+  .nohope-table th:last-child,
+  .nohope-table td:last-child { width: 20%; }
+  .nohope-table td:nth-child(2) {
+    padding-left: 8px;
+    text-overflow: ellipsis;
+  }
+  .nohope-table td:last-child b {
+    margin-inline: auto;
+  }
+}
+
+/* Preserve the existing condensed phone table showing Position, Player,
+   Played and Points; the detailed desktop table is never cut in half. */
+@media (max-width: 560px) {
+  .nohope-groups { grid-template-columns: minmax(0,1fr); }
+  .nohope-group-card { max-width: 100%; }
+}
