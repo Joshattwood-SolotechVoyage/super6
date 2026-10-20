@@ -141,7 +141,7 @@
   async function ensureResultsShortcut(){
     const panel=$('[data-admin-panel="results"]');
     const overview=$('#adminLeaguePanels');
-    if(!panel||!overview||!overview.querySelector('[data-view]'))return;
+    if(!panel||!overview)return;
     const existing=$('#adminPlayerCorrectionHub');
     if(existing){
       const editButton=existing.querySelector('#adminChoosePlayerEdit');
@@ -325,6 +325,17 @@
       if($('#adminLeaguePanels')) await decorateRows().catch(console.warn);
     },80);
   }
+
+  // Rebuild the Admin-only picker when the signed-in account changes.
+  let shortcutAuthUser=null;
+  sb.auth.onAuthStateChange((event,session)=>{
+    const userId=session?.user?.id||null;
+    if(userId===shortcutAuthUser)return;
+    shortcutAuthUser=userId;
+    resultsShortcutRetryAt=0;
+    $('#adminPlayerCorrectionHub')?.remove();
+    scheduleDecorate();
+  });
 
   const observer=new MutationObserver(scheduleDecorate);
   observer.observe(document.body,{subtree:true,childList:true});
