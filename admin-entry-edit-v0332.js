@@ -1,4 +1,4 @@
-// Super 6 v0.33.2 — Admin-only 48-hour player entry correction window.
+// Super 6 v0.34.4 — Admin-only seven-day late entry and correction window, with required audit reason.
 (async()=>{
   if(window.__SUPER6_BACKEND_READY) await window.__SUPER6_BACKEND_READY;
   const B=window.Super6Backend;
@@ -8,7 +8,7 @@
   const $=s=>document.querySelector(s);
   const $$=s=>[...document.querySelectorAll(s)];
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const HOURS_FALLBACK=48;
+  const HOURS_FALLBACK=168;
   let roundCache=null;
   let hoursCache=HOURS_FALLBACK;
   let loading=null;
@@ -27,6 +27,7 @@
       .admin48-row span:first-child{font-size:12px;font-weight:700;min-width:0}
       .admin48-row input{width:100%;padding:8px 5px;text-align:center;border:1px solid #cfc4a9;border-radius:8px;background:#fff}
       .admin48-help{margin:8px 0 0;color:#667067;font-size:11px;line-height:1.4}
+      .admin48-reason{width:100%;min-height:80px;font-size:16px;padding:10px 12px;border:1px solid #cfc4a9;border-radius:10px;background:#fff;resize:vertical;line-height:1.5}
       @media(max-width:420px){
         .admin-entry-48-btn{font-size:10px;padding:7px 8px}
         .admin48-row{grid-template-columns:minmax(0,1fr) 50px 12px 50px}
@@ -60,6 +61,8 @@
     return !!end && Date.now()<end.getTime();
   }
 
+  function windowLabel(){return hoursCache%24===0?(hoursCache/24)+'-day':hoursCache+'-hour'}
+
   function fmt(d){
     if(!d)return '';
     return new Intl.DateTimeFormat('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(d);
@@ -84,10 +87,10 @@
     }
     if(windowOpen()){
       banner.className='admin-entry-48-banner';
-      banner.innerHTML=`<b>Admin score corrections are open for 48 hours after cutoff.</b>Players remain locked at the normal cutoff. Admin correction window closes ${esc(fmt(end))}.`;
+      banner.innerHTML=`<b>Admin-only ${windowLabel()} grace period.</b>Only record predictions received before kickoff. Players remain locked at the normal cutoff. The Admin window closes ${esc(fmt(end))}.`;
     }else{
       banner.className='admin-entry-48-banner closed';
-      banner.innerHTML='<b>Admin score correction window closed.</b>The 48-hour period after cutoff has ended.';
+      banner.innerHTML='<b>Admin score correction window closed.</b>The Admin grace period after cutoff has ended.';
     }
   }
 
@@ -135,7 +138,7 @@
     try{
       await loadWindow(true);
       if(!windowOpen()){
-        alert('The 48-hour Admin score correction window has closed.');
+        alert('The Admin entry grace period for this round has closed.');
         return;
       }
 
@@ -169,12 +172,16 @@
           <div class="muted">${esc(roundCache.name)} · players themselves are locked at cutoff</div></div>
           <button class="secondary small" id="admin48Close" type="button">Close</button>
         </div>
-        <div class="notice"><b>48-hour Admin window.</b> This writes directly to the player's saved Super 6 entry and is audit logged.</div>
+        <div class="notice"><b>${windowLabel()} Admin grace period.</b> Only enter predictions already received before kickoff. Changes are saved to the player's entry and audit logged.</div>
         <div class="admin48-grid">${rows}</div>
         <label class="field" style="margin-top:12px">First-goal minute (1–90)
           <input id="admin48Minute" type="number" min="1" max="90" inputmode="numeric" value="${existing?.first_goal_minute??''}">
         </label>
         <div class="admin48-help">Enter all six score predictions and the player's first-goal minute exactly as they supplied them.</div>
+        <label class="field" style="margin-top:12px">Source / reason for late entry (required)
+          <textarea id="admin48Reason" class="admin48-reason" maxlength="500" placeholder="e.g. Scores sent in the WhatsApp group before Saturday cutoff; entering them on Tuesday." aria-required="true"></textarea>
+        </label>
+        <div class="admin48-help">For fairness, confirm where and when these predictions were originally submitted. This note is retained in the audit log.</div>
         <div id="admin48Status" class="muted" style="margin-top:9px"></div>
         <div class="modal-actions">
           <button class="secondary" id="admin48Cancel" type="button">Cancel</button>
@@ -189,6 +196,11 @@
       $('#admin48Save').onclick=async()=>{
         const status=$('#admin48Status'),btn=$('#admin48Save');
         const minute=Number($('#admin48Minute').value);
+        const reason=$('#admin48Reason').value.trim();
+        if(reason.length<8||reason.length>500){
+          status.textContent='Please record an 8–500 character source or reason for this Admin entry.';
+          return;
+        }
         if(!Number.isInteger(minute)||minute<1||minute>90){
           status.textContent='Enter a first-goal minute between 1 and 90.';
           return;
@@ -209,13 +221,14 @@
         }
         btn.disabled=true;
         btn.textContent='Saving…';
-        status.textContent='Saving Admin correction…';
+        status.textContent='Saving Admin correction with audit note…';
         try{
-          const {error}=await sb.rpc('admin_upsert_player_entry',{
+          const {error}=await sb.rpc('admin_upsert_player_entry_with_reason',{
             p_round_id:roundCache.id,
             p_player_id:playerId,
             p_first_goal_minute:minute,
-            p_predictions:predictions
+            p_predictions:predictions,
+            p_reason:reason
           });
           if(error)throw error;
           status.innerHTML='<span style="color:#176b3a;font-weight:700">Saved ✓</span>';
@@ -246,4 +259,4 @@
   window.addEventListener('focus',()=>{loadWindow(true).then(scheduleDecorate).catch(()=>{})});
   setInterval(()=>{loadWindow(true).then(scheduleDecorate).catch(()=>{})},60000);
   scheduleDecorate();
-})().catch(err=>console.error('Admin 48-hour entry edit patch failed',err));
+})().catch(err=>console.error('Admin seven-day entry edit patch failed',err));
