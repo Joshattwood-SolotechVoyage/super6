@@ -1,4 +1,4 @@
-// Super 6 v0.33.6 — smoother, idempotent Admin workflow: 48h payment corrections, clean new rounds, ordered tabs.
+// Super 6 v0.34.4 — seven-day Admin-only grace for audited entries and payments, clean new rounds, ordered tabs.
 (async()=>{
   if(window.__SUPER6_BACKEND_READY) await window.__SUPER6_BACKEND_READY;
   const B=window.Super6Backend;
@@ -17,7 +17,7 @@
   };
 
   let roundCache=null;
-  let adminHours=48;
+  let adminHours=168;
   let loadPromise=null;
   let drafting=false;
   let draftChoices=Object.fromEntries(COMP_IDS.map(id=>[id,false]));
@@ -50,11 +50,13 @@
         sb.from('app_settings').select('admin_entry_edit_hours').eq('id',1).maybeSingle()
       ]);
       roundCache=roundRes||null;
-      adminHours=Number(settingRes?.data?.admin_entry_edit_hours??48)||48;
+      adminHours=Number(settingRes?.data?.admin_entry_edit_hours??168)||168;
       return {round:roundCache,hours:adminHours};
     })();
     try{return await loadPromise}finally{loadPromise=null}
   }
+
+  function durationText(){return adminHours%24===0?(adminHours/24)+' days':adminHours+' hours'}
 
   function correctionEnd(){
     if(!roundCache?.cutoff_at)return null;
@@ -221,7 +223,7 @@
     const end=correctionEnd();
 
     // The legacy UI disables these at the 12-hour PLAYER payment deadline.
-    // Admin now has its own 48-hour correction window.
+    // Admin has its own configurable seven-day correction window.
     qa('input[data-paid]',overview).forEach(input=>{
       // Leave a saving checkbox locked until its write completes.
       if(input.dataset.paymentSaving==='1')return;
@@ -232,7 +234,8 @@
     });
 
     const head=q('.section-head .muted',overview);
-    if(head&&head.textContent!=='Tap a player to inspect their entry. Admin can correct scores and payment status for 48 hours after cutoff.')head.textContent='Tap a player to inspect their entry. Admin can correct scores and payment status for 48 hours after cutoff.';
+    const heading='Tap a player to inspect their entry. Admin can record previously submitted predictions and correct payments for '+durationText()+' after cutoff.';
+    if(head&&head.textContent!==heading)head.textContent=heading;
 
     let note=q('#adminPaymentCorrectionNote',overview);
     if(!note){
@@ -245,9 +248,9 @@
     if(!roundCache||!end){
       setNote(note,'admin-correction-note closed','<b>Admin corrections</b>No round is available.');
     }else if(open){
-      setNote(note,'admin-correction-note good',`<b>Admin corrections stay open after Complete Round.</b>Scores and payment status can be corrected until ${esc(fmt(end))}. Any completed-round payment change is recalculated automatically.`);
+      setNote(note,'admin-correction-note good',`<b>Admin-only grace: ${durationText()} after cutoff.</b>Previously submitted scores and payment status can be corrected until ${esc(fmt(end))}. All changes are audited.`);
     }else{
-      setNote(note,'admin-correction-note closed','<b>Admin correction window closed.</b>The 48-hour period after cutoff has ended.');
+      setNote(note,'admin-correction-note closed','<b>Admin correction window closed.</b>The '+durationText()+' grace period after cutoff has ended.');
     }
   }
 
@@ -274,9 +277,9 @@
     if(open&&String(roundCache.status)==='completed'){
       setNote(note,'admin-correction-note good',`<b>Results calculated — this is not irreversible.</b>Admin can still correct player scores and payments until ${esc(fmt(end))}. Changes recalculate the round automatically.`);
     }else if(open){
-      setNote(note,'admin-correction-note',`<b>Complete Round does not close Admin editing.</b>After results are calculated, Admin corrections remain available until ${esc(fmt(end))}.`);
+      setNote(note,'admin-correction-note',`<b>Admin grace: ${durationText()} after cutoff.</b>Only record entries previously supplied before kickoff. Admin corrections remain available until ${esc(fmt(end))}.`);
     }else{
-      setNote(note,'admin-correction-note closed','<b>Round is final for Admin corrections.</b>The 48-hour correction window has ended.');
+      setNote(note,'admin-correction-note closed','<b>Round is final for Admin corrections.</b>The '+durationText()+' grace period has ended.');
     }
   }
 
