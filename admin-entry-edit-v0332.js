@@ -1,4 +1,4 @@
-// Super 6 v0.34.4 — Admin-only seven-day late entry and correction window, with required audit reason.
+// Super 6 v0.34.5 — Easy Results-tab Admin player corrections with audited seven-day safeguards.
 (async()=>{
   if(window.__SUPER6_BACKEND_READY) await window.__SUPER6_BACKEND_READY;
   const B=window.Super6Backend;
@@ -114,7 +114,7 @@
         btn=document.createElement('button');
         btn.type='button';
         btn.className='secondary small admin-entry-48-btn';
-        btn.textContent='Scores';
+        btn.textContent='Edit picks';
         btn.dataset.playerId=view.dataset.view||'';
         btn.addEventListener('click',e=>{
           e.preventDefault();
@@ -126,6 +126,74 @@
         else row.appendChild(btn);
       }
     });
+    await ensureResultsShortcut();
+  }
+
+
+  // Make Admin score-prediction entry visible in Results as well as Overview.
+  // Server-side Admin checks, cutoff limits and audit notes remain authoritative.
+  let resultsShortcutLoading=null;
+  let resultsShortcutRetryAt=0;
+  async function ensureResultsShortcut(){
+    const panel=$('[data-admin-panel="results"]');
+    const overview=$('#adminLeaguePanels');
+    if(!panel||!overview||!overview.querySelector('[data-view]'))return;
+    const existing=$('#adminPlayerCorrectionHub');
+    if(existing){
+      const editButton=existing.querySelector('#adminChoosePlayerEdit');
+      if(editButton)editButton.disabled=!windowOpen();
+      return;
+    }
+    if(resultsShortcutLoading||Date.now()<resultsShortcutRetryAt)return;
+    resultsShortcutLoading=(async()=>{
+      const {data:allowed,error:accessError}=await sb.rpc('is_admin');
+      if(accessError||allowed!==true){
+        resultsShortcutRetryAt=Date.now()+10000;
+        return;
+      }
+      const {data:players,error:playerError}=await sb.from('profiles')
+        .select('id,username').eq('role','player').order('username');
+      if(playerError)throw playerError;
+      const hub=document.createElement('section');
+      hub.className='card';
+      hub.id='adminPlayerCorrectionHub';
+      hub.innerHTML=[
+        '<div class="section-head"><div><div class="kicker">Player corrections</div>',
+        '<h3>Add or edit a player’s predictions</h3>',
+        '<div class="muted">Enter the six predicted scores and first-goal minute. The app recalculates points automatically for paid entries.</div>',
+        '</div></div>',
+        '<div class="admin-correction-picker">',
+        '<label class="field" for="adminChoosePlayer">Choose a player',
+        '<select id="adminChoosePlayer" style="font-size:16px;min-width:0;width:100%">',
+        '<option value="">Select a player…</option>',
+        (players||[]).map(p=>'<option value="'+esc(p.id)+'">'+esc(p.username)+'</option>').join(''),
+        '</select></label>',
+        '<button id="adminChoosePlayerEdit" class="big-action" type="button" '+(windowOpen()?'':'disabled')+'>Add / edit predictions</button>',
+        '</div>',
+        '<div class="admin48-help">Admin only · '+esc(windowLabel())+' after round cutoff · original predictions must have been received before kickoff. Corrections are audited. Mark payment separately in Overview.</div>',
+        '<div id="adminPlayerCorrectionStatus" class="muted" role="status" style="margin-top:8px"></div>'
+      ].join('');
+      const layout=panel.querySelector('.admin-layout');
+      if(layout)panel.insertBefore(hub,layout);
+      else panel.appendChild(hub);
+      hub.querySelector('#adminChoosePlayerEdit').addEventListener('click',()=>{
+        const selected=hub.querySelector('#adminChoosePlayer').value;
+        if(!selected){
+          hub.querySelector('#adminPlayerCorrectionStatus').textContent='Choose a player first.';
+          return;
+        }
+        if(!windowOpen()){
+          hub.querySelector('#adminPlayerCorrectionStatus').textContent='The Admin correction window has closed.';
+          return;
+        }
+        openEditor(selected);
+      });
+    })();
+    try{await resultsShortcutLoading}
+    catch(err){
+      resultsShortcutRetryAt=Date.now()+10000;
+      console.warn('Could not load Admin player correction shortcut',err);
+    }finally{resultsShortcutLoading=null}
   }
 
   function closeEditor(){
