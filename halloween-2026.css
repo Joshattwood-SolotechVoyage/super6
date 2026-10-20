@@ -1,0 +1,235 @@
+/* Super 6 · Fright Night. 2026 seasonal presentation only.
+   Scoped completely to html.super6-halloween. No competition logic changes. */
+html.super6-halloween {
+  --green:#24172e;
+  --green2:#58344c;
+  --green3:#704058;
+  --cream:#fff0df;
+  --paper:#fff8ec;
+  --ink:#241d25;
+  --muted:#716670;
+  --line:#dccab8;
+  --gold:#ff983d;
+  --shadow:0 14px 34px rgba(36,17,31,.16);
+  background:#1b1421;
+}
+html.super6-halloween body {
+  background:
+    radial-gradient(circle at 85% 4%,rgba(255,147,57,.20),transparent 23rem),
+    radial-gradient(circle at 5% 45%,rgba(94,47,114,.22),transparent 28rem),
+    repeating-linear-gradient(135deg,transparent,transparent 44px,rgba(255,175,86,.025) 45px,transparent 46px),
+    #24192c;
+  color:var(--ink);
+}
+html.super6-halloween .app {
+  background:linear-gradient(180deg,rgba(255,231,207,.05),rgba(255,247,237,.08));
+}
+/* Fright Night masthead – compact on phones, decorative but not obstructive. */
+html.super6-halloween .s6-halloween-banner {
+  position:relative;
+  isolation:isolate;
+  min-height:82px;
+  padding:12px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  overflow:hidden;
+  color:#fff5e8;
+  border-bottom:3px solid #f7993f;
+  background:
+    radial-gradient(circle at 74% 0%,rgba(254,156,75,.34),transparent 27%),
+    linear-gradient(115deg,#160e24 0%,#3b2141 48%,#180f27 100%);
+  box-shadow:0 10px 23px rgba(21,11,29,.28);
+}
+html.super6-halloween .s6-halloween-banner::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  background:repeating-linear-gradient(90deg,transparent 0 39px,rgba(255,255,255,.025) 40px 41px);
+  opacity:.65;
+  pointer-events:none;
+}
+html.super6-halloween .s6-halloween-wordmark {
+  z-index:1;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  margin:auto;
+}
+html.super6-halloween .s6-halloween-pumpkin {
+  display:block;
+  font-size:40px;
+  filter:drop-shadow(0 3px 10px rgba(255,150,40,.4));
+  line-height:1.1;
+}
+html.super6-halloween .s6-halloween-wordmark strong {
+  display:block;
+  font:900 clamp(18px,3vw,28px)/1.05 Impact,Haettenschweiler,"Arial Narrow Bold",sans-serif;
+  letter-spacing:1.5px;
+  white-space:nowrap;
+}
+html.super6-halloween .s6-halloween-wordmark strong span {color:#ff9e43}
+html.super6-halloween .s6-halloween-wordmark small {
+  display:block;
+  margin-top:5px;
+  font:700 10px/1.25 system-ui,sans-serif;
+  letter-spacing:1.3px;
+  color:#f5cfab;
+}
+html.super6-halloween .s6-halloween-left,
+html.super6-halloween .s6-halloween-right {
+  position:relative;
+  z-index:1;
+  font-size:23px;
+  white-space:nowrap;
+  opacity:.9;
+}
+html.super6-halloween .topbar {
+  color:#fff4e7;
+  background:linear-gradient(100deg,#25172e,#43223d);
+  border-bottom-color:#ff983d;
+  box-shadow:0 7px 22px rgba(23,9,28,.27);
+}
+html.super6-halloween .brand small {color:#ffd39f;opacity:1}
+html.super6-halloween .top-actions button {
+  border-color:rgba(255,184,120,.66);
+  color:#fff3e8;
+}
+html.super6-halloween .hero {
+  background:
+    radial-gradient(circle at 86% 28%,rgba(255,153,64,.22),transparent 27%),
+    linear-gradient(120deg,#251a32,#4b2541 84%);
+  border:1px solid rgba(255,158,67,.6);
+  color:#fff5ec;
+  overflow:hidden;
+}
+html.super6-halloween .hero::before {
+  content:"🕸️";
+  position:absolute;
+  right:13px;
+  top:0;
+  font-size:69px;
+  opacity:.35;
+  transform:rotate(12deg);
+  pointer-events:none;
+}
+html.super6-halloween .hero::after {
+  content:"🦇";
+  position:absolute;
+  right:25px;
+  bottom:6px;
+  width:auto;
+  height:auto;
+  border:0;
+  border-radius:0;
+  font-size:36px;
+  opacity:.5;
+  pointer-events:none;
+}
+html.super6-halloween .hero-grid,
+html.super6-halloween .admin-hero > div {position:relative;z-index:1}
+html.super6-halloween .hero .kicker {color:#ffd299}
+html.super6-halloween .countdown {
+  background:rgba(19,8,28,.31);
+  border-color:rgba(255,186,124,.6);
+}
+html.super6-halloween .countdown.urgent {background:#7d281f}
+html.super6-halloween .countdown.soon {background:#795017}
+html.super6-halloween .login-wrap {margin-top:min(7vh,65px)}
+html.super6-halloween .login-card {
+  border:2px solid #e68d40;
+  box-shadow:0 25px 70px rgba(12,5,21,.48);
+}
+html.super6-halloween .login-top {
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 80% 20%,rgba(255,154,65,.25),transparent 35%),
+    linear-gradient(125deg,#25172e,#4c2742);
+  border-bottom-color:#ff9e43;
+  color:#fff4e7;
+}
+html.super6-halloween .login-top::before {
+  content:"🕸️";
+  position:absolute;
+  top:-18px;
+  left:-13px;
+  font-size:87px;
+  opacity:.38;
+  pointer-events:none;
+}
+html.super6-halloween .login-top::after {
+  content:"🦇 🎃";
+  position:absolute;
+  right:11px;
+  top:8px;
+  font-size:20px;
+  opacity:.76;
+  pointer-events:none;
+}
+html.super6-halloween .login-top > * {position:relative;z-index:1}
+html.super6-halloween .login-body {background:#fff7ec}
+html.super6-halloween .card {
+  border-color:#d9c5b9;
+  box-shadow:0 9px 24px rgba(41,21,38,.12);
+}
+html.super6-halloween .card:not(.hero) .kicker {color:#814b3d}
+html.super6-halloween .player-nav {
+  background:rgba(255,247,233,.98);
+  border-color:#dfc1a5;
+}
+html.super6-halloween .player-nav button.active {
+  background:linear-gradient(125deg,#482744,#271a32);
+  color:#ffead4;
+  box-shadow:inset 0 -3px 0 #ff983d;
+}
+html.super6-halloween .admin-tabs button.active,
+html.super6-halloween .tabs button.active {
+  background:#3b2441;
+  color:#fff1de;
+  border-color:#a75947;
+}
+html.super6-halloween .admin-tabs button.active small {color:#ffcfaa}
+html.super6-halloween .big-action {
+  color:#321b26;
+  background:linear-gradient(180deg,#ffb359,#f28a30);
+  box-shadow:inset 0 -3px 0 rgba(96,49,13,.25);
+}
+html.super6-halloween .big-action:hover {filter:brightness(1.04)}
+html.super6-halloween .scorebox {border-color:#703c5c}
+html.super6-halloween .match-card {background:#fffaf3;border-color:#dec5b7}
+html.super6-halloween .round-pos {background:#462844;color:#fff4df}
+html.super6-halloween .round-points,
+html.super6-halloween .stat strong {color:#60334c}
+html.super6-halloween .prediction-heading .kicker::before {content:"🎃 ";letter-spacing:normal}
+html.super6-halloween #playerTables .section-head h3::after {content:" 🕷️";font-size:.65em}
+html.super6-halloween .league-panel h4,
+html.super6-halloween .standings-table th {background:#3a2842;color:#fff5e5}
+html.super6-halloween .table-wrap {background:#fffaf2}
+html.super6-halloween .notice {border-left-color:#ed964b}
+html.super6-halloween .chip.good,
+html.super6-halloween .chip.warn,
+html.super6-halloween .chip.bad,
+html.super6-halloween .status-pill,
+html.super6-halloween .metric { /* status meanings keep their original colours */ }
+html.super6-halloween .poster-preview {background-color:#31223d;border-color:#d9ab71}
+html.super6-halloween .poster-ribbon {background:#8c452b}
+@media(max-width:640px){
+  html.super6-halloween .s6-halloween-banner {min-height:72px;padding:10px 10px;gap:3px}
+  html.super6-halloween .s6-halloween-wordmark {gap:7px}
+  html.super6-halloween .s6-halloween-wordmark strong {font-size:19px;letter-spacing:.4px}
+  html.super6-halloween .s6-halloween-wordmark small {font-size:8px;letter-spacing:.65px}
+  html.super6-halloween .s6-halloween-pumpkin {font-size:31px}
+  html.super6-halloween .s6-halloween-left,
+  html.super6-halloween .s6-halloween-right {font-size:14px}
+}
+@media(max-width:365px){
+  html.super6-halloween .s6-halloween-left,
+  html.super6-halloween .s6-halloween-right {display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  html.super6-halloween *,html.super6-halloween *::before,html.super6-halloween *::after{
+    animation-duration:.01ms!important;transition-duration:.01ms!important;
+  }
+}
