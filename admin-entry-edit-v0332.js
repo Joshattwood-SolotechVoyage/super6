@@ -27,6 +27,10 @@
       .admin48-row span:first-child{font-size:12px;font-weight:700;min-width:0}
       .admin48-row input{width:100%;padding:8px 5px;text-align:center;border:1px solid #cfc4a9;border-radius:8px;background:#fff}
       .admin48-help{margin:8px 0 0;color:#667067;font-size:11px;line-height:1.4}
+      .admin-correction-picker{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:12px}
+      .admin-correction-picker .field{flex:1 1 220px;margin:0}
+      .admin-correction-picker button{flex:0 1 auto;white-space:nowrap}
+      @media(max-width:480px){.admin-correction-picker button{width:100%}}
       .admin48-reason{width:100%;min-height:80px;font-size:16px;padding:10px 12px;border:1px solid #cfc4a9;border-radius:10px;background:#fff;resize:vertical;line-height:1.5}
       @media(max-width:420px){
         .admin-entry-48-btn{font-size:10px;padding:7px 8px}
