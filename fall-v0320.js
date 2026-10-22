@@ -163,7 +163,7 @@
   }
   async function syncRoundToggle(force=false){
     ensureRoundToggle();const cb=q('#fallWeekCheckbox'),help=q('#fallWeekHelp');if(!cb)return;
-    try{await loadState(force);const round=await currentRound();const locked=!!state.competition?.roster_locked_at;cb.disabled=!locked||!round;cb.checked=!!round?.fall_week;const day=round?(state.matches||[]).find(m=>String(m.round_id)===String(round.id))?.matchday:null;help.textContent=!locked?'Lock the 15-player F-All roster first.':day?`This is F-All Round ${day}.`:'Tick to assign the next F-All round.'}catch(err){cb.disabled=true;if(help)help.textContent='Could not load F-All status.'}
+    try{await loadState(force);const round=await currentRound();const locked=!!state.competition?.roster_locked_at;cb.disabled=!locked||!round;if(document.documentElement.dataset.super6RoundDraft!=='1')cb.checked=!!round?.fall_week;const day=round?(state.matches||[]).find(m=>String(m.round_id)===String(round.id))?.matchday:null;const message=!locked?'Lock the 15-player F-All roster first.':day?`This is F-All Round ${day}.`:'Tick to assign the next F-All round.';if(help.textContent!==message)help.textContent=message}catch(err){cb.disabled=true;if(help&&help.textContent!=='Could not load F-All status.')help.textContent='Could not load F-All status.'}
   }
 
   function bindRoundSave(){
@@ -171,7 +171,15 @@
     btn.addEventListener('click',()=>{const wanted=!!q('#fallWeekCheckbox')?.checked;setTimeout(async()=>{try{await loadState(true);const round=await currentRound();if(!round)return;const {error}=await sb.rpc('admin_set_fall_week',{p_round_id:round.id,p_enabled:wanted});if(error)throw error;await loadState(true);await syncRoundToggle(false);if(!isHidden(q('[data-admin-panel="fall"]')))renderAdmin(false)}catch(err){alert('F-All week: '+(err.message||err))}},1200)},true);
   }
 
-  function boot(){ensurePlayerUI();ensureAdminUI();ensureRoundToggle();bindRoundSave();if(!isHidden(q('#adminArea')))syncRoundToggle(false)}
+  let lastRoundTabVisible=false,lastRoundToggle=null;
+  function boot(){
+    ensurePlayerUI();ensureAdminUI();ensureRoundToggle();bindRoundSave();
+    const panel=q('[data-admin-panel="round"]'),cb=q('#fallWeekCheckbox');
+    const visible=!!panel&&!isHidden(panel)&&!isHidden(q('#adminArea'));
+    // Fetch status only on entering the Round tab or remounting the switch.
+    if(visible&&(!lastRoundTabVisible||lastRoundToggle!==cb))syncRoundToggle(false);
+    lastRoundTabVisible=visible;lastRoundToggle=cb;
+  }
   boot();
   const mo=new MutationObserver(()=>{boot()});
   mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});

@@ -1,4 +1,4 @@
-// Super 6 v0.34.4 — seven-day Admin-only grace for audited entries and payments, clean new rounds, ordered tabs.
+// Super 6 v0.34.6 — seven-day Admin-only grace for audited entries and payments, clean new rounds, ordered tabs.
 (async()=>{
   if(window.__SUPER6_BACKEND_READY) await window.__SUPER6_BACKEND_READY;
   const B=window.Super6Backend;
@@ -142,7 +142,10 @@
       fallWeekCheckbox:'#fallWeekHelp'
     };
     const el=q(map[id]||'');
-    if(el&&drafting&&!draftChoices[id]) el.textContent=`${LABELS[id]} is off for this new round. Tick it only if you want this week to count.`;
+    if(el&&drafting&&!draftChoices[id]){
+      const message=`${LABELS[id]} is off for this new round. Tick it only if you want this week to count.`;
+      if(el.textContent!==message)el.textContent=message;
+    }
   }
 
   function applyDraftChoices(){
@@ -157,6 +160,7 @@
 
   function beginDraft(){
     drafting=true;
+    document.documentElement.dataset.super6RoundDraft='1';
     draftChoices=Object.fromEntries(COMP_IDS.map(id=>[id,false]));
     clearInterval(draftTimer);
     clearTimeout(saveReleaseTimer);
@@ -177,6 +181,7 @@
     // resolve the newly-created database round.
     saveReleaseTimer=setTimeout(()=>{
       drafting=false;
+      delete document.documentElement.dataset.super6RoundDraft;
       clearInterval(draftTimer);
       draftTimer=null;
       setTimeout(()=>loadAdminWindow(true).then(syncAll).catch(()=>{}),400);

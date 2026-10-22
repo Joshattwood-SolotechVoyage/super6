@@ -314,17 +314,19 @@
       const days=new Set((state.matches||[]).map(m=>m.matchday)).size;
       const attachedGroup=round?(state.matches||[]).find(m=>String(m.round_id)===String(round.id)):null;
       const attachedKO=round?(state.knockout||[]).find(m=>String(m.round_id)===String(round.id)):null;
-      cb.checked=!!round?.no_hope_a;
+      if(document.documentElement.dataset.super6RoundDraft!=='1')cb.checked=!!round?.no_hope_a;
       cb.disabled=!round||champion||(!started&&!groupsReady)||(started&&!confirmed&&days>=10&&!attachedGroup);
-      if(!round)help.textContent='No current Super 6 round.';
-      else if(champion)help.textContent='No-Hope-A is complete.';
-      else if(attachedGroup)help.textContent=`This is No-Hope-A Matchday ${attachedGroup.matchday}.`;
-      else if(attachedKO)help.textContent=`This is the No-Hope-A ${stageLabel(attachedKO.stage)}.`;
-      else if(!groupsReady&&!started)help.textContent='Assign exactly 5 players to each group first.';
-      else if(started&&!confirmed&&days>=10)help.textContent='All 10 group matchdays are assigned. Confirm the group tables next.';
-      else if(confirmed)help.textContent='Tick to attach the next No-Hope-A knockout stage.';
-      else help.textContent=`Tick to create No-Hope-A Matchday ${days+1} of 10.`;
-    }catch(err){cb.disabled=true;if(help)help.textContent='Could not load No-Hope-A status.'}
+      let message='';
+      if(!round)message='No current Super 6 round.';
+      else if(champion)message='No-Hope-A is complete.';
+      else if(attachedGroup)message=`This is No-Hope-A Matchday ${attachedGroup.matchday}.`;
+      else if(attachedKO)message=`This is the No-Hope-A ${stageLabel(attachedKO.stage)}.`;
+      else if(!groupsReady&&!started)message='Assign exactly 5 players to each group first.';
+      else if(started&&!confirmed&&days>=10)message='All 10 group matchdays are assigned. Confirm the group tables next.';
+      else if(confirmed)message='Tick to attach the next No-Hope-A knockout stage.';
+      else message=`Tick to create No-Hope-A Matchday ${days+1} of 10.`;
+      if(help.textContent!==message)help.textContent=message;
+    }catch(err){cb.disabled=true;if(help&&help.textContent!=='Could not load No-Hope-A status.')help.textContent='Could not load No-Hope-A status.'}
   }
 
   function bindRoundSave(){
@@ -346,9 +348,14 @@
     },true);
   }
 
+  let lastRoundTabVisible=false,lastRoundToggle=null;
   function boot(){
     ensurePlayerUI();ensureAdminUI();ensureRoundToggle();bindRoundSave();
-    if(!hidden(q('#adminArea')))syncRoundToggle(false);
+    const panel=q('[data-admin-panel="round"]'),cb=q('#nohopeWeekCheckbox');
+    const visible=!!panel&&!hidden(panel)&&!hidden(q('#adminArea'));
+    // A background DOM mutation must not overwrite an Admin selection.
+    if(visible&&(!lastRoundTabVisible||lastRoundToggle!==cb))syncRoundToggle(false);
+    lastRoundTabVisible=visible;lastRoundToggle=cb;
   }
 
   boot();
