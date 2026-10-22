@@ -1,4 +1,4 @@
-// Super 6 v0.34.4 — Admin-only seven-day late entry and correction window, with required audit reason.
+// Super 6 v0.34.5 — Admin-only seven-day late entry and correction window, with required audit reason.
 (async()=>{
   if(window.__SUPER6_BACKEND_READY) await window.__SUPER6_BACKEND_READY;
   const B=window.Super6Backend;
@@ -128,6 +128,21 @@
     });
   }
 
+  function showSavedNotice(playerName){
+    const panels=$('#adminLeaguePanels');
+    if(!panels?.parentNode)return;
+    let notice=$('#admin48SavedNotice');
+    if(!notice){
+      notice=document.createElement('div');
+      notice.id='admin48SavedNotice';
+      notice.className='admin-entry-48-banner';
+      notice.setAttribute('role','status');
+      panels.parentNode.insertBefore(notice,panels);
+    }
+    notice.innerHTML=`<b>Scores saved ✓</b>${esc(playerName)}'s predictions have been updated.`;
+    setTimeout(()=>notice.remove(),5000);
+  }
+
   function closeEditor(){
     const modal=$('#admin48EntryModal');
     if(modal) modal.remove();
@@ -189,6 +204,16 @@
         </div>
       </div>`;
       root.appendChild(wrap);
+      // Enter in a score field advances to the next field; it must never submit
+      // a surrounding form, reload the app, or interfere with the Admin session.
+      wrap.addEventListener('keydown',e=>{
+        if(e.key!=='Enter'||e.isComposing||!e.target.matches('input[type="number"]'))return;
+        e.preventDefault();
+        e.stopPropagation();
+        const fields=[...wrap.querySelectorAll('.admin48-row input,#admin48Minute')];
+        const next=fields[fields.indexOf(e.target)+1];
+        (next||$('#admin48Reason'))?.focus();
+      },true);
       $('#admin48Close').onclick=closeEditor;
       $('#admin48Cancel').onclick=closeEditor;
       wrap.addEventListener('click',e=>{if(e.target===wrap)closeEditor()});
@@ -232,7 +257,15 @@
           });
           if(error)throw error;
           status.innerHTML='<span style="color:#176b3a;font-weight:700">Saved ✓</span>';
-          setTimeout(()=>location.reload(),500);
+          btn.textContent='Saved ✓';
+          // Saving an entry must not reset the user's login. Keep the app mounted.
+          window.dispatchEvent(new CustomEvent('super6:admin-entry-saved',{
+            detail:{roundId:roundCache.id,playerId}
+          }));
+          setTimeout(()=>{
+            closeEditor();
+            showSavedNotice(profile.username);
+          },350);
         }catch(err){
           status.textContent=err?.message||'Could not save the Admin correction.';
           btn.disabled=false;
