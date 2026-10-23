@@ -185,7 +185,16 @@
     let sub = null;
     try { sub = await currentSubscription(); }
     catch (_) { /* browser might deny access */ }
-    const enabled = !!sub && Notification.permission === "granted";
+    let enabled = !!sub && Notification.permission === "granted";
+    if (enabled && token()) {
+      try {
+        const stored = await call("get_preferences", { endpoint: sub.endpoint });
+        enabled = !!stored.found;
+        if (stored.prefs) document.querySelectorAll("#s6NotifyPrefs input[data-notify-pref]").forEach(input => {
+          input.checked = stored.prefs[input.dataset.notifyPref] !== false;
+        });
+      } catch (_) { /* keep browser state visible if the backend is temporarily unavailable */ }
+    }
     enableButton.classList.toggle("hidden", enabled);
     disableButton.classList.toggle("hidden", !enabled);
     prefs.classList.toggle("hidden", !enabled);
