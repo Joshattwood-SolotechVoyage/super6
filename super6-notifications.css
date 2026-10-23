@@ -1,0 +1,21 @@
+/* Super 6 notification UI — additive, accessible and mobile-first */
+.s6-notify-card { margin-top: 16px; }
+.s6-notify-copy { margin: 6px 0 12px; line-height: 1.45; }
+.s6-notify-card .section-head { margin-bottom: 8px; }
+.s6-notify-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+.s6-notify-actions button { flex: 1 1 170px; max-width: 320px; min-height: 42px; }
+.s6-notify-prefs { margin-top: 16px; border-top: 1px solid rgba(128,128,128,.22); padding-top: 12px; }
+.s6-notify-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px 12px; margin: 10px 0 14px; }
+.s6-notify-choice { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 600; padding: 7px 0; min-height: 34px; }
+.s6-notify-choice input { width: 18px; height: 18px; flex: 0 0 18px; accent-color: #16794a; }
+.s6-notify-message { margin-top: 12px; min-height: 1em; overflow-wrap: anywhere; }
+.s6-notify-error { color: #b83131 !important; font-weight: 600; }
+.s6-notify-admin-count { font-size: 15px; font-weight: 750; line-height: 1.5; }
+.s6-notify-card button:disabled { cursor: not-allowed; opacity: .55; }
+@media (max-width: 560px) {
+  .s6-notify-actions { flex-direction: column; align-items: stretch; }
+  .s6-notify-actions button { width: 100%; max-width: none; flex: 0 0 auto; }
+  .s6-notify-choices { grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+  .s6-notify-choice { font-size: 12px; }
+}
+@media (max-width: 350px) { .s6-notify-choices { grid-template-columns: 1fr; } }
