@@ -121,5 +121,56 @@ if(begin!==-1&&end>begin&&source.includes('function renderAdminLeaguePanels(){')
   if(source.includes(oldRefresh))source=source.replace(oldRefresh,newRefresh);
   else console.warn('Super 6: background payment refresh update not found');
 }else console.warn('Super 6: original payment handler not found; original implementation kept');
+// v0.34.8 — Restore a verified Supabase browser session after reopening the app.
+// The bundled app previously always created an empty in-memory session, leaving users on
+// the PIN screen even when Supabase had kept their refresh token securely in browser storage.
+const originalLoginHeader=[
+"async function login(name,pin){",
+" const canonicalName=canonicalPlayerLoginName(name);",
+" const profile=await window.Super6Backend.pinLogin(canonicalName,pin);",
+" await refreshLiveStandings();"
+].join('\n');
+const persistentLoginHeader=[
+"async function login(name,pin){",
+" const canonicalName=canonicalPlayerLoginName(name);",
+" const profile=await window.Super6Backend.pinLogin(canonicalName,pin);",
+" return finishLoginWithProfile(profile);",
+"}",
+"async function finishLoginWithProfile(profile){",
+" await refreshLiveStandings();"
+].join('\n');
+if(!source.includes(originalLoginHeader)) throw new Error('Could not install Super 6 session restore: login entry point changed.');
+source=source.replace(originalLoginHeader,persistentLoginHeader);
+const persistentRestore=[
+"// Supabase persists and refreshes tokens; never store the PIN locally.",
+"async function restoreSavedLogin(){",
+" const btn=$('#loginForm')?.querySelector('button[type=\"submit\"]');",
+" const previousLabel=btn?.textContent;",
+" if(btn){btn.disabled=true;btn.textContent='Restoring your login…';}",
+" try{",
+"  const sb=window.Super6Backend.client();",
+"  const {data:existing,error:sessionError}=await sb.auth.getSession();",
+"  if(sessionError||!existing?.session?.access_token)return;",
+"  // Validate with Auth before loading a role from the protected profiles table.",
+"  const {data:verified,error:userError}=await sb.auth.getUser();",
+"  if(userError||!verified?.user?.id)return;",
+"  const {data:profile,error:profileError}=await sb.from('profiles')",
+"   .select('id, username, role, league_id')",
+"   .eq('id',verified.user.id).single();",
+"  if(profileError||!profile||!['player','admin'].includes(profile.role))return;",
+"  await finishLoginWithProfile(profile);",
+" }catch(error){",
+"  console.warn('Super 6 could not restore the saved session:',error);",
+"  session={role:null,userId:null};",
+"  $('#appScreen')?.classList.add('hidden');",
+"  $('#loginScreen')?.classList.remove('hidden');",
+" }finally{",
+"  if(btn){btn.disabled=false;btn.textContent=previousLabel||'Enter Super 6';}",
+" }",
+"}",
+"void restoreSavedLogin();"
+].join('\n');
+if(!source.trimEnd().endsWith('})();')) throw new Error('Could not install Super 6 session restore: boot structure changed.');
+source=source.replace(/\}\)\(\);\s*$/,persistentRestore+'\n})();');
 (0,eval)(source);
 })().catch(err=>{console.error(err);const el=document.getElementById('app')||document.body;if(el){const d=document.createElement('div');d.style.cssText='margin:16px;padding:14px;border:1px solid #b44;background:#fff4f2;color:#6b1d1d;border-radius:10px;font:14px Arial';d.textContent='Super 6 failed to load: '+(err?.message||err);el.prepend(d);}});
