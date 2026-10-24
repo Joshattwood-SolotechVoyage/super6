@@ -73,7 +73,11 @@
       a.played++;b.played++;a.s6+=s1;b.s6+=s2;
       if(m.player1_tiebreak!=null){a.accuracy+=Number(m.player1_tiebreak);a.accuracySamples++}
       if(m.player2_tiebreak!=null){b.accuracy+=Number(m.player2_tiebreak);b.accuracySamples++}
-      if(s1>s2){a.wins++;b.losses++;a.points+=3}
+      // An explicit Admin adjudication takes precedence for a tied cup match.
+      // Keep the actual Super 6 scores unchanged, but award 3/0 group points.
+      if(m.winner_id&&String(m.winner_id)===String(m.player1_id)){a.wins++;b.losses++;a.points+=3}
+      else if(m.winner_id&&String(m.winner_id)===String(m.player2_id)){b.wins++;a.losses++;b.points+=3}
+      else if(s1>s2){a.wins++;b.losses++;a.points+=3}
       else if(s2>s1){b.wins++;a.losses++;b.points+=3}
       else{a.draws++;b.draws++;a.points++;b.points++}
     }
@@ -88,7 +92,9 @@
         for(const m of groupMatches.filter(m=>ids.has(String(m.player1_id))&&ids.has(String(m.player2_id)))){
           const a=map.get(String(m.player1_id)),b=map.get(String(m.player2_id));
           const s1=Number(m.player1_score),s2=Number(m.player2_score);
-          if(s1>s2)a.h2h+=3;else if(s2>s1)b.h2h+=3;else{a.h2h++;b.h2h++}
+          if(m.winner_id&&String(m.winner_id)===String(m.player1_id))a.h2h+=3;
+          else if(m.winner_id&&String(m.winner_id)===String(m.player2_id))b.h2h+=3;
+          else if(s1>s2)a.h2h+=3;else if(s2>s1)b.h2h+=3;else{a.h2h++;b.h2h++}
         }
       }
       rows.sort((a,b)=>
@@ -112,7 +118,7 @@
   function groupTable(g,me=''){
     const rows=groupRows()[g]||[];
     if(!rows.length) return '<div class="notice">No players assigned to this group yet.</div>';
-    return `<div class="nohope-table-wrap"><table class="nohope-table"><thead><tr><th>Pos</th><th>Player</th><th>Played</th><th>W</th><th>D</th><th>L</th><th>League pts</th></tr></thead><tbody>${rows.map(r=>`<tr class="${me===r.id?'me':''} ${r.qualifying?'qualifying':''}"><td>${r.position}</td><td title="${esc(r.name)}"><b>${esc(r.name)}</b></td><td>${r.played}</td><td>${r.wins}</td><td>${r.draws}</td><td>${r.losses}</td><td><b>${r.points}</b></td></tr>`).join('')}</tbody></table></div>`;
+    return `<div class="nohope-table-wrap"><table class="nohope-table"><thead><tr><th>Pos</th><th>Player</th><th>Played</th><th>W</th><th>D</th><th>L</th><th title="Super 6 points scored in No-Hope-A cup fixtures">S6</th><th>League pts</th></tr></thead><tbody>${rows.map(r=>`<tr class="${me===r.id?'me':''} ${r.qualifying?'qualifying':''}"><td>${r.position}</td><td title="${esc(r.name)}"><b>${esc(r.name)}</b></td><td>${r.played}</td><td>${r.wins}</td><td>${r.draws}</td><td>${r.losses}</td><td class="cup-s6-cell">${r.s6}</td><td><b>${r.points}</b></td></tr>`).join('')}</tbody></table></div>`;
   }
 
   function allGroupsHTML(me=''){

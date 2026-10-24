@@ -1,0 +1,45 @@
+/* v0.34.7 — cumulative S6 cup totals; keep both leagues readable on phones. */
+.chumpions-table th.cup-s6-cell,.nohope-table th.cup-s6-cell{
+  font-weight:900;letter-spacing:0;color:#294f35;background:#f0e6cb;white-space:nowrap
+}
+.chumpions-table td.cup-s6-cell,.nohope-table td.cup-s6-cell{
+  font-weight:900;color:#173f2a;background:#f5edda;font-variant-numeric:tabular-nums
+}
+@media(min-width:561px){
+  .nohope-table th:nth-child(1),.nohope-table td:nth-child(1){width:8%}
+  .nohope-table th:nth-child(2),.nohope-table td:nth-child(2){width:31%}
+  .nohope-table th:nth-child(3),.nohope-table td:nth-child(3){width:11%}
+  .nohope-table th:nth-child(4),.nohope-table td:nth-child(4),
+  .nohope-table th:nth-child(5),.nohope-table td:nth-child(5),
+  .nohope-table th:nth-child(6),.nohope-table td:nth-child(6){width:6%}
+  .nohope-table th.cup-s6-cell,.nohope-table td.cup-s6-cell{width:13%}
+  .nohope-table th:last-child,.nohope-table td:last-child{width:19%}
+}
+.chumpions-table th:nth-child(1),.chumpions-table td:nth-child(1){width:8%}
+.chumpions-table th:nth-child(2),.chumpions-table td:nth-child(2){width:33%}
+.chumpions-table th:nth-child(3),.chumpions-table td:nth-child(3){width:12%}
+.chumpions-table th:nth-child(4),.chumpions-table td:nth-child(4),
+.chumpions-table th:nth-child(5),.chumpions-table td:nth-child(5),
+.chumpions-table th:nth-child(6),.chumpions-table td:nth-child(6){width:7%}
+.chumpions-table th.cup-s6-cell,.chumpions-table td.cup-s6-cell{width:11%}
+.chumpions-table th:last-child,.chumpions-table td:last-child{width:15%}
+@media(max-width:560px){
+  .nohope-table th:nth-child(4),.nohope-table td:nth-child(4),
+  .nohope-table th:nth-child(5),.nohope-table td:nth-child(5),
+  .nohope-table th:nth-child(6),.nohope-table td:nth-child(6),
+  .chumpions-table th:nth-child(4),.chumpions-table td:nth-child(4),
+  .chumpions-table th:nth-child(5),.chumpions-table td:nth-child(5),
+  .chumpions-table th:nth-child(6),.chumpions-table td:nth-child(6){display:none!important}
+  .chumpions-table{min-width:0!important;table-layout:fixed}
+  .chumpions-table th,.chumpions-table td{padding:8px 2px!important;font-size:10px!important;overflow:hidden}
+  .chumpions-table th:nth-child(1),.chumpions-table td:nth-child(1),
+  .nohope-table th:nth-child(1),.nohope-table td:nth-child(1){width:9%!important}
+  .chumpions-table th:nth-child(2),.chumpions-table td:nth-child(2),
+  .nohope-table th:nth-child(2),.nohope-table td:nth-child(2){width:39%!important;text-align:left}
+  .chumpions-table th:nth-child(3),.chumpions-table td:nth-child(3),
+  .nohope-table th:nth-child(3),.nohope-table td:nth-child(3){width:11%!important}
+  .chumpions-table th.cup-s6-cell,.chumpions-table td.cup-s6-cell,
+  .nohope-table th.cup-s6-cell,.nohope-table td.cup-s6-cell{width:16%!important;display:table-cell!important}
+  .chumpions-table th:last-child,.chumpions-table td:last-child,
+  .nohope-table th:last-child,.nohope-table td:last-child{width:25%!important;display:table-cell!important}
+}
