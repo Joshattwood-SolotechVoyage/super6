@@ -740,3 +740,44 @@ button{touch-action:manipulation}
 /* v0.33.5 — readable neutral status chips inside the dark player hero.
    Semantic good/warn/bad colours remain unchanged. */
 .hero .status-row .chip:not(.good):not(.warn):not(.bad){color:#173f2a}
+
+
+/* v0.34.9 — Account name and Log out together in the top bar, including iPhone. */
+.topbar .top-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;min-width:0;flex:0 1 auto}
+.top-actions #whoBtn{
+  display:block;
+  min-width:0;
+  max-width:clamp(60px,26vw,180px);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:12px;
+  font-weight:700;
+  color:var(--cream);
+  text-align:right;
+}
+.top-actions #logoutBtn{
+  flex:0 0 auto;
+  white-space:nowrap;
+  border:1px solid rgba(243,234,208,.50);
+  border-radius:999px;
+  padding:8px 11px;
+  background:transparent;
+  color:var(--cream);
+  font-weight:600;
+  cursor:pointer;
+}
+.top-actions #logoutBtn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+@media(max-width:759px){
+  .topbar .brand{flex:0 1 auto;min-width:0}
+  .topbar .top-actions{flex:1 1 auto;min-width:0;gap:6px}
+  .top-actions #whoBtn{display:block;font-size:11px}
+  .top-actions #logoutBtn{padding:7px 9px;font-size:11px}
+}
+@media(max-width:430px){
+  .topbar{gap:6px;padding-left:8px;padding-right:8px}
+  .topbar .brand{gap:5px}
+  .topbar .brand-logo{width:34px;height:34px}
+  .topbar .brand h1{font-size:20px}
+  .top-actions #whoBtn{display:block;max-width:clamp(54px,23vw,105px)}
+}
