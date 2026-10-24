@@ -1,4 +1,4 @@
-// Super 6 v0.34.5 — Admin-only seven-day late entry and correction window, with required audit reason.
+// Super 6 v0.34.8 — Admin-only seven-day late entry and correction window; no mandatory explanation.
 (async()=>{
   if(window.__SUPER6_BACKEND_READY) await window.__SUPER6_BACKEND_READY;
   const B=window.Super6Backend;
@@ -27,7 +27,6 @@
       .admin48-row span:first-child{font-size:12px;font-weight:700;min-width:0}
       .admin48-row input{width:100%;padding:8px 5px;text-align:center;border:1px solid #cfc4a9;border-radius:8px;background:#fff}
       .admin48-help{margin:8px 0 0;color:#667067;font-size:11px;line-height:1.4}
-      .admin48-reason{width:100%;min-height:80px;font-size:16px;padding:10px 12px;border:1px solid #cfc4a9;border-radius:10px;background:#fff;resize:vertical;line-height:1.5}
       @media(max-width:420px){
         .admin-entry-48-btn{font-size:10px;padding:7px 8px}
         .admin48-row{grid-template-columns:minmax(0,1fr) 50px 12px 50px}
@@ -193,10 +192,6 @@
           <input id="admin48Minute" type="number" min="1" max="90" inputmode="numeric" value="${existing?.first_goal_minute??''}">
         </label>
         <div class="admin48-help">Enter all six score predictions and the player's first-goal minute exactly as they supplied them.</div>
-        <label class="field" style="margin-top:12px">Source / reason for late entry (required)
-          <textarea id="admin48Reason" class="admin48-reason" maxlength="500" placeholder="e.g. Scores sent in the WhatsApp group before Saturday cutoff; entering them on Tuesday." aria-required="true"></textarea>
-        </label>
-        <div class="admin48-help">For fairness, confirm where and when these predictions were originally submitted. This note is retained in the audit log.</div>
         <div id="admin48Status" class="muted" style="margin-top:9px"></div>
         <div class="modal-actions">
           <button class="secondary" id="admin48Cancel" type="button">Cancel</button>
@@ -212,7 +207,7 @@
         e.stopPropagation();
         const fields=[...wrap.querySelectorAll('.admin48-row input,#admin48Minute')];
         const next=fields[fields.indexOf(e.target)+1];
-        (next||$('#admin48Reason'))?.focus();
+        next?.focus();
       },true);
       $('#admin48Close').onclick=closeEditor;
       $('#admin48Cancel').onclick=closeEditor;
@@ -221,11 +216,6 @@
       $('#admin48Save').onclick=async()=>{
         const status=$('#admin48Status'),btn=$('#admin48Save');
         const minute=Number($('#admin48Minute').value);
-        const reason=$('#admin48Reason').value.trim();
-        if(reason.length<8||reason.length>500){
-          status.textContent='Please record an 8–500 character source or reason for this Admin entry.';
-          return;
-        }
         if(!Number.isInteger(minute)||minute<1||minute>90){
           status.textContent='Enter a first-goal minute between 1 and 90.';
           return;
@@ -246,14 +236,13 @@
         }
         btn.disabled=true;
         btn.textContent='Saving…';
-        status.textContent='Saving Admin correction with audit note…';
+        status.textContent='Saving Admin correction…';
         try{
-          const {error}=await sb.rpc('admin_upsert_player_entry_with_reason',{
+          const {error}=await sb.rpc('admin_upsert_player_entry',{
             p_round_id:roundCache.id,
             p_player_id:playerId,
             p_first_goal_minute:minute,
-            p_predictions:predictions,
-            p_reason:reason
+            p_predictions:predictions
           });
           if(error)throw error;
           status.innerHTML='<span style="color:#176b3a;font-weight:700">Saved ✓</span>';
