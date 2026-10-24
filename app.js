@@ -141,6 +141,16 @@ const persistentLoginHeader=[
 ].join('\n');
 if(!source.includes(originalLoginHeader)) throw new Error('Could not install Super 6 session restore: login entry point changed.');
 source=source.replace(originalLoginHeader,persistentLoginHeader);
+
+const oldAccountHeaderBinding="$('#logoutBtn').onclick=logout;$('#whoBtn').onclick=logout;";
+const oldAdminLoginSession="session={role:'admin',userId:null,authUserId:profile.id};";
+const oldAccountDisplay="$('#whoBtn').textContent=session.role==='admin'?'Admin':currentUser().name;";
+if(!source.includes(oldAccountHeaderBinding) || !source.includes(oldAdminLoginSession) || !source.includes(oldAccountDisplay)){
+  throw new Error('Could not install Super 6 top-bar account layout: login implementation changed.');
+}
+source=source.replace(oldAccountHeaderBinding,"$('#logoutBtn').onclick=logout;");
+source=source.replace(oldAdminLoginSession,"session={role:'admin',userId:null,authUserId:profile.id,username:profile.username};");
+source=source.replace(oldAccountDisplay,"$('#whoBtn').textContent=session.role==='admin'?(session.username||'Admin'):currentUser().name;");
 const persistentRestore=[
 "// Supabase persists and refreshes tokens; never store the PIN locally.",
 "async function restoreSavedLogin(){",
