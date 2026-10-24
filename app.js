@@ -151,6 +151,18 @@ if(!source.includes(oldAccountHeaderBinding) || !source.includes(oldAdminLoginSe
 source=source.replace(oldAccountHeaderBinding,"$('#logoutBtn').onclick=logout;");
 source=source.replace(oldAdminLoginSession,"session={role:'admin',userId:null,authUserId:profile.id,username:profile.username};");
 source=source.replace(oldAccountDisplay,"$('#whoBtn').textContent=session.role==='admin'?(session.username||'Admin'):currentUser().name;");
+// v0.35.0 — enforce 30-minute fixed login expiry for players and admins.
+const oldSessionWindowLogin=" const profile=await window.Super6Backend.pinLogin(canonicalName,pin);\n return finishLoginWithProfile(profile);\n}";
+const newSessionWindowLogin=" const profile=await window.Super6Backend.pinLogin(canonicalName,pin);\n openThirtyMinuteSession(profile.id);\n try{return await finishLoginWithProfile(profile)}\n catch(error){\n  clearThirtyMinuteSession();\n  await window.Super6Backend.signOut().catch(()=>{});\n  throw error;\n }\n}";
+const oldSessionWindowLogout="async function logout(){await window.Super6Backend.signOut().catch(()=>{});";
+const newSessionWindowLogout="async function logout(){clearThirtyMinuteSession();clearInterval(timer);await window.Super6Backend.signOut().catch(()=>{});";
+const oldSessionWindowTimer="function startTimer(){clearInterval(timer);timer=setInterval(()=>{if(session.role==='player')renderCountdown();";
+const newSessionWindowTimer="function startTimer(){clearInterval(timer);timer=setInterval(()=>{if(!hasValidThirtyMinuteSession(session.authUserId)){checkThirtyMinuteSession();return;}if(session.role==='player')renderCountdown();";
+if(!source.includes(oldSessionWindowLogin)||!source.includes(oldSessionWindowLogout)||!source.includes(oldSessionWindowTimer)) throw new Error('Super 6 session window patch: bundled app login, logout or timer changed.');
+source=source.replace(oldSessionWindowLogin,newSessionWindowLogin);
+source=source.replace(oldSessionWindowLogout,newSessionWindowLogout);
+source=source.replace(oldSessionWindowTimer,newSessionWindowTimer);
+const thirtyMinuteSessionHelpers="// A fixed 30-minute PIN session; Supabase token refresh does not extend this window.\nconst SUPER6_LOGIN_TTL_MS=30*60*1000;\nconst SUPER6_LOGIN_WINDOW_KEY='super6_login_window_v1';\nlet sessionWindowMemory=null;\nlet expiryLogoutInProgress=false;\nfunction getThirtyMinuteSession(){\n try{const value=localStorage.getItem(SUPER6_LOGIN_WINDOW_KEY);return value?JSON.parse(value):sessionWindowMemory}\n catch(error){return sessionWindowMemory}\n}\nfunction hasValidThirtyMinuteSession(authUserId){\n const windowInfo=getThirtyMinuteSession();\n return Boolean(authUserId&&windowInfo&&String(windowInfo.userId)===String(authUserId)&&\n  Number.isFinite(windowInfo.expiresAt)&&windowInfo.expiresAt>Date.now()&&\n  windowInfo.expiresAt<=Date.now()+SUPER6_LOGIN_TTL_MS);\n}\nfunction openThirtyMinuteSession(authUserId){\n sessionWindowMemory={userId:String(authUserId),expiresAt:Date.now()+SUPER6_LOGIN_TTL_MS};\n try{localStorage.setItem(SUPER6_LOGIN_WINDOW_KEY,JSON.stringify(sessionWindowMemory))}\n catch(error){console.warn('Super 6: 30-minute session cannot be remembered on this device.',error)}\n}\nfunction clearThirtyMinuteSession(){\n sessionWindowMemory=null;\n try{localStorage.removeItem(SUPER6_LOGIN_WINDOW_KEY)}catch(error){}\n}\nfunction checkThirtyMinuteSession(){\n if(!session.role||expiryLogoutInProgress)return;\n if(hasValidThirtyMinuteSession(session.authUserId))return;\n expiryLogoutInProgress=true;\n void logout().finally(()=>{expiryLogoutInProgress=false});\n}\ndocument.addEventListener('visibilitychange',()=>{if(!document.hidden)checkThirtyMinuteSession()});\nwindow.addEventListener('focus',checkThirtyMinuteSession);\nwindow.addEventListener('pageshow',checkThirtyMinuteSession);\nwindow.addEventListener('storage',event=>{if(event.key===SUPER6_LOGIN_WINDOW_KEY)checkThirtyMinuteSession()});";
 const persistentRestore=[
 "// Supabase persists and refreshes tokens; never store the PIN locally.",
 "async function restoreSavedLogin(){",
@@ -161,6 +173,11 @@ const persistentRestore=[
 "  const sb=window.Super6Backend.client();",
 "  const {data:existing,error:sessionError}=await sb.auth.getSession();",
 "  if(sessionError||!existing?.session?.access_token)return;",
+"  if(!hasValidThirtyMinuteSession(existing.session.user?.id)){",
+"   clearThirtyMinuteSession();",
+"   await window.Super6Backend.signOut().catch(()=>{});",
+"   return;",
+"  }",
 "  // Validate with Auth before loading a role from the protected profiles table.",
 "  const {data:verified,error:userError}=await sb.auth.getUser();",
 "  if(userError||!verified?.user?.id)return;",
@@ -181,6 +198,6 @@ const persistentRestore=[
 "void restoreSavedLogin();"
 ].join('\n');
 if(!source.trimEnd().endsWith('})();')) throw new Error('Could not install Super 6 session restore: boot structure changed.');
-source=source.replace(/\}\)\(\);\s*$/,persistentRestore+'\n})();');
+source=source.replace(/\}\)\(\);\s*$/,thirtyMinuteSessionHelpers+'\n'+persistentRestore+'\n})();');
 (0,eval)(source);
 })().catch(err=>{console.error(err);const el=document.getElementById('app')||document.body;if(el){const d=document.createElement('div');d.style.cssText='margin:16px;padding:14px;border:1px solid #b44;background:#fff4f2;color:#6b1d1d;border-radius:10px;font:14px Arial';d.textContent='Super 6 failed to load: '+(err?.message||err);el.prepend(d);}});
