@@ -217,10 +217,10 @@
     text.push('','⚽ '+d.goals+' goals • '+d.draws+' draws','#WeComeBackStronger');
     return text.join('\n');
   }
-  async function show(){
+  async function show(dataOverride){
     var p=document.getElementById('posterPreview');
     if(!p)return;
-    var data=parse();
+    var data=dataOverride||parse();
     if(!data)return;
     try{await loadBrandLogo();}
     catch(error){console.warn('Super 6 roundup could not load the logo; keeping the existing weekly poster.',error);return;}
@@ -250,6 +250,7 @@
     var btn=document.getElementById('downloadPoster');
     if(!btn)return;
     btn.id='downloadRoundupImage';
+    btn.disabled=false;
     btn.textContent='Download roundup PNG';
     btn.onclick=async function(){
       var original=btn.textContent;btn.disabled=true;btn.textContent='Making the image…';
@@ -278,9 +279,126 @@
     }
     actions.style.cssText='display:flex;gap:8px;flex-wrap:wrap;';
   }
-  // The old #posterBtn handler creates the preview synchronously.
-  // Enhance it afterwards, leaving calculations and preview generation untouched.
+  // v0.35.2: Make the admin round-up available when a newer round is still open.
+  // The existing Results UI otherwise disables #posterBtn whenever the current round has no results.
+  // Historical snapshots are read-only; scoring and payment calculations remain unchanged.
+  function enableRoundupButton(){
+    var btn=document.getElementById('posterBtn');
+    if(!btn)return;
+    if(btn.disabled)btn.disabled=false;
+    if(btn.textContent!=='Weekly round-up')btn.textContent='Weekly round-up';
+    btn.title='Generate a PNG of the latest completed round, including previous weeks';
+  }
+  if(typeof MutationObserver!=='undefined'){
+    var buttonObserver=new MutationObserver(enableRoundupButton);
+    buttonObserver.observe(document.getElementById('adminArea')||document.body,{
+      subtree:true,childList:true,attributes:true,attributeFilter:['disabled']
+    });
+  }
+  enableRoundupButton();
+
+  function getHistoricalPreviewData(round,results,fixtures,leagueRecords){
+    var names=leagueRecords.map(function(l){return {name:l.name,id:String(l.id),order:Number(l.sort_order)||0};});
+    results.forEach(function(row){
+      var id=String(row.league_id||''),name=String(row.league_name||'').trim();
+      if(!name)return;
+      if(!names.some(function(l){return l.id===id||l.name===name;})){
+        names.push({name:name,id:id,order:100});
+      }
+    });
+    var awardRows=function(rows,field){
+      return rows.filter(function(x){return Boolean(x[field]);}).map(function(x){
+        return {name:String(x.username||'Player'),points:Number(x.points||0)};
+      });
+    };
+    var leagues=names.sort(function(a,b){return a.order-b.order||a.name.localeCompare(b.name);}).map(function(l){
+      var eligible=results.filter(function(row){
+        return (String(row.league_id||'')===l.id||String(row.league_name||'')===l.name)&&row.counted!==false;
+      });
+      var winners=awardRows(eligible,'is_winner');
+      var topScore=winners.length?Math.max.apply(null,winners.map(function(x){return x.points;})):null;
+      var joint=topScore===null?[]:eligible.filter(function(x){return Number(x.points)===topScore;});
+      var evidence='';
+      if(joint.length>1&&round.official_first_goal_minute!=null){
+        evidence='TIEBREAK • '+joint.map(function(x){return String(x.username||'Player')+' ±'+String(x.tie_break_difference==null?'?':x.tie_break_difference)+'m';}).join(' / ')+' • actual '+round.official_first_goal_minute+"'";
+      }
+      return {name:l.name,entries:eligible.length,awards:{winner:winners,second:awardRows(eligible,'is_second'),spoon:awardRows(eligible,'is_wooden_spoon')},tiebreak:evidence};
+    });
+    var matchResults=fixtures.filter(function(f){return !f.removed;}).map(function(f){
+      var a=f.home_score==null?null:Number(f.home_score),b=f.away_score==null?null:Number(f.away_score);
+      return {home:f.home_team,away:f.away_team,homeGoals:a,awayGoals:b,score:a==null||b==null?'—':a+' – '+b};
+    });
+    var played=matchResults.filter(function(m){return m.homeGoals!=null&&m.awayGoals!=null;});
+    var winners=leagues.flatMap(function(l){return l.awards.winner.map(function(w){return {name:w.name,points:w.points,league:l.name};});});
+    var best=winners.reduce(function(n,w){return Math.max(n,w.points);},-1);
+    return {
+      round:round.name.toUpperCase()+' RESULTS',
+      ribbon:round.official_first_goal_minute!=null?'FIRST GOAL '+round.official_first_goal_minute+"'":'FINAL RESULTS',
+      fixtures:matchResults,leagues:leagues,best:best,
+      stars:best<0?[]:winners.filter(function(x){return x.points===best;}),
+      goals:played.reduce(function(n,m){return n+m.homeGoals+m.awayGoals;},0),
+      draws:played.filter(function(m){return m.homeGoals===m.awayGoals;}).length,
+      biggest:played.slice().sort(function(a,b){return (b.homeGoals+b.awayGoals)-(a.homeGoals+a.awayGoals);})[0]||null,
+      entries:leagues.reduce(function(n,l){return n+l.entries;},0)
+    };
+  }
+
+  function openPreviewModal(){
+    var root=document.getElementById('modalRoot');
+    if(!root)throw new Error('The round-up window could not be opened.');
+    root.innerHTML='<div class="modal" id="historicalRoundupModal"><div class="modal-card">'
+      +'<div class="section-head"><div><div class="kicker">Admin · Shareable image</div><h3>Super 6 Weekly Round-Up</h3>'
+      +'<div class="muted">Loading the latest completed round…</div></div><button class="secondary small" type="button" id="closeHistoricalRoundup">Close</button></div>'
+      +'<div id="posterPreview" class="poster-preview"><div class="notice">Loading completed results…</div></div>'
+      +'<div class="modal-actions"><button type="button" id="downloadPoster" class="big-action" disabled>Download roundup PNG</button></div>'
+      +'</div></div>';
+    var dialog=document.getElementById('historicalRoundupModal');
+    document.getElementById('closeHistoricalRoundup').onclick=function(){root.innerHTML='';};
+    dialog.addEventListener('click',function(e){if(e.target===dialog)root.innerHTML='';});
+    return dialog;
+  }
+
+  var opening=false;
+  async function openLatestCompletedRoundup(){
+    if(opening)return;
+    opening=true;
+    var dialog=openPreviewModal();
+    var preview=document.getElementById('posterPreview');
+    try{
+      if(!window.Super6Backend||!window.Super6Backend.client||!window.Super6Backend.loadRoundResults)throw new Error('Results are not ready. Please refresh the app and try again.');
+      var sb=window.Super6Backend.client();
+      var roundResponse=await sb.from('rounds').select('id,name,completed_at,official_first_goal_minute').eq('status','completed').order('completed_at',{ascending:false}).limit(12);
+      if(roundResponse.error)throw roundResponse.error;
+      var finished=roundResponse.data||[],round=null,results=[];
+      for(var i=0;i<finished.length;i++){
+        var candidate=finished[i];
+        var candidateResults=await window.Super6Backend.loadRoundResults(candidate.id);
+        if(Array.isArray(candidateResults)&&candidateResults.some(function(x){return x.counted!==false;})){
+          round=candidate;results=candidateResults;break;
+        }
+      }
+      if(!round)throw new Error('There are no completed rounds with counted results yet.');
+      var fetched=await Promise.all([
+        sb.from('fixtures').select('home_team,away_team,home_score,away_score,removed,sort_order').eq('round_id',round.id).order('sort_order'),
+        sb.from('leagues').select('id,name,sort_order').order('sort_order')
+      ]);
+      if(fetched[0].error)throw fetched[0].error;
+      if(fetched[1].error)throw fetched[1].error;
+      if(!dialog.isConnected)return;
+      var data=getHistoricalPreviewData(round,results,fetched[0].data||[],fetched[1].data||[]);
+      await show(data);
+    }catch(error){
+      console.error('Super 6 weekly round-up could not load',error);
+      if(dialog.isConnected){
+        preview.innerHTML='<div class="notice bad"></div>';
+        preview.querySelector('.notice').textContent='Could not load the round-up: '+(error.message||'Please try again.');
+      }
+    }finally{opening=false;}
+  }
   document.addEventListener('click',function(event){
-    if(event.target&&event.target.closest&&event.target.closest('#posterBtn'))setTimeout(show,0);
-  });
+    if(!event.target||!event.target.closest||!event.target.closest('#posterBtn'))return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    void openLatestCompletedRoundup();
+  },true);
 })();
