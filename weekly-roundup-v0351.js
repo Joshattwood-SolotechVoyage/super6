@@ -47,7 +47,7 @@
         if(kind)awards[kind]=parseNames($('b',a));
       });
       var count=counts.find(function(x){return x.name.toLowerCase()===name.toLowerCase();});
-      return {name:name,entries:count?count.value:null,awards:awards};
+      return {name:name,entries:count?count.value:null,awards:awards,tiebreak:txt($('.poster-tiebreak',card))};
     });
     if(!leagues.length)return null;
     var winners=leagues.flatMap(function(l){return l.awards.winner.map(function(w){return {name:w.name,points:w.points,league:l.name};});});
@@ -87,7 +87,7 @@
     heading(540,89,'SUPER 6',90,cream,'middle',950,900);
     heading(540,124,'THE ROUND-UP',22,gold,'middle',900,900);
     heading(540,174,data.round.toUpperCase(),42,cream,'middle',930,900);
-    heading(540,205,'SIX GAMES  •  THREE POINTS OF VIEW? NEVER.',16,gold,'middle',960,700);
+    heading(540,205,'SIX MATCHES  •  PLENTY OF BRAGGING RIGHTS',16,gold,'middle',960,700);
 
     bg(35,250,1010,300,paper,20);
     bg(35,250,1010,53,gold,20);
@@ -107,13 +107,15 @@
     statBox(56,String(data.entries),'COUNTED ENTRIES');
     statBox(393,String(data.goals),'MATCH GOALS');
     statBox(730,String(data.draws),'DRAWN MATCHES');
-    y=728;
+    var firstGoal=(data.ribbon.match(/FIRST GOAL\s+\d+'?/i)||[])[0];
+    if(firstGoal)heading(540,708,firstGoal,18,gold,'middle',960,850);
+    y=748;
     heading(54,y,'LEAGUE-BY-LEAGUE DRAMA',36,cream,'start',967,900);
     heading(54,y+30,'Every winner. Every chase. Every wooden spoon.',21,gold,'start',967,650);
     y+=58;
 
     data.leagues.forEach(function(l,i){
-      var h=246;
+      var h=l.tiebreak?276:246;
       bg(40,y,1000,h,i%2? '#ecdfbe':paper,14);
       bg(40,y,1000,58,i%2?'#2c5c40':green,14);
       bg(40,y+37,1000,22,i%2?'#2c5c40':green,0);
@@ -127,6 +129,7 @@
       heading(690,y+172,point(l.awards.second),19,green,'start',300,900);
       heading(72,y+200,names(l.awards.second),23,ink,'start',890,750);
       heading(72,y+231,'🥄  SPOON CLUB: '+names(l.awards.spoon),19,red,'start',920,800);
+      if(l.tiebreak)heading(72,y+259,l.tiebreak,16,red,'start',920,750);
       y+=h+14;
     });
 
@@ -184,6 +187,8 @@
     setTimeout(function(){URL.revokeObjectURL(url);},3000);
   }
   function shareText(d){
+    var names=function(rows){return rows.length?rows.map(function(w){return w.name;}).join(' / '):'—';};
+    var point=function(rows){return rows.length&&rows[0].points!=null?rows[0].points+' PTS':'';};
     var text=['⚽ SUPER 6 — '+d.round,'','🏆 WINNER OF THE WEEK: '+(d.stars.length?d.stars.map(function(x){return x.name;}).join(' / ')+' ('+d.best+' pts)':'No winner')];
     d.leagues.forEach(function(l){
       text.push('','🏟️ '+l.name,'👑 '+names(l.awards.winner)+' '+point(l.awards.winner),'🥈 '+names(l.awards.second)+' '+point(l.awards.second),'🥄 '+names(l.awards.spoon));
