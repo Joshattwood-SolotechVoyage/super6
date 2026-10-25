@@ -250,6 +250,7 @@
     var btn=document.getElementById('downloadPoster');
     if(!btn)return;
     btn.id='downloadRoundupImage';
+    btn.disabled=false;
     btn.textContent='Download roundup PNG';
     btn.onclick=async function(){
       var original=btn.textContent;btn.disabled=true;btn.textContent='Making the image…';
