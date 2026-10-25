@@ -4,6 +4,26 @@
   'use strict';
   var latest=null;
   var latestSvg='';
+  var brandLogoPromise=null;
+  function loadBrandLogo(){
+    if(!brandLogoPromise)brandLogoPromise=new Promise(function(resolve,reject){
+      var img=new Image();
+      img.onload=function(){resolve(img);};
+      img.onerror=function(){reject(new Error('The Super 6 logo could not be loaded. Check super6-logo.png and try again.'));};
+      img.src='super6-logo.png';
+    });
+    return brandLogoPromise;
+  }
+  function drawBrandLogo(ctx,img){
+    // Keep the official logo in the same position on the exported PNG as in the preview.
+    ctx.save();
+    ctx.fillStyle='#f6e9c8'; ctx.fillRect(41,24,224,166);
+    ctx.strokeStyle='#efc66d';ctx.lineWidth=4;ctx.strokeRect(41,24,224,166);
+    var boxW=210,boxH=152,scale=Math.min(boxW/img.naturalWidth,boxH/img.naturalHeight);
+    var w=img.naturalWidth*scale,h=img.naturalHeight*scale;
+    ctx.drawImage(img,48+(boxW-w)/2,31+(boxH-h)/2,w,h);
+    ctx.restore();
+  }
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c];});};
   var txt=function(n){return (n&&n.textContent||'').replace(/\s+/g,' ').trim();};
   var $=function(s,root){return (root||document).querySelector(s);};
@@ -171,11 +191,12 @@
       var img=new Image(),url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}));
       img.onload=function(){
         var canvas=document.createElement('canvas');canvas.width=1080;canvas.height=Number(img.naturalHeight)||2500;
-        try{
-          canvas.getContext('2d').drawImage(img,0,0);
+        loadBrandLogo().then(function(logo){
+          var ctx=canvas.getContext('2d');
+          ctx.drawImage(img,0,0);
+          drawBrandLogo(ctx,logo);
           canvas.toBlob(function(blob){if(blob)resolve(blob);else reject(new Error('PNG conversion failed'));},'image/png');
-        }catch(error){reject(error);}
-        URL.revokeObjectURL(url);
+        }).catch(reject).finally(function(){URL.revokeObjectURL(url);});
       };
       img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('Could not render roundup image'));};
       img.src=url;
@@ -196,19 +217,32 @@
     text.push('','⚽ '+d.goals+' goals • '+d.draws+' draws','#WeComeBackStronger');
     return text.join('\n');
   }
-  function show(){
+  async function show(){
     var p=document.getElementById('posterPreview');
     if(!p)return;
     var data=parse();
     if(!data)return;
+    try{await loadBrandLogo();}
+    catch(error){console.warn('Super 6 roundup could not load the logo; keeping the existing weekly poster.',error);return;}
+    // Another modal may have opened while the asset was loading.
+    if(!p.isConnected||document.getElementById('posterPreview')!==p)return;
     latest=data;latestSvg=poster(data);
     p.innerHTML='';
-    p.style.cssText='border:0;background:transparent;padding:0;box-shadow:none;max-width:580px;margin:20px auto;';
+    p.style.cssText='position:relative;border:0;background:transparent;padding:0;box-shadow:none;max-width:580px;margin:20px auto;';
     var img=document.createElement('img');
     img.alt='Super 6 round-up featuring the overall winner, all league awards and match results';
     img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(latestSvg);
     img.style.cssText='width:100%;height:auto;display:block;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.2)';
     p.appendChild(img);
+    var svgHeight=Number((latestSvg.match(/viewBox="0 0 1080 (\d+)"/)||[])[1])||2401;
+    var logoBox=document.createElement('div');
+    logoBox.style.cssText='position:absolute;box-sizing:border-box;left:3.8%;top:'+(24/svgHeight*100)+'%;width:20.75%;height:'+(166/svgHeight*100)+'%;background:#f6e9c8;border:2px solid #efc66d;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px;padding:2px;';
+    var logoImg=document.createElement('img');
+    logoImg.src='super6-logo.png';
+    logoImg.alt='Official Super 6 logo';
+    logoImg.style.cssText='max-width:100%;max-height:100%;object-fit:contain;';
+    logoBox.appendChild(logoImg);
+    p.appendChild(logoBox);
     var modal=p.closest('.modal')||p.parentElement.parentElement;
     var title=$('.section-head h3',modal),desc=$('.section-head .muted',modal);
     if(title)title.textContent='The Super 6 Round-Up';
