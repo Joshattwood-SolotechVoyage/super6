@@ -148,7 +148,7 @@ function stadium(data,rows){
  }
  });
  // Footer uses the full canvas, as in the requested design.
- a+=tx(561,1262,'SAME AGAIN NEXT WEEK?',fit('SAME AGAIN NEXT WEEK?',882,67,42),P.cream,{a:'middle',i:true,stroke:'#103023'});
+ a+=tx(561,1262,'NEXT WEEK, WE GO AGAIN',fit('NEXT WEEK, WE GO AGAIN',882,67,42),P.cream,{a:'middle',i:true,stroke:'#103023'});
  a+=tx(561,1305,'Different week. Same dreams.',30,P.gold,{a:'middle',i:true,f:'Georgia,serif',w:500});
  a+='<path d="M294 1326H832L804 1374H329Z" fill="'+P.red+'"/>';
  a+=tx(561,1360,'#BackStronger',36,P.cream,{a:'middle',i:true});
