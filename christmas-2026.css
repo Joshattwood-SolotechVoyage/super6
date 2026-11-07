@@ -1,0 +1,21 @@
+/* December 2026 festive visual layer; no changes to competition status colours or logic. */
+html.super6-christmas{--green:#123e31;--green2:#1b5843;--green3:#287355;--cream:#fff6e7;--paper:#fffbf4;--ink:#21352b;--muted:#66766c;--line:#d7dfd1;--gold:#e3b755;--shadow:0 14px 34px rgba(13,54,37,.15)}
+html.super6-christmas body{background:radial-gradient(circle at 90% 4%,#b32d36 0,transparent 28rem),linear-gradient(155deg,#102e29,#18563e 55%,#163b31);color:var(--ink)}
+html.super6-christmas .s6-christmas-banner{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:18px;min-height:78px;padding:12px 16px;color:#fff9e9;background:linear-gradient(105deg,#7e1927,#b42a37 47%,#17543d);border-bottom:3px solid #e6bb63;box-shadow:0 8px 24px #102b2344}
+html.super6-christmas .s6-christmas-wordmark{display:flex;align-items:center;gap:12px}
+html.super6-christmas .s6-christmas-wordmark>span{font-size:32px}
+html.super6-christmas .s6-christmas-wordmark strong{font-weight:900;font-size:clamp(15px,2.6vw,25px);letter-spacing:.6px}
+html.super6-christmas .s6-christmas-wordmark small{display:block;font-size:10px;letter-spacing:1px;color:#ffe6a6;margin-top:4px}
+html.super6-christmas .s6-christmas-sound{flex-shrink:0;border:1px solid #f2d99a;background:#163f35;color:#fff9e9;border-radius:22px;padding:9px 12px;cursor:pointer;font-size:12px}
+html.super6-christmas .topbar,html.super6-christmas .login-top{background:linear-gradient(115deg,#103d31,#21674c);color:#fff8e9;border-bottom-color:#e6bb63}
+html.super6-christmas .hero{background:linear-gradient(120deg,#133e32,#1f6249);color:#fff8e9;border:1px solid #d8b364;overflow:hidden}
+html.super6-christmas .hero::before{content:'🎅';position:absolute;right:12px;top:0;font-size:65px;opacity:.26;pointer-events:none}
+html.super6-christmas .card{border-color:#d8dfd3}
+html.super6-christmas .login-card{border:2px solid #d8b364;box-shadow:0 24px 65px #0c2b2455}
+html.super6-christmas .big-action{background:#ad2936;color:white}
+html.super6-christmas .player-nav button.active{border-bottom-color:#d8ad4f}
+html.super6-christmas .s6-christmas-snow{position:fixed;inset:0;z-index:10;pointer-events:none;overflow:hidden}
+html.super6-christmas .s6-christmas-snow span{position:absolute;top:-30px;color:#fff;font-size:14px;opacity:.32;animation:s6-snowfall 18s linear infinite}
+@keyframes s6-snowfall{to{transform:translate3d(30px,110vh,0)}}
+@media(max-width:600px){html.super6-christmas .s6-christmas-banner{gap:7px;padding:9px 7px;min-height:65px}html.super6-christmas .s6-christmas-wordmark{gap:5px}html.super6-christmas .s6-christmas-wordmark>span{font-size:19px}html.super6-christmas .s6-christmas-wordmark strong{font-size:13px}html.super6-christmas .s6-christmas-wordmark small{font-size:7px;letter-spacing:0}html.super6-christmas .s6-christmas-sound{padding:7px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){html.super6-christmas .s6-christmas-snow{display:none}}
