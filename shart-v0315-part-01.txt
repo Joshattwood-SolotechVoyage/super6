@@ -15,7 +15,7 @@
       sb.from('shart_members').select('season_id,player_id,source,created_at').eq('season_id',seasonId),
       sb.from('shart_competition_state').select('season_id,round1_round_id,round1_generated_at,round1_generated_by,bye_snapshot_at,draw_generated_at,draw_generated_by,champion_id,completed_at,updated_at').eq('season_id',seasonId).maybeSingle(),
       sb.from('shart_shootouts').select('id,season_id,match_id,attempt_no,home_team,away_team,cutoff_at,actual_home,actual_away,player1_points,player2_points,status,winner_id,completed_at,created_at,updated_at').eq('season_id',seasonId).order('attempt_no',{ascending:true}),
-      sb.from('shart_shootout_predictions').select('shootout_id,player_id,home_score,away_score,submitted_at,updated_at')
+      sb.from('shart_shootout_predictions').select('shootout_id,player_id,home_score,away_score,first_goal_minute,submitted_at,updated_at')
     ]);
     for(const r of [memberRes,compRes,shootoutRes,predRes]) if(r.error) throw new Error(r.error.message||'Run the SHART v0.31.5 SQL update.');
     return {...base,members:memberRes.data||[],competition:compRes.data||base.competition||null,shootouts:shootoutRes.data||[],shootoutPredictions:predRes.data||[]};
@@ -23,8 +23,8 @@
 
   const rpc=async(name,args)=>{const {data,error}=await B.client().rpc(name,args);if(error)throw new Error(error.message||'SHART action failed.');return data};
   B.createShartShootout=(matchId,home,away,cutoff)=>rpc('admin_create_shart_shootout',{p_match_id:matchId,p_home_team:home,p_away_team:away,p_cutoff_at:cutoff});
-  B.submitShartShootoutPrediction=(shootoutId,home,away)=>rpc('submit_shart_shootout_prediction',{p_shootout_id:shootoutId,p_home_score:Number(home),p_away_score:Number(away)});
-  B.completeShartShootout=(shootoutId,home,away)=>rpc('admin_complete_shart_shootout',{p_shootout_id:shootoutId,p_actual_home:Number(home),p_actual_away:Number(away)});
+  B.submitShartShootoutPrediction=(shootoutId,home,away,minute)=>rpc('submit_shart_shootout_prediction',{p_shootout_id:shootoutId,p_home_score:Number(home),p_away_score:Number(away),p_first_goal_minute:Number(minute)});
+  B.completeShartShootout=(shootoutId,home,away,minute)=>rpc('admin_complete_shart_shootout',{p_shootout_id:shootoutId,p_actual_home:Number(home),p_actual_away:Number(away),p_actual_first_goal_minute:minute===''?null:Number(minute)});
   B.mode=(B.mode||'')+'-shart-r1-shootout-v0315';
 
   const names=s=>new Map((s.players||[]).map(p=>[String(p.id),p.username||'Player']));
