@@ -1,8 +1,8 @@
 -- Existing predictions retain NULL minutes and must be resubmitted before completion.
 ALTER TABLE super6.shart_shootout_predictions ADD COLUMN IF NOT EXISTS first_goal_minute integer CHECK (first_goal_minute between 1 and 120);
 ALTER TABLE super6.shart_shootouts ADD COLUMN IF NOT EXISTS actual_first_goal_minute integer CHECK (actual_first_goal_minute between 1 and 120);
-DROP FUNCTION IF EXISTS super6.submit_shart_shootout_prediction(uuid,integer,integer);
-DROP FUNCTION IF EXISTS super6.admin_complete_shart_shootout(uuid,integer,integer);
+-- Keep legacy 3-argument functions for compatibility with in-flight clients.
+-- New frontend calls the 4-argument overloads below.
 CREATE OR REPLACE FUNCTION super6.submit_shart_shootout_prediction(p_shootout_id uuid, p_home_score integer, p_away_score integer, p_first_goal_minute integer)
  RETURNS void
  LANGUAGE plpgsql
@@ -142,3 +142,8 @@ begin
 end;
 $function$
 ;
+
+REVOKE ALL ON FUNCTION super6.submit_shart_shootout_prediction(uuid,integer,integer,integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION super6.admin_complete_shart_shootout(uuid,integer,integer,integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION super6.submit_shart_shootout_prediction(uuid,integer,integer,integer) TO authenticated;
+GRANT EXECUTE ON FUNCTION super6.admin_complete_shart_shootout(uuid,integer,integer,integer) TO authenticated;
