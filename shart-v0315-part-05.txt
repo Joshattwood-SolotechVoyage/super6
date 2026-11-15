@@ -1,6 +1,6 @@
--entry'),h=box.querySelector('[data-player-so-home]').value,a=box.querySelector('[data-player-so-away]').value;
-      if(h===''||a===''){alert('Enter both scores.');return}
-      btn.disabled=true;try{await B.submitShartShootoutPrediction(btn.dataset.playerSoSave,h,a);cache=null;await renderPlayer(true)}catch(e){alert(e.message||'Could not save your shootout prediction.')}finally{btn.disabled=false}
+-entry'),h=box.querySelector('[data-player-so-home]').value,a=box.querySelector('[data-player-so-away]').value,minute=box.querySelector('[data-player-so-minute]').value;
+      if(h===''||a===''||minute===''||!Number.isInteger(Number(minute))||Number(minute)<1||Number(minute)>120){alert('Enter both scores and a first-goal minute (1–120).');return}
+      btn.disabled=true;try{await B.submitShartShootoutPrediction(btn.dataset.playerSoSave,h,a,minute);cache=null;await renderPlayer(true)}catch(e){alert(e.message||'Could not save your shootout prediction.')}finally{btn.disabled=false}
     });
   }
 
