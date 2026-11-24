@@ -1,0 +1,10 @@
+.cup-shootouts { margin-bottom: 12px; }
+.cup-shootouts article + article { border-top: 1px solid currentColor; padding-top: 12px; margin-top: 12px; }
+.cup-shootouts form { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,9rem),1fr)); gap: 8px; align-items: end; }
+.cup-shootouts form input { width: 100%; min-width: 0; box-sizing: border-box; }
+.cup-shootouts [role=status] { grid-column: 1/-1; }
+.shootout-managed, .shart-shootout-admin, .shart-player-shootout { display:none !important; }
+@media(max-width:600px) {
+  .cup-shootouts form { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .cup-shootouts button { min-height: 44px; }
+}
